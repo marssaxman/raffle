@@ -6,29 +6,12 @@
 
 #include <iostream>
 #include <fstream>
-#include "scanner.h"
 
-class ifsource: public source<char>
-{
-	std::ifstream &in;
-public:
-	ifsource(std::ifstream &i): in(i) {}
-	bool ready() override { return in.good(); }
-	char produce() { return in.get(); }
-};
+#define YY_DEBUG 1
+#include "grammar.inl"
 
 int main(int argc, const char *argv[])
 {
-    if (argc < 1) {
-        std::cerr << "no input files\n";
-    } else for (int i = 1; i < argc; ++i) {
-		std::ifstream file(argv[i]);
-		ifsource floo(file);
-		scanner flap;
-
-
-		// now I need to attach this process to that source
-    }
-	return EXIT_SUCCESS;
+	return yyparse()? EXIT_SUCCESS: EXIT_FAILURE;
 }
 

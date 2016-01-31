@@ -1,0 +1,23 @@
+Input           <- _ Procedure EndOfFile
+Procedure		<- Expression (';' _ Procedure)*
+
+Expression		<- List
+List			<- Comparison (',' _ List)*
+Comparison		<- Arithmetic ('!'? ('=' / '>' / '<') _ Comparison)*
+Arithmetic      <- Factor (('+' / '-') _ Arithmetic)*
+Factor          <- Primary (('*' / '/' / '%' / '<<' / '>>') _ Factor)*
+Primary			<- ('!' _ / '-' _ )? Term (Subexpression / '.' _ Identifier)*
+Term            <- Subexpression / Number / Identifier
+Subexpression	<- Parens / Brackets / Braces
+Parens			<- '(' _ Expression? ')' _
+Brackets		<- '[' _ Expression? ']' _
+Braces			<- '{' _ Procedure? '}' _
+Number          <- [0-9]+ { /*number*/ } _
+Identifier		<- [A-Za-z_] [A-Za-z0-9_]* { /*identifier*/ } _
+
+_               <- ( Space / Comment )*
+Comment         <- '#' ( !EndOfLine . )* EndOfLine
+Space           <- ' ' / '\t' / EndOfLine
+EndOfLine       <- '\r\n' / '\n' / '\r'
+EndOfFile       <- !.
+
