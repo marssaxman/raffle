@@ -4,15 +4,7 @@
 // this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
-#include <iostream>
-#include <fstream>
+#include "ast.h"
 
-#include "parser.h"
-
-
-int main(int argc, const char *argv[])
-{
-	parse();
-	return EXIT_SUCCESS;
-}
+ast::node *parse();
 

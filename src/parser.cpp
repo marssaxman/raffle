@@ -4,15 +4,18 @@
 // this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
-#include <iostream>
-#include <fstream>
-
 #include "parser.h"
 
+#define YY_DEBUG 1
+#define YYSTYPE ast::node*
+#define YY_CTX_LOCAL
+#include "grammar.inl"
 
-int main(int argc, const char *argv[])
+ast::node *parse()
 {
-	parse();
-	return EXIT_SUCCESS;
+	yycontext ctx;
+	memset(&ctx, 0, sizeof(yycontext));
+	yyparse(&ctx);
+	yyrelease(&ctx);
+	return 0;
 }
-
