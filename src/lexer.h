@@ -20,7 +20,8 @@
 // 	string: ('\"' [^\"]* '\"') | ('\'' [^\']* '\'')
 // 	space: [\s\t]+
 // 	delimiter: '(' | '[' | '{' | '}' | ']' | ')'
-// 	operator: ',' | ';' | '+' | '-' | '*' | '/' | '%'
+// 	operator: ',' | ';' | '+' | '-' | '*' | '/' | '%' | '|' | '^' | '&' |
+//				'<' | '=' | '>' | '<<' | '>>' | '<-' | '->'
 
 class lexer {
 public:
@@ -45,6 +46,13 @@ public:
 		virtual void token_star(position) = 0;
 		virtual void token_slash(position) = 0;
 		virtual void token_percent(position) = 0;
+		virtual void token_bang(position) = 0;
+		virtual void token_lesser(position) = 0;
+		virtual void token_equal(position) = 0;
+		virtual void token_greater(position) = 0;
+		virtual void token_tilde(position) = 0;
+		virtual void token_pipe(position) = 0;
+		virtual void token_and(position) = 0;
 	};
 	struct error {
 		virtual void token_unknown(position, char) = 0;

@@ -31,6 +31,13 @@ void lexer::read_line(const std::string &input)
 			case '*': out.token_star(pos); break;
 			case '/': out.token_slash(pos); break;
 			case '%': out.token_percent(pos); break;
+			case '~': out.token_tilde(pos); break;
+			case '!': out.token_bang(pos); break;
+			case '<': out.token_lesser(pos); break;
+			case '=': out.token_equal(pos); break;
+			case '>': out.token_greater(pos); break;
+			case '&': out.token_and(pos); break;
+			case '|': out.token_pipe(pos); break;
 
 			case '\"':
 			case '\'':

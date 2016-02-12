@@ -4,20 +4,22 @@
 // this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
-#ifndef ERROR_HANDLER_H
-#define ERROR_HANDLER_H
+#ifndef ERRORS_H
+#define ERRORS_H
 
 #include "lexer.h"
 #include "parser.h"
 
-struct error_handler: public lexer::error, public parser::error {
+struct errors: public lexer::error, public parser::error {
 	virtual void token_unknown(lexer::position p, char c) override;
 	virtual void token_nonterminated(lexer::position p) override;
 	virtual void parse_unexpected(lexer::position) override;
 	virtual void parse_mismatched_paren(lexer::position) override;
+	virtual void parse_mismatched_bracket(lexer::position) override;
+	virtual void parse_mismatched_brace(lexer::position) override;
 private:
 	void report(lexer::position, std::string message);
 };
 
-#endif //ERROR_HANDLER_H
+#endif //ERRORS_H
 
