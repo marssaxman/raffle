@@ -6,13 +6,36 @@
 
 #include <iostream>
 #include <fstream>
+#include "lexer.h"
 
-#include "parser.h"
+struct output_handler: public lexer::output {
+	virtual void indent(lexer::position p, unsigned level) {}
+	virtual void spacer(lexer::position p) override {}
+	virtual void number(lexer::position p, std::string text) override {}
+	virtual void symbol(lexer::position p, std::string text) override {}
+	virtual void string(lexer::position p, std::string text) override {}
+	virtual void rubric(lexer::position p, std::string text) override {}
+	virtual void opener(lexer::position p, char c) override {}
+	virtual void closer(lexer::position p, char c) override {}
+	virtual void newline(lexer::position p) override {}
+};
 
+struct error_handler: public lexer::error {
+	virtual void unknown(lexer::position p, char c) override {}
+	virtual void nonterminated(lexer::position p) override {}
+};
 
-int main(int argc, const char *argv[])
-{
-	parse();
+int main(int argc, const char *argv[]) {
+	output_handler o;
+	error_handler e;
+	if (argc <= 1) {
+		lexer l(o, e);
+		l.read_file(std::cin);
+	} else for (int i = 1; i < argc; ++i) {
+		lexer l(o, e);
+		std::ifstream file(argv[i]);
+		l.read_file(file);
+	}
 	return EXIT_SUCCESS;
 }
 
