@@ -6,86 +6,127 @@
 
 #include "parser.h"
 
+// Operator codes are grouped and spaced so that shifting right yields the
+// precedence level. Furthermore, left-associative operators are even, while
+// right-associative operators are odd, so masking the low bit yields the
+// associativity.
+
+namespace op {
+enum {
+	// 0
+	sequence = 0x00,
+	// 1
+	list = 0x10,
+	// 2
+	add = 0x20,
+	subtract = 0x22,
+	// 3
+	multiply = 0x30,
+	divide = 0x32,
+	modulo = 0x34,
+	// 4
+	paren = 0x40,
+};
+}
+
+static int precedence(int op) { return op >> 4; }
+static bool rightassoc(int op) { return op & 1; }
+
 void parser::token_number(lexer::position p, std::string text)
 {
-	out.parse_number(text);
-	++state.top().count;
+	values.push(out.parse_number(text));
 }
 
 void parser::token_symbol(lexer::position p, std::string text)
 {
-	out.parse_symbol(text);
-	++state.top().count;
+	values.push(out.parse_symbol(text));
 }
 
 void parser::token_string(lexer::position p, std::string text)
 {
-	out.parse_string(text);
-	++state.top().count;
+	values.push(out.parse_string(text));
 }
 
 void parser::token_paren_open(lexer::position p)
 {
-	state.push({block::paren});
+	states.push(op::paren);
 }
 
 void parser::token_paren_close(lexer::position p)
 {
-	if (close_block(block::paren, p)) {
-		out.parse_paren_group(state.top().count);
-		state.pop();
+	while (!states.empty() && states.top() != op::paren) {
+		commit_infix();
 	}
-}
-
-void parser::token_bracket_open(lexer::position p)
-{
-	state.push({block::bracket});
-}
-
-void parser::token_bracket_close(lexer::position p)
-{
-	if (close_block(block::brace, p)) {
-		out.parse_bracket_group(state.top().count);
-		state.pop();
-	}
-}
-
-void parser::token_brace_open(lexer::position p)
-{
-	state.push({block::brace});
-}
-
-void parser::token_brace_close(lexer::position p)
-{
-	if (close_block(block::brace, p)) {
-		out.parse_brace_group(state.top().count);
-		state.pop();
+	if (!states.empty()) {
+		states.pop();
+	} else {
+		err.parse_mismatched_paren(p);
 	}
 }
 
 void parser::token_comma(lexer::position p)
 {
-	std::cout << "comma" << std::endl;
+	parse_infix(op::list);
 }
 
 void parser::token_semicolon(lexer::position p)
 {
-	std::cout << "semicolon" << std::endl;
+	parse_infix(op::sequence);
 }
 
-bool parser::close_block(block::id type, lexer::position p)
+void parser::token_plus(lexer::position p)
 {
-	return state.top().type == type || (unexpected_close(p), 0);
+	parse_infix(op::add);
 }
 
-void parser::unexpected_close(lexer::position p)
+void parser::token_minus(lexer::position p)
 {
-	switch (state.top().type) {
-		case block::paren: err.parse_expect_paren(p); break;
-		case block::bracket: err.parse_expect_bracket(p); break;
-		case block::brace: err.parse_expect_brace(p); break;
-		default: err.parse_unexpected_close(p); break;
+	parse_infix(op::subtract);
+}
+
+void parser::token_star(lexer::position p)
+{
+	parse_infix(op::multiply);
+}
+
+void parser::token_slash(lexer::position p)
+{
+	parse_infix(op::divide);
+}
+
+void parser::token_percent(lexer::position p)
+{
+	parse_infix(op::modulo);
+}
+
+void parser::parse_infix(int tk)
+{
+	while (!states.empty()) {
+		int prev = states.top();
+		if (precedence(tk) > precedence(prev)) break;
+		if (rightassoc(tk) && precedence(tk) == precedence(prev)) break;
+		commit_infix();
 	}
+	states.push(tk);
 }
 
-
+void parser::commit_infix()
+{
+	int tk = states.top();
+	states.pop();
+	int r = values.top();
+	values.pop();
+	int l = values.top();
+	values.pop();
+	int val = 0;
+	switch (tk) {
+		case op::sequence: val = out.parse_sequence(l, r); break;
+		case op::list: val = out.parse_list(l, r); break;
+		case op::add: val = out.parse_addition(l, r); break;
+		case op::subtract: val = out.parse_subtraction(l, r); break;
+		case op::multiply: val = out.parse_multiplication(l, r); break;
+		case op::divide: val = out.parse_division(l, r); break;
+		case op::modulo: val = out.parse_modulo(l, r); break;
+	}
+	values.push(val);
+}

@@ -12,97 +12,16 @@
 #include "parser.h"
 #include "error_handler.h"
 
-struct ast
-{
-	std::string value;
-	std::deque<ast> tree;
-};
-
-static void print_ast(ast node, std::string indent)
-{
-	std::cout << indent << node.value << std::endl;
-	while (!node.tree.empty()) {
-		ast sub = node.tree.front();
-		node.tree.pop_front();
-		print_ast(sub, indent + "  ");
-	}
-}
-
 struct output_handler: public parser::output {
-	std::stack<ast> state;
-	virtual void parse_number(std::string t) override;
-	virtual void parse_symbol(std::string t) override;
-	virtual void parse_string(std::string t) override;
-	virtual void parse_paren_group(unsigned count) override;
-	virtual void parse_bracket_group(unsigned count) override;
-	virtual void parse_brace_group(unsigned count) override;
-	void printout()
-	{
-		std::stack<ast> backup;
-		unsigned i = 0;
-		while (!state.empty()) {
-			ast n = state.top();
-			backup.push(n);
-			state.pop();
-			print_ast(n, std::to_string(i++) + ": ");
-		}
-		while (!backup.empty()) {
-			state.push(backup.top());
-			backup.pop();
-		}
-		std::cout << std::endl;
-	}
-private:
-	void fill_group(ast&, unsigned count);
+	virtual int parse_number(std::string t) override { return 0; }
+	virtual int parse_symbol(std::string t) override { return 0; }
+	virtual int parse_string(std::string t) override { return 0; }
+	virtual int parse_addition(int l, int r) override { return 0; }
+	virtual int parse_subtraction(int l, int r) override { return 0; }
+	virtual int parse_multiplication(int l, int r) override { return 0; }
+	virtual int parse_division(int l, int r) override { return 0; }
+	virtual int parse_modulo(int l, int r) override { return 0; }
 };
-
-void output_handler::parse_number(std::string t)
-{
-	state.push({t});
-	printout();
-}
-
-void output_handler::parse_symbol(std::string t)
-{
-	state.push({t});
-	printout();
-}
-
-void output_handler::parse_string(std::string t)
-{
-	state.push({t});
-	printout();
-}
-
-void output_handler::parse_paren_group(unsigned count)
-{
-	ast group = {"()"};
-	fill_group(group, count);
-	printout();
-}
-
-void output_handler::parse_bracket_group(unsigned count)
-{
-	ast group = {"[]"};
-	fill_group(group, count);
-	printout();
-}
-
-void output_handler::parse_brace_group(unsigned count)
-{
-	ast group = {"{}"};
-	fill_group(group, count);
-	printout();
-}
-
-void output_handler::fill_group(ast &group, unsigned count)
-{
-	while (count-- > 0) {
-		group.tree.push_front(state.top());
-		state.pop();
-	}
-	state.push(group);
-}
 
 int main(int argc, const char *argv[]) {
 	error_handler e;

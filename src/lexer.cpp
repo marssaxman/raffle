@@ -26,6 +26,11 @@ void lexer::read_line(const std::string &input)
 			case '}': out.token_brace_close(pos); break;
 			case ',': out.token_comma(pos); break;
 			case ';': out.token_semicolon(pos); break;
+			case '+': out.token_plus(pos); break;
+			case '-': out.token_minus(pos); break;
+			case '*': out.token_star(pos); break;
+			case '/': out.token_slash(pos); break;
+			case '%': out.token_percent(pos); break;
 
 			case '\"':
 			case '\'':

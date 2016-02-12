@@ -21,24 +21,13 @@ void error_handler::token_nonterminated(lexer::position p)
 	report(p, "nonterminated string");
 }
 
-void error_handler::parse_expect_paren(lexer::position p)
+void error_handler::parse_unexpected(lexer::position p)
 {
-	report(p, "expected a closing parenthesis");
+	report(p, "syntax error");
 }
 
-void error_handler::parse_expect_bracket(lexer::position p)
+void error_handler::parse_mismatched_paren(lexer::position p)
 {
-	report(p, "expected a closing bracket");
+	report(p, "no match for this parenthesis");
 }
-
-void error_handler::parse_expect_brace(lexer::position p)
-{
-	report(p, "expected a closing brace");
-}
-
-void error_handler::parse_unexpected_close(lexer::position p)
-{
-	report(p, "mismatched closing");
-}
-
 

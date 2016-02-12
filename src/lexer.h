@@ -10,6 +10,18 @@
 #include <string>
 #include <iostream>
 
+// lexical grammar:
+// 	file: (line '\n')*
+// 	line: token* comment?
+// 	comment: '#' [^\n]*
+// 	token: number | symbol | string | space | delimiter | operator
+// 	number: [0-9]+
+// 	symbol: [_A-Za-z] [_A-Za-z0-9]*
+// 	string: ('\"' [^\"]* '\"') | ('\'' [^\']* '\'')
+// 	space: [\s\t]+
+// 	delimiter: '(' | '[' | '{' | '}' | ']' | ')'
+// 	operator: ',' | ';' | '+' | '-' | '*' | '/' | '%'
+
 class lexer {
 public:
 	struct position {
@@ -28,6 +40,11 @@ public:
 		virtual void token_brace_close(position) = 0;
 		virtual void token_comma(position) = 0;
 		virtual void token_semicolon(position) = 0;
+		virtual void token_plus(position) = 0;
+		virtual void token_minus(position) = 0;
+		virtual void token_star(position) = 0;
+		virtual void token_slash(position) = 0;
+		virtual void token_percent(position) = 0;
 	};
 	struct error {
 		virtual void token_unknown(position, char) = 0;

@@ -13,10 +13,8 @@
 struct error_handler: public lexer::error, public parser::error {
 	virtual void token_unknown(lexer::position p, char c) override;
 	virtual void token_nonterminated(lexer::position p) override;
-	virtual void parse_expect_paren(lexer::position) override;
-	virtual void parse_expect_bracket(lexer::position) override;
-	virtual void parse_expect_brace(lexer::position) override;
-	virtual void parse_unexpected_close(lexer::position) override;
+	virtual void parse_unexpected(lexer::position) override;
+	virtual void parse_mismatched_paren(lexer::position) override;
 private:
 	void report(lexer::position, std::string message);
 };
