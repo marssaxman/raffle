@@ -7,11 +7,11 @@
 #include "parser.h"
 
 #define YY_DEBUG 1
-#define YYSTYPE ast::node*
+#define YYSTYPE int
 #define YY_CTX_LOCAL
 #include "grammar.inl"
 
-ast::node *parse()
+int parse()
 {
 	yycontext ctx;
 	memset(&ctx, 0, sizeof(yycontext));

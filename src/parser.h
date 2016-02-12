@@ -4,7 +4,10 @@
 // this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
-#include "ast.h"
+#ifndef PARSER_H
+#define PARSER_H
 
-ast::node *parse();
+int parse();
+
+#endif //PARSER_H
 
