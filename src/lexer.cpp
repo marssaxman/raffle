@@ -6,46 +6,11 @@
 
 #include "lexer.h"
 
-static bool is_combining_punct(char c)
-{
-	switch (c) {
-		case '!':
-		case '$':
-		case '%':
-		case '&':
-		case '*':
-		case '+':
-		case '-':
-		case '.':
-		case '/':
-		case ':':
-		case '<':
-		case '=':
-		case '>':
-		case '?':
-		case '@':
-		case '\\':
-		case '^':
-		case '`':
-		case '|':
-		case '~':
-			return true;
-		default:
-			return false;
-	}
-}
-
 void lexer::read_line(const std::string &input)
 {
-	pos.col = 0;
+	pos.col = 1;
 	auto i = input.begin();
-	while (i != input.end() && isblank(*i)) {
-		++i;
-	}
-	unsigned indent = i - input.begin();
-	out.indent(pos, indent);
-	pos.col = indent;
-	for (pos.col = indent; i != input.end(); pos.col = i - input.begin()) {
+	for (; i != input.end(); pos.col = i - input.begin()) {
 		auto tokenstart = i;
 		switch (char c = *i++) {
 			case '#':
@@ -53,35 +18,31 @@ void lexer::read_line(const std::string &input)
 				i = input.end();
 				break;
 
-			case '(':
-			case '[':
-			case '{':
-				out.opener(pos, c);
-				break;
-
-			case ')':
-			case ']':
-			case '}':
-				out.closer(pos, c);
-				break;
+			case '(': out.token_paren_open(pos); break;
+			case '[': out.token_bracket_open(pos); break;
+			case '{': out.token_brace_open(pos); break;
+			case ')': out.token_paren_close(pos); break;
+			case ']': out.token_bracket_close(pos); break;
+			case '}': out.token_brace_close(pos); break;
+			case ',': out.token_comma(pos); break;
+			case ';': out.token_semicolon(pos); break;
 
 			case '\"':
 			case '\'':
-				do {
-					if (i == input.end()) {
-						err.nonterminated(pos);
-						break;
-					}
-				} while (*i++ != c);
-				out.string(pos, std::string(tokenstart, i));
+				while (i != input.end() && *i != c) {
+					++i;
+				}
+				if (i != input.end()) {
+					out.token_string(pos, std::string(tokenstart, ++i));
+				} else {
+					err.token_nonterminated(pos);
+				}
 				break;
 
 			case ' ':
 			case '\t':
-				while (i != input.end() && isblank(*i)) {
-					++i;
-				}
-				out.spacer(pos);
+			case '\f':
+			case '\v':
 				break;
 
 			case '0':
@@ -94,10 +55,10 @@ void lexer::read_line(const std::string &input)
 			case '7':
 			case '8':
 			case '9':
-				while (i != input.end() && isalnum(*i)) {
+				while (i != input.end() && isdigit(*i)) {
 					++i;
 				}
-				out.number(pos, std::string(tokenstart, i));
+				out.token_number(pos, std::string(tokenstart, i));
 				break;
 
 			case '_':
@@ -130,47 +91,15 @@ void lexer::read_line(const std::string &input)
 				while (i != input.end() && isalnum(*i) || '_' == *i) {
 					++i;
 				}
-				out.symbol(pos, std::string(tokenstart, i));
-				break;
-
-			case ',':
-			case ';':
-				out.rubric(pos, std::string(1, c));
-				break;
-
-			case '!':
-			case '$':
-			case '%':
-			case '&':
-			case '*':
-			case '+':
-			case '-':
-			case '.':
-			case '/':
-			case ':':
-			case '<':
-			case '=':
-			case '>':
-			case '?':
-			case '@':
-			case '\\':
-			case '^':
-			case '`':
-			case '|':
-			case '~':
-				while (i != input.end() && is_combining_punct(*i)) {
-					++i;
-				}
-				out.rubric(pos, std::string(tokenstart, i));
+				out.token_symbol(pos, std::string(tokenstart, i));
 				break;
 
 			default:
-				err.unknown(pos, c);
+				err.token_unknown(pos, c);
 				pos.col = input.size();
 				break;
 		}
 	}
-	out.newline(pos);
 }
 
 void lexer::read_file(std::istream &in)

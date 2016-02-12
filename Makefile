@@ -1,8 +1,7 @@
 
 default: all
-all: grammar raffle
+all: raffle
 raffle: bin/rfl
-grammar: src/grammar.inl
 
 include srctree.mk
 -include $(call findtype, d, obj)
@@ -19,11 +18,8 @@ obj/%.o: src/%.c
 	@mkdir -p $(@D)
 	$(CC) -Isrc -std=c99 $(CXXFLAGS) -c $< -o $@
 
-src/grammar.inl: src/grammar.peg
-	peg $< -o $@
-
 clean:
-	-@rm -rf bin obj src/grammar.inl
+	-@rm -rf bin obj
 
-.PHONY: all clean raffle grammar
+.PHONY: all clean raffle
 

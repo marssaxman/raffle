@@ -6,33 +6,113 @@
 
 #include <iostream>
 #include <fstream>
+#include <deque>
+#include <stack>
 #include "lexer.h"
+#include "parser.h"
+#include "error_handler.h"
 
-struct output_handler: public lexer::output {
-	virtual void indent(lexer::position p, unsigned level) {}
-	virtual void spacer(lexer::position p) override {}
-	virtual void number(lexer::position p, std::string text) override {}
-	virtual void symbol(lexer::position p, std::string text) override {}
-	virtual void string(lexer::position p, std::string text) override {}
-	virtual void rubric(lexer::position p, std::string text) override {}
-	virtual void opener(lexer::position p, char c) override {}
-	virtual void closer(lexer::position p, char c) override {}
-	virtual void newline(lexer::position p) override {}
+struct ast
+{
+	std::string value;
+	std::deque<ast> tree;
 };
 
-struct error_handler: public lexer::error {
-	virtual void unknown(lexer::position p, char c) override {}
-	virtual void nonterminated(lexer::position p) override {}
+static void print_ast(ast node, std::string indent)
+{
+	std::cout << indent << node.value << std::endl;
+	while (!node.tree.empty()) {
+		ast sub = node.tree.front();
+		node.tree.pop_front();
+		print_ast(sub, indent + "  ");
+	}
+}
+
+struct output_handler: public parser::output {
+	std::stack<ast> state;
+	virtual void parse_number(std::string t) override;
+	virtual void parse_symbol(std::string t) override;
+	virtual void parse_string(std::string t) override;
+	virtual void parse_paren_group(unsigned count) override;
+	virtual void parse_bracket_group(unsigned count) override;
+	virtual void parse_brace_group(unsigned count) override;
+	void printout()
+	{
+		std::stack<ast> backup;
+		unsigned i = 0;
+		while (!state.empty()) {
+			ast n = state.top();
+			backup.push(n);
+			state.pop();
+			print_ast(n, std::to_string(i++) + ": ");
+		}
+		while (!backup.empty()) {
+			state.push(backup.top());
+			backup.pop();
+		}
+		std::cout << std::endl;
+	}
+private:
+	void fill_group(ast&, unsigned count);
 };
+
+void output_handler::parse_number(std::string t)
+{
+	state.push({t});
+	printout();
+}
+
+void output_handler::parse_symbol(std::string t)
+{
+	state.push({t});
+	printout();
+}
+
+void output_handler::parse_string(std::string t)
+{
+	state.push({t});
+	printout();
+}
+
+void output_handler::parse_paren_group(unsigned count)
+{
+	ast group = {"()"};
+	fill_group(group, count);
+	printout();
+}
+
+void output_handler::parse_bracket_group(unsigned count)
+{
+	ast group = {"[]"};
+	fill_group(group, count);
+	printout();
+}
+
+void output_handler::parse_brace_group(unsigned count)
+{
+	ast group = {"{}"};
+	fill_group(group, count);
+	printout();
+}
+
+void output_handler::fill_group(ast &group, unsigned count)
+{
+	while (count-- > 0) {
+		group.tree.push_front(state.top());
+		state.pop();
+	}
+	state.push(group);
+}
 
 int main(int argc, const char *argv[]) {
-	output_handler o;
 	error_handler e;
+	output_handler o;
+	parser p(o, e);
 	if (argc <= 1) {
-		lexer l(o, e);
+		lexer l(p, e);
 		l.read_file(std::cin);
 	} else for (int i = 1; i < argc; ++i) {
-		lexer l(o, e);
+		lexer l(p, e);
 		std::ifstream file(argv[i]);
 		l.read_file(file);
 	}

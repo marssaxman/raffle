@@ -17,19 +17,21 @@ public:
 		unsigned col = 0;
 	};
 	struct output {
-		virtual void indent(position, unsigned) = 0;
-		virtual void spacer(position) = 0;
-		virtual void number(position, std::string) = 0;
-		virtual void symbol(position, std::string) = 0;
-		virtual void string(position, std::string) = 0;
-		virtual void rubric(position, std::string) = 0;
-		virtual void opener(position, char) = 0;
-		virtual void closer(position, char) = 0;
-		virtual void newline(position) = 0;
+		virtual void token_number(position, std::string) = 0;
+		virtual void token_symbol(position, std::string) = 0;
+		virtual void token_string(position, std::string) = 0;
+		virtual void token_paren_open(position) = 0;
+		virtual void token_paren_close(position) = 0;
+		virtual void token_bracket_open(position) = 0;
+		virtual void token_bracket_close(position) = 0;
+		virtual void token_brace_open(position) = 0;
+		virtual void token_brace_close(position) = 0;
+		virtual void token_comma(position) = 0;
+		virtual void token_semicolon(position) = 0;
 	};
 	struct error {
-		virtual void unknown(position, char) = 0;
-		virtual void nonterminated(position) = 0;
+		virtual void token_unknown(position, char) = 0;
+		virtual void token_nonterminated(position) = 0;
 	};
 	lexer(output &o, error &e): out(o), err(e) {}
 	void read_line(const std::string&);
