@@ -22,10 +22,12 @@ enum {
 	define = 0x13,
 	// 2: structure
 	list = 0x20,
+	caption = 0x22,
 	// 3: relation
 	equal = 0x30,
-	lesser = 0x32,
-	greater = 0x34,
+	unequal = 0x32,
+	lesser = 0x34,
+	greater = 0x36,
 	// 4: add/sub
 	add = 0x40,
 	subtract = 0x42,
@@ -41,8 +43,7 @@ enum {
 	and_ = 0x5A,
 	// 6: unary
 	negate = 0x60,
-	invert = 0x62,
-	complement = 0x64,
+	subscript = 0x62,
 	// 7: group
 	paren = 0x70,
 	bracket = 0x72,
@@ -55,65 +56,98 @@ static bool rightassoc(int op) { return op & 1; }
 
 void parser::token_number(lexer::position p, std::string text)
 {
-	values.push(out.parse_number(text));
+	accept(out.parse_number(text));
 }
 
 void parser::token_symbol(lexer::position p, std::string text)
 {
-	values.push(out.parse_symbol(text));
+	accept(out.parse_symbol(text));
 }
 
 void parser::token_string(lexer::position p, std::string text)
 {
-	values.push(out.parse_string(text));
+	accept(out.parse_string(text));
+}
+
+void parser::token_paren_empty(lexer::position p)
+{
+	if (!prefix) {
+		states.push(op::subscript);
+	}
+	accept(out.parse_paren_empty());
 }
 
 void parser::token_paren_open(lexer::position p)
 {
+	if (!prefix) {
+		states.push(op::subscript);
+	}
 	states.push(op::paren);
+	prefix = true;
 }
 
 void parser::token_paren_close(lexer::position p)
 {
-	if (commit_group(op::paren)) {
-		int val = values.top();
-		values.pop();
-		values.push(out.parse_paren_group(val));
+	if (close_group(op::paren)) {
+		accept(out.parse_paren_group(recall()));
 	} else {
 		err.parse_mismatched_paren(p);
 	}
+	prefix = false;
+}
+
+void parser::token_bracket_empty(lexer::position p)
+{
+	if (!prefix) {
+		states.push(op::subscript);
+	}
+	accept(out.parse_bracket_empty());
 }
 
 void parser::token_bracket_open(lexer::position p)
 {
+	if (!prefix) {
+		states.push(op::subscript);
+	}
 	states.push(op::bracket);
+	prefix = true;
 }
 
 void parser::token_bracket_close(lexer::position p)
 {
-	if (commit_group(op::bracket)) {
-		int val = values.top();
-		values.pop();
-		values.push(out.parse_bracket_group(val));
+	if (close_group(op::bracket)) {
+		accept(out.parse_bracket_group(recall()));
 	} else {
 		err.parse_mismatched_bracket(p);
 	}
+	prefix = false;
+}
+
+void parser::token_brace_empty(lexer::position p)
+{
+	if (!prefix) {
+		states.push(op::subscript);
+	}
+	accept(out.parse_brace_empty());
 }
 
 void parser::token_brace_open(lexer::position p)
 {
+	if (!prefix) {
+		states.push(op::subscript);
+	}
 	states.push(op::brace);
+	prefix = true;
 }
 
 void parser::token_brace_close(lexer::position p)
 {
-	if (commit_group(op::brace)) {
-		int val = values.top();
-		values.pop();
-		values.push(out.parse_brace_group(val));
+	if (close_group(op::brace)) {
+		accept(out.parse_brace_group(recall()));
 	} else {
 		err.parse_mismatched_brace(p);
 	}
+	prefix = false;
 }
 
 void parser::token_comma(lexer::position p)
@@ -121,9 +155,24 @@ void parser::token_comma(lexer::position p)
 	parse_infix(op::list);
 }
 
+void parser::token_colon(lexer::position p)
+{
+	parse_infix(op::caption);
+}
+
 void parser::token_semicolon(lexer::position p)
 {
 	parse_infix(op::sequence);
+}
+
+void parser::token_arrow_left(lexer::position p)
+{
+	parse_infix(op::define);
+}
+
+void parser::token_arrow_right(lexer::position p)
+{
+	parse_infix(op::capture);
 }
 
 void parser::token_plus(lexer::position p)
@@ -131,9 +180,13 @@ void parser::token_plus(lexer::position p)
 	parse_infix(op::add);
 }
 
-void parser::token_minus(lexer::position p)
+void parser::token_hyphen(lexer::position p)
 {
-	parse_infix(op::subtract);
+	if (prefix) {
+		parse_prefix(op::negate);
+	} else {
+		parse_infix(op::subtract);
+	}
 }
 
 void parser::token_star(lexer::position p)
@@ -151,22 +204,27 @@ void parser::token_percent(lexer::position p)
 	parse_infix(op::modulo);
 }
 
-void parser::token_lesser(lexer::position p)
-{
-	parse_infix(op::lesser);
-}
-
 void parser::token_equal(lexer::position p)
 {
 	parse_infix(op::equal);
 }
 
-void parser::token_greater(lexer::position p)
+void parser::token_diamond(lexer::position p)
+{
+	parse_infix(op::unequal);
+}
+
+void parser::token_angle_left(lexer::position p)
+{
+	parse_infix(op::lesser);
+}
+
+void parser::token_angle_right(lexer::position p)
 {
 	parse_infix(op::greater);
 }
 
-void parser::token_and(lexer::position p)
+void parser::token_ampersand(lexer::position p)
 {
 	parse_infix(op::and_);
 }
@@ -176,21 +234,44 @@ void parser::token_pipe(lexer::position p)
 	parse_infix(op::or_);
 }
 
-void parser::token_bang(lexer::position p)
+void parser::token_caret(lexer::position p)
 {
-	// this is a unary prefix
+	parse_infix(op::xor_);
 }
 
-void parser::token_tilde(lexer::position p)
+void parser::token_shift_left(lexer::position p)
 {
-	// this is a unary prefix
+	parse_infix(op::shift_left);
+}
+
+void parser::token_shift_right(lexer::position p)
+{
+	parse_infix(op::shift_right);
 }
 
 void parser::close()
 {
 	while (!states.empty()) {
-		commit_infix();
+		commit_op();
 	}
+}
+
+void parser::accept(int val)
+{
+	values.push(val);
+	prefix = false;
+}
+
+int parser::recall()
+{
+	int val = values.top();
+	values.pop();
+	return val;
+}
+
+void parser::parse_prefix(int tk)
+{
+	states.push(tk);
 }
 
 void parser::parse_infix(int tk)
@@ -199,52 +280,50 @@ void parser::parse_infix(int tk)
 		int prev = states.top();
 		if (precedence(tk) > precedence(prev)) break;
 		if (rightassoc(tk) && precedence(tk) == precedence(prev)) break;
-		commit_infix();
+		commit_op();
 	}
 	states.push(tk);
+	prefix = true;
 }
 
-void parser::commit_infix()
+void parser::commit_op()
 {
 	int tk = states.top();
 	states.pop();
-	int r = values.top();
-	values.pop();
-	int l = values.top();
-	values.pop();
-	int val = 0;
+	int v = recall();
 	switch (tk) {
-		case op::sequence: val = out.parse_sequence(l, r); break;
-		case op::capture: val = out.parse_capture(l, r); break;
-		case op::define: val = out.parse_define(l, r); break;
-		case op::list: val = out.parse_list(l, r); break;
-		case op::equal: val = out.parse_equal(l, r); break;
-		case op::lesser: val = out.parse_lesser(l, r); break;
-		case op::greater: val = out.parse_greater(l, r); break;
-		case op::add: val = out.parse_addition(l, r); break;
-		case op::subtract: val = out.parse_subtraction(l, r); break;
-		case op::or_: val = out.parse_or(l, r); break;
-		case op::xor_: val = out.parse_xor(l, r); break;
-		case op::range: val = out.parse_range(l, r); break;
-		case op::multiply: val = out.parse_multiplication(l, r); break;
-		case op::divide: val = out.parse_division(l, r); break;
-		case op::modulo: val = out.parse_modulo(l, r); break;
-		case op::shift_left: val = out.parse_shift_left(l, r); break;
-		case op::shift_right: val = out.parse_shift_right(l, r); break;
-		case op::and_: val = out.parse_and(l, r); break;
+		case op::sequence: accept(out.parse_sequence(recall(), v)); break;
+		case op::capture: accept(out.parse_capture(recall(), v)); break;
+		case op::define: accept(out.parse_define(recall(), v)); break;
+		case op::list: accept(out.parse_list(recall(), v)); break;
+		case op::caption: accept(out.parse_caption(recall(), v)); break;
+		case op::equal: accept(out.parse_equal(recall(), v)); break;
+		case op::unequal: accept(out.parse_unequal(recall(), v)); break;
+		case op::lesser: accept(out.parse_lesser(recall(), v)); break;
+		case op::greater: accept(out.parse_greater(recall(), v)); break;
+		case op::add: accept(out.parse_addition(recall(), v)); break;
+		case op::subtract: accept(out.parse_subtraction(recall(), v)); break;
+		case op::or_: accept(out.parse_or(recall(), v)); break;
+		case op::xor_: accept(out.parse_xor(recall(), v)); break;
+		case op::range: accept(out.parse_range(recall(), v)); break;
+		case op::multiply: accept(out.parse_multiplication(recall(), v)); break;
+		case op::divide: accept(out.parse_division(recall(), v)); break;
+		case op::modulo: accept(out.parse_modulo(recall(), v)); break;
+		case op::shift_left: accept(out.parse_shift_left(recall(), v)); break;
+		case op::shift_right: accept(out.parse_shift_right(recall(), v)); break;
+		case op::and_: accept(out.parse_and(recall(), v)); break;
+		case op::negate: accept(out.parse_negate(v)); break;
 	}
-	values.push(val);
 }
 
-bool parser::commit_group(int tk)
+bool parser::close_group(int tk)
 {
-	while (!states.empty() && states.top() != tk) {
-		commit_infix();
+	while (!states.empty()) {
+		if (states.top() == tk) {
+			states.pop();
+			return true;
+		}
+		commit_op();
 	}
-	if (!states.empty() && states.top() == tk) {
-		states.pop();
-		return true;
-	} else {
-		return false;
-	}
+	return false;
 }

@@ -18,26 +18,52 @@ void lexer::read_line(const std::string &input)
 				i = input.end();
 				break;
 
-			case '(': out.token_paren_open(pos); break;
-			case '[': out.token_bracket_open(pos); break;
-			case '{': out.token_brace_open(pos); break;
+			case '(': switch (i != input.end()? *i: 0) {
+				case ')': out.token_paren_empty(pos); ++i; break;
+				default: out.token_paren_open(pos);
+			} break;
+
+			case '[': switch (i != input.end()? *i: 0) {
+				case ']': out.token_bracket_empty(pos); ++i; break;
+				default: out.token_bracket_open(pos);
+			} break;
+
+			case '{': switch (i != input.end()? *i: 0) {
+				case '}': out.token_brace_empty(pos); ++i; break;
+				default: out.token_brace_open(pos);
+			} break;
+
 			case ')': out.token_paren_close(pos); break;
 			case ']': out.token_bracket_close(pos); break;
 			case '}': out.token_brace_close(pos); break;
 			case ',': out.token_comma(pos); break;
+			case ':': out.token_colon(pos); break;
 			case ';': out.token_semicolon(pos); break;
 			case '+': out.token_plus(pos); break;
-			case '-': out.token_minus(pos); break;
 			case '*': out.token_star(pos); break;
 			case '/': out.token_slash(pos); break;
 			case '%': out.token_percent(pos); break;
-			case '~': out.token_tilde(pos); break;
-			case '!': out.token_bang(pos); break;
-			case '<': out.token_lesser(pos); break;
 			case '=': out.token_equal(pos); break;
-			case '>': out.token_greater(pos); break;
-			case '&': out.token_and(pos); break;
+			case '&': out.token_ampersand(pos); break;
 			case '|': out.token_pipe(pos); break;
+			case '^': out.token_caret(pos); break;
+
+			case '<': switch (i != input.end()? *i: 0) {
+				case '-': out.token_arrow_left(pos); ++i; break;
+				case '<': out.token_shift_left(pos); ++i; break;
+				case '>': out.token_diamond(pos); ++i; break;
+				default: out.token_angle_left(pos);
+			} break;
+
+			case '>': switch (i != input.end()? *i: 0) {
+				case '>': out.token_shift_right(pos); ++i; break;
+				default: out.token_angle_right(pos);
+			} break;
+
+			case '-': switch (i != input.end()? *i: 0) {
+				case '>': out.token_arrow_right(pos); ++i; break;
+				default: out.token_hyphen(pos);
+			} break;
 
 			case '\"':
 			case '\'':
