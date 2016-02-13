@@ -13,22 +13,14 @@
 #include "ast.h"
 #include "errors.h"
 
-static void run(std::istream &src)
-{
+int main(int argc, const char *argv[]) {
 	errors e;
 	ast o;
 	parser p(o, e);
 	lexer l(p, e);
-	l.read_file(std::cin);
-	p.close();
-}
-
-int main(int argc, const char *argv[]) {
-	if (argc <= 1) {
-		run(std::cin);
-	} else for (int i = 1; i < argc; ++i) {
-		std::ifstream file(argv[i]);
-		run(file);
+	for (std::string line; std::getline(std::cin, line);) {
+		l.read_line(line);
+		p.flush();
 	}
 	return EXIT_SUCCESS;
 }

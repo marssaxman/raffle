@@ -23,7 +23,7 @@
 // 	delimiter: '(' | '[' | '{' | '}' | ']' | ')'
 // 	operator: arithmetic | relation | structure
 //	arithmetic: '+' | '-' | '*' | '/' | '%' | '|' | '^' | '&' | '<<' | '>>'
-//	relation: '=' | '<>' | '<' | '>'
+//	relation: '=' | '<' | '>'
 //	structure: ',' | ':' | ';' | '<-' | '->'
 
 class lexer {

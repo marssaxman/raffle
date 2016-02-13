@@ -25,9 +25,8 @@ enum {
 	caption = 0x22,
 	// 3: relation
 	equal = 0x30,
-	unequal = 0x32,
-	lesser = 0x34,
-	greater = 0x36,
+	lesser = 0x32,
+	greater = 0x34,
 	// 4: add/sub
 	add = 0x40,
 	subtract = 0x42,
@@ -211,7 +210,7 @@ void parser::token_equal(lexer::position p)
 
 void parser::token_diamond(lexer::position p)
 {
-	parse_infix(op::unequal);
+	err.parse_unexpected(p);
 }
 
 void parser::token_angle_left(lexer::position p)
@@ -249,7 +248,7 @@ void parser::token_shift_right(lexer::position p)
 	parse_infix(op::shift_right);
 }
 
-void parser::close()
+void parser::flush()
 {
 	while (!states.empty()) {
 		commit_op();
@@ -298,7 +297,6 @@ void parser::commit_op()
 		case op::list: accept(out.parse_list(recall(), v)); break;
 		case op::caption: accept(out.parse_caption(recall(), v)); break;
 		case op::equal: accept(out.parse_equal(recall(), v)); break;
-		case op::unequal: accept(out.parse_unequal(recall(), v)); break;
 		case op::lesser: accept(out.parse_lesser(recall(), v)); break;
 		case op::greater: accept(out.parse_greater(recall(), v)); break;
 		case op::add: accept(out.parse_addition(recall(), v)); break;

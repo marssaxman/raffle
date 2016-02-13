@@ -31,7 +31,6 @@ public:
 		virtual int parse_list(int, int) = 0;
 		virtual int parse_caption(int, int) = 0;
 		virtual int parse_equal(int, int) = 0;
-		virtual int parse_unequal(int, int) = 0;
 		virtual int parse_lesser(int, int) = 0;
 		virtual int parse_greater(int, int) = 0;
 		virtual int parse_addition(int, int) = 0;
@@ -89,7 +88,7 @@ public:
 	virtual void token_shift_right(lexer::position) override;
 	virtual void token_arrow_left(lexer::position) override;
 	virtual void token_arrow_right(lexer::position) override;
-	void close();
+	void flush();
 protected:
 	void accept(int val);
 	int recall();
