@@ -17,29 +17,29 @@ class parser: public lexer::output {
 		location loc;
 	};
 	std::stack<int> values;
-	std::stack<token> states;
-	// some tokens apply in either infix or prefix context
-	bool prefix = true;
+	std::stack<token> ops;
+	// availability of operators depends on context
+	enum class state {
+		empty,	// initial state, no value yet
+		value,	// last token completed an expression value
+		prefix,	// after unary operator, expecting an operand
+		infix,	// after binary operator, expecting an operand
+	} context = state::empty;
 public:
 	struct output {
+		virtual int rule_empty() = 0; // for optional items
 		virtual int rule_number(std::string) = 0;
 		virtual int rule_symbol(std::string) = 0;
 		virtual int rule_string(std::string) = 0;
-		virtual int rule_blank() = 0;
-		virtual int rule_paren_empty() = 0;
-		virtual int rule_bracket_empty() = 0;
-		virtual int rule_brace_empty() = 0;
+		virtual int rule_placeholder() = 0; // 
 		virtual int rule_sequence(int, int) = 0;
 		virtual int rule_capture(int, int) = 0;
 		virtual int rule_define(int, int) = 0;
-		virtual int rule_list(int, int) = 0;
+		virtual int rule_join(int, int) = 0;
 		virtual int rule_caption(int, int) = 0;
 		virtual int rule_equal(int, int) = 0;
 		virtual int rule_lesser(int, int) = 0;
 		virtual int rule_greater(int, int) = 0;
-		virtual int rule_not_equal(int, int) = 0;
-		virtual int rule_not_lesser(int, int) = 0;
-		virtual int rule_not_greater(int, int) = 0;
 		virtual int rule_addition(int, int) = 0;
 		virtual int rule_subtraction(int, int) = 0;
 		virtual int rule_or(int, int) = 0;
@@ -53,9 +53,9 @@ public:
 		virtual int rule_and(int, int) = 0;
 		virtual int rule_negate(int) = 0;
 		virtual int rule_complement(int) = 0;
-		virtual int rule_paren_group(int) = 0;
-		virtual int rule_bracket_group(int) = 0;
-		virtual int rule_brace_group(int) = 0;
+		virtual int rule_eval(int) = 0;
+		virtual int rule_list(int) = 0;
+		virtual int rule_object(int) = 0;
 		virtual int rule_subscript(int, int) = 0;
 		virtual int rule_lookup(int, int) = 0;
 	};
@@ -70,11 +70,8 @@ public:
 	virtual void token_symbol(location, std::string) override;
 	virtual void token_string(location, std::string) override;
 	virtual void token_underscore(location) override;
-	virtual void token_paren_pair(location) override;
 	virtual void token_paren(location, direction) override;
-	virtual void token_bracket_pair(location) override;
 	virtual void token_bracket(location, direction) override;
-	virtual void token_brace_pair(location) override;
 	virtual void token_brace(location, direction) override;
 	virtual void token_comma(location) override;
 	virtual void token_colon(location) override;
@@ -88,8 +85,6 @@ public:
 	virtual void token_percent(location) override;
 	virtual void token_equal(location) override;
 	virtual void token_angle(location, direction) override;
-	virtual void token_bang_equal(location) override;
-	virtual void token_bang_angle(location, direction) override;
 	virtual void token_bang(location) override;
 	virtual void token_ampersand(location) override;
 	virtual void token_pipe(location) override;
@@ -100,13 +95,14 @@ public:
 protected:
 	void accept(int val);
 	int recall();
+	void term(int (output::*rule)(std::string), location, std::string);
 	void group(int tk, int (output::*rule)(int), location, direction);
 	void open_group(int tk, location);
 	void close_group(int tk, int (output::*rule)(int), location);
-	void parse_directional(int l, int r, location, direction);
-	void parse_prefix(int, location);
-	void parse_infix(int, location);
-	void commit_op();
+	void directional(int l, int r, location, direction);
+	void unary(int, location);
+	void binary(int, location);
+	void commit();
 private:
 	output &out;
 	error &err;

@@ -14,10 +14,11 @@ namespace ast {
 
 struct node {
 	enum type {
+		empty,
 		number,
 		symbol,
 		string,
-		blank,
+		placeholder,
 	} id;
 	node(type i): id(i) {}
 };
@@ -43,24 +44,20 @@ struct branch: public node {
 typedef std::vector<std::unique_ptr<node>> tree;
 
 struct builder: public parser::output {
+	builder() { make(node::empty); }
+	virtual int rule_empty() override;
 	virtual int rule_number(std::string t) override;
 	virtual int rule_symbol(std::string t) override;
 	virtual int rule_string(std::string t) override;
-	virtual int rule_blank() override;
-	virtual int rule_paren_empty() override;
-	virtual int rule_bracket_empty() override;
-	virtual int rule_brace_empty() override;
+	virtual int rule_placeholder() override;
 	virtual int rule_sequence(int l, int r) override;
 	virtual int rule_capture(int, int) override;
 	virtual int rule_define(int, int) override;
-	virtual int rule_list(int l, int r) override;
+	virtual int rule_join(int l, int r) override;
 	virtual int rule_caption(int l, int r) override;
 	virtual int rule_equal(int l, int r) override;
 	virtual int rule_lesser(int l, int r) override;
 	virtual int rule_greater(int l, int r) override;
-	virtual int rule_not_equal(int l, int r) override;
-	virtual int rule_not_lesser(int l, int r) override;
-	virtual int rule_not_greater(int l, int r) override;
 	virtual int rule_addition(int l, int r) override;
 	virtual int rule_subtraction(int l, int r) override;
 	virtual int rule_or(int l, int r) override;
@@ -74,9 +71,9 @@ struct builder: public parser::output {
 	virtual int rule_and(int l, int r) override;
 	virtual int rule_negate(int v) override;
 	virtual int rule_complement(int v) override;
-	virtual int rule_paren_group(int v) override;
-	virtual int rule_bracket_group(int v) override;
-	virtual int rule_brace_group(int v) override;
+	virtual int rule_eval(int v) override;
+	virtual int rule_list(int v) override;
+	virtual int rule_object(int v) override;
 	virtual int rule_subscript(int, int) override;
 	virtual int rule_lookup(int, int) override;
 private:

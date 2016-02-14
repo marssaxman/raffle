@@ -37,8 +37,14 @@ int builder::make(node::type id, ref left, ref right)
 	return i;
 }
 
+int builder::rule_empty()
+{
+	return 0;
+}
+
 int builder::rule_number(std::string t)
 {
+	std::cout << t << " ";
 	return make(node::number, t);
 }
 
@@ -52,27 +58,9 @@ int builder::rule_string(std::string t)
 	return make(node::string, t);
 }
 
-int builder::rule_blank()
+int builder::rule_placeholder()
 {
-	return make(node::blank);
-}
-
-int builder::rule_paren_empty()
-{
-	std::cout << "() ";
-	return ++i;
-}
-
-int builder::rule_bracket_empty()
-{
-	std::cout << "[] ";
-	return ++i;
-}
-
-int builder::rule_brace_empty()
-{
-	std::cout << "{} ";
-	return ++i;
+	return make(node::placeholder);
 }
 
 int builder::rule_sequence(int l, int r)
@@ -93,7 +81,7 @@ int builder::rule_define(int, int)
 	return ++i;
 }
 
-int builder::rule_list(int l, int r)
+int builder::rule_join(int l, int r)
 {
 	std::cout << ", ";
 	return ++i;
@@ -120,24 +108,6 @@ int builder::rule_lesser(int l, int r)
 int builder::rule_greater(int l, int r)
 {
 	std::cout << "> ";
-	return ++i;
-}
-
-int builder::rule_not_equal(int l, int r)
-{
-	std::cout << "!= ";
-	return ++i;
-}
-
-int builder::rule_not_lesser(int l, int r)
-{
-	std::cout << "!< ";
-	return ++i;
-}
-
-int builder::rule_not_greater(int l, int r)
-{
-	std::cout << "!> ";
 	return ++i;
 }
 
@@ -219,21 +189,21 @@ int builder::rule_complement(int v)
 	return ++i;
 }
 
-int builder::rule_paren_group(int v)
+int builder::rule_eval(int v)
 {
-	std::cout << "(*) ";
+	std::cout << "() ";
 	return ++i;
 }
 
-int builder::rule_bracket_group(int v)
+int builder::rule_list(int v)
 {
-	std::cout << "[*] ";
+	std::cout << "[] ";
 	return ++i;
 }
 
-int builder::rule_brace_group(int v)
+int builder::rule_object(int v)
 {
-	std::cout << "{*} ";
+	std::cout << "{} ";
 	return ++i;
 }
 
