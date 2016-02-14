@@ -25,7 +25,7 @@
 // 	operator: arithmetic | relation | structure
 //	arithmetic: '+' | '-' | '*' | '/' | '%' | '<<' | '>>'
 //  logic/set: '|' | '&' | '^' | '!'
-//	relation: '=' | '<' | '>'
+//	relation: '=' | '<' | '>' '!=' | '!<' | '!>'
 //	structure: ',' | ':' | ';' | '<-' | '->' | '.' | '..'
 
 class lexer {
@@ -58,6 +58,8 @@ public:
 		virtual void token_bang(location) = 0;
 		virtual void token_equal(location) = 0;
 		virtual void token_angle(location, direction) = 0;
+		virtual void token_bang_equal(location) = 0;
+		virtual void token_bangle(location, direction) = 0;
 		virtual void token_guillemet(location, direction) = 0;
 		virtual void token_arrow(location, direction) = 0;
 	};

@@ -24,7 +24,7 @@ class parser: public lexer::output {
 		// structure
 		join = 0x50, caption,
 		// relation
-		equal = 0x60, lesser, greater,
+		equal = 0x60, lesser, greater, not_equal, not_lesser, not_greater,
 		// additive
 		add = 0x80, subtract, disjoin, exclude, range,
 		// multiplicative
@@ -62,6 +62,9 @@ public:
 		virtual int rule_equal(int, int) = 0;
 		virtual int rule_lesser(int, int) = 0;
 		virtual int rule_greater(int, int) = 0;
+		virtual int rule_not_equal(int, int) = 0;
+		virtual int rule_not_lesser(int, int) = 0;
+		virtual int rule_not_greater(int, int) = 0;
 		virtual int rule_addition(int, int) = 0;
 		virtual int rule_subtraction(int, int) = 0;
 		virtual int rule_or(int, int) = 0;
@@ -108,6 +111,8 @@ public:
 	virtual void token_equal(location) override;
 	virtual void token_angle(location, direction) override;
 	virtual void token_bang(location) override;
+	virtual void token_bang_equal(location) override;
+	virtual void token_bangle(location, direction) override;
 	virtual void token_ampersand(location) override;
 	virtual void token_pipe(location) override;
 	virtual void token_caret(location) override;

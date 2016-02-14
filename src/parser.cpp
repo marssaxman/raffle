@@ -106,6 +106,14 @@ void parser::token_bang(location l) {
 	unary(op::complement, l);
 }
 
+void parser::token_bang_equal(location l) {
+	binary(op::not_equal, l);
+}
+
+void parser::token_bangle(location l, direction d) {
+	directional(op::not_lesser, op::not_greater, l, d);
+}
+
 void parser::token_ampersand(location l) {
 	binary(op::conjoin, l);
 }
@@ -126,6 +134,7 @@ void parser::flush() {
 	while (!ops.empty()) {
 		commit();
 	}
+	context = state::empty;
 }
 
 void parser::accept(int val) {
@@ -231,6 +240,9 @@ void parser::commit() {
 		case op::equal: accept(out.rule_equal(recall(), v)); break;
 		case op::lesser: accept(out.rule_lesser(recall(), v)); break;
 		case op::greater: accept(out.rule_greater(recall(), v)); break;
+		case op::not_equal: accept(out.rule_not_equal(recall(), v)); break;
+		case op::not_lesser: accept(out.rule_not_lesser(recall(), v)); break;
+		case op::not_greater: accept(out.rule_not_greater(recall(), v)); break;
 		case op::add: accept(out.rule_addition(recall(), v)); break;
 		case op::subtract: accept(out.rule_subtraction(recall(), v)); break;
 		case op::disjoin: accept(out.rule_or(recall(), v)); break;

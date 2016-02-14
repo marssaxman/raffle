@@ -58,6 +58,9 @@ struct builder: public parser::output {
 	virtual int rule_equal(int l, int r) override;
 	virtual int rule_lesser(int l, int r) override;
 	virtual int rule_greater(int l, int r) override;
+	virtual int rule_not_equal(int l, int r) override;
+	virtual int rule_not_lesser(int l, int r) override;
+	virtual int rule_not_greater(int l, int r) override;
 	virtual int rule_addition(int l, int r) override;
 	virtual int rule_subtraction(int l, int r) override;
 	virtual int rule_or(int l, int r) override;

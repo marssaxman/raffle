@@ -111,6 +111,24 @@ int builder::rule_greater(int l, int r)
 	return ++i;
 }
 
+int builder::rule_not_equal(int l, int r)
+{
+	std::cout << "!= ";
+	return ++i;
+}
+
+int builder::rule_not_lesser(int l, int r)
+{
+	std::cout << "!< ";
+	return ++i;
+}
+
+int builder::rule_not_greater(int l, int r)
+{
+	std::cout << "!> ";
+	return ++i;
+}
+
 int builder::rule_addition(int l, int r)
 {
 	std::cout << "+ ";
