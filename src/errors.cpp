@@ -27,16 +27,8 @@ void errors::parser_missing_operand(location l) {
 	report(l, "expected expression before this operator");
 }
 
-void errors::parser_mismatched_paren(location l) {
-	report(l, "unmatched parenthesis");
-}
-
-void errors::parser_mismatched_bracket(location l) {
-	report(l, "unmatched bracket");
-}
-
-void errors::parser_mismatched_brace(location l) {
-	report(l, "unmatched brace");
+void errors::parser_mismatched_group(location l) {
+	report(l, "unmatched grouping delimiter");
 }
 
 void errors::parser_unimplemented(location l) {

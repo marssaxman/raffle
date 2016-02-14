@@ -1,5 +1,4 @@
-// Copyright (C) 2016 Mars Saxman. All rights reserved.
-// Permission is granted to use at your own risk and distribute this software
+// Copyright (C) 2016 Mars Saxman. All rights reserved.// Permission is granted to use at your own risk and distribute this software
 // in source and binary forms provided all source code distributions retain
 // this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
@@ -63,9 +62,7 @@ public:
 	struct error {
 		virtual void parser_unexpected(location) = 0;
 		virtual void parser_missing_operand(location) = 0;
-		virtual void parser_mismatched_paren(location) = 0;
-		virtual void parser_mismatched_bracket(location) = 0;
-		virtual void parser_mismatched_brace(location) = 0;
+		virtual void parser_mismatched_group(location) = 0;
 		virtual void parser_unimplemented(location) = 0;
 	};
 	parser(output &o, error &e): out(o), err(e) {}
@@ -103,10 +100,13 @@ public:
 protected:
 	void accept(int val);
 	int recall();
+	void group(int tk, int (output::*rule)(int), location, direction);
+	void open_group(int tk, location);
+	void close_group(int tk, int (output::*rule)(int), location);
+	void parse_directional(int l, int r, location, direction);
 	void parse_prefix(int, location);
 	void parse_infix(int, location);
 	void commit_op();
-	bool close_group(int);
 private:
 	output &out;
 	error &err;

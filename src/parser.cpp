@@ -94,23 +94,7 @@ void parser::token_paren_pair(location l) {
 }
 
 void parser::token_paren(location l, direction d) {
-	switch (d) {
-		case direction::left:
-			if (!prefix) {
-				states.push({op::subscript, l});
-			}
-			states.push({op::paren, l});
-			prefix = true;
-			break;
-		case direction::right:
-			if (close_group(op::paren)) {
-				accept(out.rule_paren_group(recall()));
-			} else {
-				err.parser_mismatched_paren(l);
-			}
-			prefix = false;
-			break;
-	}
+	group(op::paren, &output::rule_paren_group, l, d);
 }
 
 void parser::token_bracket_pair(location l) {
@@ -121,23 +105,7 @@ void parser::token_bracket_pair(location l) {
 }
 
 void parser::token_bracket(location l, direction d) {
-	switch (d) {
-		case direction::left:
-			if (!prefix) {
-				states.push({op::subscript, l});
-			}
-			states.push({op::bracket, l});
-			prefix = true;
-			break;
-		case direction::right:
-			if (close_group(op::bracket)) {
-				accept(out.rule_bracket_group(recall()));
-			} else {
-				err.parser_mismatched_bracket(l);
-			}
-			prefix = false;
-			break;
-	}
+	group(op::bracket, &output::rule_bracket_group, l, d);
 }
 
 void parser::token_brace_pair(location l) {
@@ -148,23 +116,7 @@ void parser::token_brace_pair(location l) {
 }
 
 void parser::token_brace(location l, direction d) {
-	switch (d) {
-		case direction::left:
-			if (!prefix) {
-				states.push({op::subscript, l});
-			}
-			states.push({op::brace, l});
-			prefix = true;
-			break;
-		case direction::right:
-			if (close_group(op::brace)) {
-				accept(out.rule_paren_group(recall()));
-			} else {
-				err.parser_mismatched_paren(l);
-			}
-			prefix = false;
-			break;
-	}
+	group(op::brace, &output::rule_brace_group, l, d);
 }
 
 void parser::token_comma(location l) {
@@ -188,14 +140,7 @@ void parser::token_dot_dot(location l) {
 }
 
 void parser::token_arrow(location l, direction d) {
-	switch (d) {
-		case direction::left:
-			parse_infix(op::define, l);
-			break;
-		case direction::right:
-			parse_infix(op::capture, l);
-			break;
-	}
+	parse_directional(op::define, op::capture, l, d);
 }
 
 void parser::token_plus(location l) {
@@ -227,14 +172,7 @@ void parser::token_equal(location l) {
 }
 
 void parser::token_angle(location l, direction d) {
-	switch (d) {
-		case direction::left:
-			parse_infix(op::lesser, l);
-			break;
-		case direction::right:
-			parse_infix(op::greater, l);
-			break;
-	}
+	parse_directional(op::lesser, op::greater, l, d);
 }
 
 void parser::token_bang_equal(location l) {
@@ -242,14 +180,7 @@ void parser::token_bang_equal(location l) {
 }
 
 void parser::token_bang_angle(location l, direction d) {
-	switch (d) {
-		case direction::left:
-			parse_infix(op::not_lesser, l);
-			break;
-		case direction::right:
-			parse_infix(op::not_greater, l);
-			break;
-	}
+	parse_directional(op::not_lesser, op::not_greater, l, d);
 }
 
 void parser::token_bang(location l) {
@@ -269,14 +200,7 @@ void parser::token_caret(location l) {
 }
 
 void parser::token_guillemet(location l, lexer::direction d) {
-	switch (d) {
-		case direction::left:
-			parse_infix(op::shift_left, l);
-			break;
-		case direction::right:
-			parse_infix(op::shift_right, l);
-			break;
-	}
+	parse_directional(op::shift_left, op::shift_right, l, d);
 }
 
 void parser::flush() {
@@ -294,6 +218,41 @@ int parser::recall() {
 	int val = values.top();
 	values.pop();
 	return val;
+}
+
+void parser::group(int tk, int (output::*rule)(int), location l, direction d) {
+	switch (d) {
+		case direction::left: open_group(tk, l); break;
+		case direction::right: close_group(tk, rule, l); break;
+	}
+}
+
+void parser::open_group(int tk, location l) {
+	if (!prefix) {
+		states.push({op::subscript, l});
+	}
+	states.push({tk, l});
+	prefix = true;
+}
+
+void parser::close_group(int tk, int (output::*rule)(int), location l) {
+	prefix = false;
+	while (!states.empty()) {
+		if (states.top().id == tk) {
+			states.pop();
+			accept((out.*rule)(recall()));
+			return;
+		}
+		commit_op();
+	}
+	err.parser_mismatched_group(l);
+}
+
+void parser::parse_directional(int l, int r, location loc, direction dir) {
+	switch (dir) {
+		case direction::left: parse_infix(l, loc); break;
+		case direction::right: parse_infix(r, loc); break;
+	}
 }
 
 void parser::parse_prefix(int tk, location l) {
@@ -348,16 +307,5 @@ void parser::commit_op() {
 		case op::lookup: accept(out.rule_lookup(recall(), v)); break;
 		default: err.parser_unimplemented(tk.loc); break;
 	}
-}
-
-bool parser::close_group(int tk) {
-	while (!states.empty()) {
-		if (states.top().id == tk) {
-			states.pop();
-			return true;
-		}
-		commit_op();
-	}
-	return false;
 }
 

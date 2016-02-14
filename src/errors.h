@@ -15,9 +15,7 @@ struct errors: public lexer::error, public parser::error {
 	virtual void lexer_nonterminated(location) override;
 	virtual void parser_unexpected(location) override;
 	virtual void parser_missing_operand(location) override;
-	virtual void parser_mismatched_paren(location) override;
-	virtual void parser_mismatched_bracket(location) override;
-	virtual void parser_mismatched_brace(location) override;
+	virtual void parser_mismatched_group(location) override;
 	virtual void parser_unimplemented(location) override;
 private:
 	void report(location, std::string message);
