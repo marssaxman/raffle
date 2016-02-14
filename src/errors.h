@@ -17,6 +17,7 @@ struct errors: public lexer::error, public parser::error {
 	virtual void parse_mismatched_paren(lexer::position) override;
 	virtual void parse_mismatched_bracket(lexer::position) override;
 	virtual void parse_mismatched_brace(lexer::position) override;
+	virtual void parse_unimplemented(lexer::position) override;
 private:
 	void report(lexer::position, std::string message);
 };

@@ -41,3 +41,7 @@ void errors::parse_mismatched_brace(lexer::position p)
 	report(p, "unmatched brace");
 }
 
+void errors::parse_unimplemented(lexer::position p)
+{
+	report(p, "operator commit implementation missing");
+}

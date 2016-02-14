@@ -48,16 +48,27 @@ void lexer::read_line(const std::string &input)
 			case '|': out.token_pipe(pos); break;
 			case '^': out.token_caret(pos); break;
 
+			case '.': switch(i != input.end()? *i: 0) {
+				case '.': out.token_dot_dot(pos); ++i; break;
+				default: out.token_dot(pos);
+			} break;
+
+			case '!': switch (i != input.end()? *i: 0) {
+				case '=': out.token_bang_equal(pos); ++i; break;
+				case '<': out.token_bang_lesser(pos); ++i; break;
+				case '>': out.token_bang_greater(pos); ++i; break;
+				default: out.token_bang(pos);
+			} break;
+
 			case '<': switch (i != input.end()? *i: 0) {
 				case '-': out.token_arrow_left(pos); ++i; break;
 				case '<': out.token_shift_left(pos); ++i; break;
-				case '>': out.token_diamond(pos); ++i; break;
-				default: out.token_angle_left(pos);
+				default: out.token_lesser(pos);
 			} break;
 
 			case '>': switch (i != input.end()? *i: 0) {
 				case '>': out.token_shift_right(pos); ++i; break;
-				default: out.token_angle_right(pos);
+				default: out.token_greater(pos);
 			} break;
 
 			case '-': switch (i != input.end()? *i: 0) {

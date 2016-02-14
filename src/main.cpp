@@ -21,6 +21,7 @@ int main(int argc, const char *argv[]) {
 	for (std::string line; std::getline(std::cin, line);) {
 		l.read_line(line);
 		p.flush();
+		std::cout << std::endl;
 	}
 	return EXIT_SUCCESS;
 }

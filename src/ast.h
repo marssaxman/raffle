@@ -24,6 +24,9 @@ struct ast: public parser::output {
 	virtual int parse_equal(int l, int r) override;
 	virtual int parse_lesser(int l, int r) override;
 	virtual int parse_greater(int l, int r) override;
+	virtual int parse_not_equal(int l, int r) override;
+	virtual int parse_not_lesser(int l, int r) override;
+	virtual int parse_not_greater(int l, int r) override;
 	virtual int parse_addition(int l, int r) override;
 	virtual int parse_subtraction(int l, int r) override;
 	virtual int parse_or(int l, int r) override;
@@ -36,10 +39,12 @@ struct ast: public parser::output {
 	virtual int parse_shift_right(int l, int r) override;
 	virtual int parse_and(int l, int r) override;
 	virtual int parse_negate(int v) override;
+	virtual int parse_complement(int v) override;
 	virtual int parse_paren_group(int v) override;
 	virtual int parse_bracket_group(int v) override;
 	virtual int parse_brace_group(int v) override;
 	virtual int parse_subscript(int, int) override;
+	virtual int parse_lookup(int, int) override;
 private:
 	unsigned i = 0;
 };

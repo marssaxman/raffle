@@ -22,9 +22,10 @@
 //	null: '()' | '[]' | '{}'
 // 	delimiter: '(' | '[' | '{' | '}' | ']' | ')'
 // 	operator: arithmetic | relation | structure
-//	arithmetic: '+' | '-' | '*' | '/' | '%' | '|' | '^' | '&' | '<<' | '>>'
-//	relation: '=' | '<' | '>'
-//	structure: ',' | ':' | ';' | '<-' | '->'
+//	arithmetic: '+' | '-' | '*' | '/' | '%' | '<<' | '>>'
+//  logic/set: '|' | '&' | '^' | '!'
+//	relation: '=' | '<' | '>' | '!=' | '!<' | '!>'
+//	structure: ',' | ':' | ';' | '<-' | '->' | '.' | '..'
 
 class lexer {
 public:
@@ -48,6 +49,8 @@ public:
 		virtual void token_comma(position) = 0;
 		virtual void token_semicolon(position) = 0;
 		virtual void token_colon(position) = 0;
+		virtual void token_dot(position) = 0;
+		virtual void token_dot_dot(position) = 0;
 		virtual void token_plus(position) = 0;
 		virtual void token_hyphen(position) = 0;
 		virtual void token_star(position) = 0;
@@ -56,10 +59,13 @@ public:
 		virtual void token_ampersand(position) = 0;
 		virtual void token_pipe(position) = 0;
 		virtual void token_caret(position) = 0;
+		virtual void token_bang(position) = 0;
 		virtual void token_equal(position) = 0;
-		virtual void token_diamond(position) = 0;
-		virtual void token_angle_left(position) = 0;
-		virtual void token_angle_right(position) = 0;
+		virtual void token_lesser(position) = 0;
+		virtual void token_greater(position) = 0;
+		virtual void token_bang_equal(position) = 0;
+		virtual void token_bang_lesser(position) = 0;
+		virtual void token_bang_greater(position) = 0;
 		virtual void token_shift_left(position) = 0;
 		virtual void token_shift_right(position) = 0;
 		virtual void token_arrow_left(position) = 0;

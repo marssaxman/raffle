@@ -9,19 +9,19 @@
 
 int ast::parse_number(std::string t)
 {
-	std::cout << "number ";
+	std::cout << t << " ";
 	return ++i;
 }
 
 int ast::parse_symbol(std::string t)
 {
-	std::cout << "symbol ";
+	std::cout << t << " ";
 	return ++i;
 }
 
 int ast::parse_string(std::string t)
 {
-	std::cout << "string ";
+	std::cout << t << " ";;
 	return ++i;
 }
 
@@ -81,90 +81,138 @@ int ast::parse_equal(int l, int r)
 
 int ast::parse_lesser(int l, int r)
 {
+	std::cout << "< ";
 	return ++i;
 }
 
 int ast::parse_greater(int l, int r)
 {
+	std::cout << "> ";
+	return ++i;
+}
+
+int ast::parse_not_equal(int l, int r)
+{
+	std::cout << "!= ";
+	return ++i;
+}
+
+int ast::parse_not_lesser(int l, int r)
+{
+	std::cout << "!< ";
+	return ++i;
+}
+
+int ast::parse_not_greater(int l, int r)
+{
+	std::cout << "!> ";
 	return ++i;
 }
 
 int ast::parse_addition(int l, int r)
 {
+	std::cout << "+ ";
 	return ++i;
 }
 
 int ast::parse_subtraction(int l, int r)
 {
+	std::cout << "- ";
 	return ++i;
 }
 
 int ast::parse_or(int l, int r)
 {
+	std::cout << "or ";
 	return ++i;
 }
 
 int ast::parse_xor(int l, int r)
 {
+	std::cout << "^ ";
 	return ++i;
 }
 
 int ast::parse_range(int l, int r)
 {
+	std::cout << ".. ";
 	return ++i;
 }
 
 int ast::parse_multiplication(int l, int r)
 {
+	std::cout << "* ";
 	return ++i;
 }
 
 int ast::parse_division(int l, int r)
 {
+	std::cout << "/ ";
 	return ++i;
 }
 
 int ast::parse_modulo(int l, int r)
 {
+	std::cout << "% ";
 	return ++i;
 }
 
 int ast::parse_shift_left(int l, int r)
 {
+	std::cout << "<< ";
 	return ++i;
 }
 
 int ast::parse_shift_right(int l, int r)
 {
+	std::cout << ">> ";
 	return ++i;
 }
 
 int ast::parse_and(int l, int r)
 {
+	std::cout << "and ";
 	return ++i;
 }
 
 int ast::parse_negate(int v)
 {
+	std::cout << "neg ";
+	return ++i;
+}
+
+int ast::parse_complement(int v)
+{
+	std::cout << "not ";
 	return ++i;
 }
 
 int ast::parse_paren_group(int v)
 {
+	std::cout << "(*) ";
 	return ++i;
 }
 
 int ast::parse_bracket_group(int v)
 {
+	std::cout << "[*] ";
 	return ++i;
 }
 
 int ast::parse_brace_group(int v)
 {
+	std::cout << "{*} ";
 	return ++i;
 }
 
 int ast::parse_subscript(int l, int r)
 {
+	std::cout << "app ";
+	return ++i;
+}
+
+int ast::parse_lookup(int l, int r)
+{
+	std::cout << ". ";
 	return ++i;
 }
