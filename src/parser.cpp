@@ -65,260 +65,218 @@ enum {
 static int precedence(int op) { return op >> 4; }
 static bool rightassoc(int op) { return precedence(op) & 1; }
 
-void parser::token_number(position p, std::string text)
-{
+void parser::token_number(location l, std::string text) {
 	accept(out.rule_number(text));
 }
 
-void parser::token_symbol(position p, std::string text)
-{
+void parser::token_symbol(location l, std::string text) {
 	accept(out.rule_symbol(text));
 }
 
-void parser::token_string(position p, std::string text)
-{
+void parser::token_string(location l, std::string text) {
 	accept(out.rule_string(text));
 }
 
-void parser::token_blank(position p)
-{
+void parser::token_blank(location l) {
 	accept(out.rule_blank());
 }
 
-void parser::token_paren_empty(position p)
-{
+void parser::token_paren_empty(location l) {
 	if (!prefix) {
-		states.push({op::subscript, p});
+		states.push({op::subscript, l});
 	}
 	accept(out.rule_paren_empty());
 }
 
-void parser::token_paren_open(position p)
-{
+void parser::token_paren_open(location l) {
 	if (!prefix) {
-		states.push({op::subscript, p});
+		states.push({op::subscript, l});
 	}
-	states.push({op::paren, p});
+	states.push({op::paren, l});
 	prefix = true;
 }
 
-void parser::token_paren_close(position p)
-{
+void parser::token_paren_close(location l) {
 	if (close_group(op::paren)) {
 		accept(out.rule_paren_group(recall()));
 	} else {
-		err.parser_mismatched_paren(p);
+		err.parser_mismatched_paren(l);
 	}
 	prefix = false;
 }
 
-void parser::token_bracket_empty(position p)
-{
+void parser::token_bracket_empty(location l) {
 	if (!prefix) {
-		states.push({op::subscript, p});
+		states.push({op::subscript, l});
 	}
 	accept(out.rule_bracket_empty());
 }
 
-void parser::token_bracket_open(position p)
-{
+void parser::token_bracket_open(location l) {
 	if (!prefix) {
-		states.push({op::subscript, p});
+		states.push({op::subscript, l});
 	}
-	states.push({op::bracket, p});
+	states.push({op::bracket, l});
 	prefix = true;
 }
 
-void parser::token_bracket_close(position p)
-{
+void parser::token_bracket_close(location l) {
 	if (close_group(op::bracket)) {
 		accept(out.rule_bracket_group(recall()));
 	} else {
-		err.parser_mismatched_bracket(p);
+		err.parser_mismatched_bracket(l);
 	}
 	prefix = false;
 }
 
-void parser::token_brace_empty(position p)
-{
+void parser::token_brace_empty(location l) {
 	if (!prefix) {
-		states.push({op::subscript, p});
+		states.push({op::subscript, l});
 	}
 	accept(out.rule_brace_empty());
 }
 
-void parser::token_brace_open(position p)
-{
+void parser::token_brace_open(location l) {
 	if (!prefix) {
-		states.push({op::subscript, p});
+		states.push({op::subscript, l});
 	}
-	states.push({op::brace, p});
+	states.push({op::brace, l});
 	prefix = true;
 }
 
-void parser::token_brace_close(position p)
-{
+void parser::token_brace_close(location l) {
 	if (close_group(op::brace)) {
 		accept(out.rule_brace_group(recall()));
 	} else {
-		err.parser_mismatched_brace(p);
+		err.parser_mismatched_brace(l);
 	}
 	prefix = false;
 }
 
-void parser::token_comma(position p)
-{
-	parse_infix(op::list, p);
+void parser::token_comma(location l) {
+	parse_infix(op::list, l);
 }
 
-void parser::token_colon(position p)
-{
-	parse_infix(op::caption, p);
+void parser::token_colon(location l) {
+	parse_infix(op::caption, l);
 }
 
-void parser::token_semicolon(position p)
-{
-	parse_infix(op::sequence, p);
+void parser::token_semicolon(location l) {
+	parse_infix(op::sequence, l);
 }
 
-void parser::token_dot(position p)
-{
-	parse_infix(op::lookup, p);
+void parser::token_dot(location l) {
+	parse_infix(op::lookup, l);
 }
 
-void parser::token_dot_dot(position p)
-{
-	parse_infix(op::range, p);
+void parser::token_dot_dot(location l) {
+	parse_infix(op::range, l);
 }
 
-void parser::token_arrow_left(position p)
-{
-	parse_infix(op::define, p);
+void parser::token_arrow_left(location l) {
+	parse_infix(op::define, l);
 }
 
-void parser::token_arrow_right(position p)
-{
-	parse_infix(op::capture, p);
+void parser::token_arrow_right(location l) {
+	parse_infix(op::capture, l);
 }
 
-void parser::token_plus(position p)
-{
-	parse_infix(op::add, p);
+void parser::token_plus(location l) {
+	parse_infix(op::add, l);
 }
 
-void parser::token_hyphen(position p)
-{
+void parser::token_hyphen(location l) {
 	if (prefix) {
-		parse_prefix(op::negate, p);
+		parse_prefix(op::negate, l);
 	} else {
-		parse_infix(op::subtract, p);
+		parse_infix(op::subtract, l);
 	}
 }
 
-void parser::token_star(position p)
-{
-	parse_infix(op::multiply, p);
+void parser::token_star(location l) {
+	parse_infix(op::multiply, l);
 }
 
-void parser::token_slash(position p)
-{
-	parse_infix(op::divide, p);
+void parser::token_slash(location l) {
+	parse_infix(op::divide, l);
 }
 
-void parser::token_percent(position p)
-{
-	parse_infix(op::modulo, p);
+void parser::token_percent(location l) {
+	parse_infix(op::modulo, l);
 }
 
-void parser::token_equal(position p)
-{
-	parse_infix(op::equal, p);
+void parser::token_equal(location l) {
+	parse_infix(op::equal, l);
 }
 
-void parser::token_lesser(position p)
-{
-	parse_infix(op::lesser, p);
+void parser::token_lesser(location l) {
+	parse_infix(op::lesser, l);
 }
 
-void parser::token_greater(position p)
-{
-	parse_infix(op::greater, p);
+void parser::token_greater(location l) {
+	parse_infix(op::greater, l);
 }
 
-void parser::token_bang_equal(position p)
-{
-	parse_infix(op::not_equal, p);
+void parser::token_bang_equal(location l) {
+	parse_infix(op::not_equal, l);
 }
 
-void parser::token_bang_lesser(position p)
-{
-	parse_infix(op::not_lesser, p);
+void parser::token_bang_lesser(location l) {
+	parse_infix(op::not_lesser, l);
 }
 
-void parser::token_bang_greater(position p)
-{
-	parse_infix(op::not_greater, p);
+void parser::token_bang_greater(location l) {
+	parse_infix(op::not_greater, l);
 }
 
-void parser::token_bang(position p)
-{
-	parse_prefix(op::complement, p);
+void parser::token_bang(location l) {
+	parse_prefix(op::complement, l);
 }
 
-void parser::token_ampersand(position p)
-{
-	parse_infix(op::conjoin, p);
+void parser::token_ampersand(location l) {
+	parse_infix(op::conjoin, l);
 }
 
-void parser::token_pipe(position p)
-{
-	parse_infix(op::disjoin, p);
+void parser::token_pipe(location l) {
+	parse_infix(op::disjoin, l);
 }
 
-void parser::token_caret(position p)
-{
-	parse_infix(op::exclude, p);
+void parser::token_caret(location l) {
+	parse_infix(op::exclude, l);
 }
 
-void parser::token_shift_left(position p)
-{
-	parse_infix(op::shift_left, p);
+void parser::token_shift_left(location l) {
+	parse_infix(op::shift_left, l);
 }
 
-void parser::token_shift_right(position p)
-{
-	parse_infix(op::shift_right, p);
+void parser::token_shift_right(location l) {
+	parse_infix(op::shift_right, l);
 }
 
-void parser::flush()
-{
+void parser::flush() {
 	while (!states.empty()) {
 		commit_op();
 	}
 }
 
-void parser::accept(int val)
-{
+void parser::accept(int val) {
 	values.push(val);
 	prefix = false;
 }
 
-int parser::recall()
-{
+int parser::recall() {
 	int val = values.top();
 	values.pop();
 	return val;
 }
 
-void parser::parse_prefix(int tk, position p)
-{
-	states.push({tk, p});
+void parser::parse_prefix(int tk, location l) {
+	states.push({tk, l});
 }
 
-void parser::parse_infix(int tk, position p)
-{
+void parser::parse_infix(int tk, location l) {
 	if (prefix) {
-		err.parser_missing_operand(p);
+		err.parser_missing_operand(l);
 		return;
 	}
 	while (!states.empty()) {
@@ -327,12 +285,11 @@ void parser::parse_infix(int tk, position p)
 		if (rightassoc(tk) && precedence(tk) == precedence(prev)) break;
 		commit_op();
 	}
-	states.push({tk, p});
+	states.push({tk, l});
 	prefix = true;
 }
 
-void parser::commit_op()
-{
+void parser::commit_op() {
 	token tk = states.top();
 	states.pop();
 	int v = recall();
@@ -363,12 +320,11 @@ void parser::commit_op()
 		case op::complement: accept(out.rule_complement(v)); break;
 		case op::subscript: accept(out.rule_subscript(recall(), v)); break;
 		case op::lookup: accept(out.rule_lookup(recall(), v)); break;
-		default: err.parser_unimplemented(tk.pos); break;
+		default: err.parser_unimplemented(tk.loc); break;
 	}
 }
 
-bool parser::close_group(int tk)
-{
+bool parser::close_group(int tk) {
 	while (!states.empty()) {
 		if (states.top().id == tk) {
 			states.pop();
@@ -378,3 +334,4 @@ bool parser::close_group(int tk)
 	}
 	return false;
 }
+

@@ -4,13 +4,23 @@
 // this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
-#ifndef POSITION_H
-#define POSITION_H
+#ifndef LOCATION_H
+#define LOCATION_H
 
 struct position {
 	unsigned row = 0;
 	unsigned col = 0;
+	bool operator<(const position&) const;
+	bool operator>(const position &other) const { return !(*this < other); }
 };
 
-#endif //POSITION_H
+struct location {
+	position begin;
+	position end;
+	location() {}
+	location(position b, position e): begin(b), end(e) {}
+	location operator+(const location&) const;
+};
+
+#endif //LOCATION_H
 

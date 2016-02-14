@@ -9,28 +9,52 @@
 
 using namespace ast;
 
+int builder::make(node::type id)
+{
+	int i = t.size();
+	t.emplace_back(new node(id));
+	return i;
+}
+
+int builder::make(node::type id, std::string text)
+{
+	int i = t.size();
+	t.emplace_back(new leaf(id, text));
+	return i;
+}
+
+int builder::make(node::type id, ref source)
+{
+	int i = t.size();
+	t.emplace_back(new twig(id, source));
+	return i;
+}
+
+int builder::make(node::type id, ref left, ref right)
+{
+	int i = t.size();
+	t.emplace_back(new branch(id, left, right));
+	return i;
+}
+
 int builder::rule_number(std::string t)
 {
-	std::cout << t << " ";
-	return ++i;
+	return make(node::number, t);
 }
 
 int builder::rule_symbol(std::string t)
 {
-	std::cout << t << " ";
-	return ++i;
+	return make(node::symbol, t);
 }
 
 int builder::rule_string(std::string t)
 {
-	std::cout << t << " ";
-	return ++i;
+	return make(node::string, t);
 }
 
 int builder::rule_blank()
 {
-	std::cout << "_";
-	return ++i;
+	return make(node::blank);
 }
 
 int builder::rule_paren_empty()

@@ -13,22 +13,34 @@
 namespace ast {
 
 struct node {
+	enum type {
+		number,
+		symbol,
+		string,
+		blank,
+	} id;
+	node(type i): id(i) {}
 };
 
 typedef const node &ref;
 
 struct leaf: public node {
 	std::string data;
+	leaf(type i, std::string d): node(i), data(d) {}
 };
 
 struct twig: public node {
 	ref source;
+	twig(type i, ref s): node(i), source(s) {}
 };
 
 struct branch: public node {
 	ref left;
 	ref right;
+	branch(type i, ref l, ref r): node(i), left(l), right(r) {}
 };
+
+typedef std::vector<std::unique_ptr<node>> tree;
 
 struct builder: public parser::output {
 	virtual int rule_number(std::string t) override;
@@ -68,6 +80,11 @@ struct builder: public parser::output {
 	virtual int rule_subscript(int, int) override;
 	virtual int rule_lookup(int, int) override;
 private:
+	tree t;
+	int make(node::type);
+	int make(node::type, std::string);
+	int make(node::type, ref);
+	int make(node::type, ref, ref);
 	unsigned i = 0;
 };
 

@@ -6,47 +6,48 @@
 
 #include "errors.h"
 
-void errors::report(position p, std::string message)
+void errors::report(location l, std::string message)
 {
+	position p = l.begin;
 	std::cerr << p.row << ":" << p.col << ": " << message << std::endl;
 }
 
-void errors::lexer_unknown(position p, char c)
+void errors::lexer_unknown(location l, char c)
 {
-	report(p, "unknown character '" + std::string(1, c) + "'");
+	report(l, "unknown character '" + std::string(1, c) + "'");
 }
 
-void errors::lexer_nonterminated(position p)
+void errors::lexer_nonterminated(location l)
 {
-	report(p, "nonterminated string");
+	report(l, "nonterminated string");
 }
 
-void errors::parser_unexpected(position p)
+void errors::parser_unexpected(location l)
 {
-	report(p, "syntax error");
+	report(l, "syntax error");
 }
 
-void errors::parser_missing_operand(position p)
+void errors::parser_missing_operand(location l)
 {
-	report(p, "expected expression before this operator");
+	report(l, "expected expression before this operator");
 }
 
-void errors::parser_mismatched_paren(position p)
+void errors::parser_mismatched_paren(location l)
 {
-	report(p, "unmatched parenthesis");
+	report(l, "unmatched parenthesis");
 }
 
-void errors::parser_mismatched_bracket(position p)
+void errors::parser_mismatched_bracket(location l)
 {
-	report(p, "unmatched bracket");
+	report(l, "unmatched bracket");
 }
 
-void errors::parser_mismatched_brace(position p)
+void errors::parser_mismatched_brace(location l)
 {
-	report(p, "unmatched brace");
+	report(l, "unmatched brace");
 }
 
-void errors::parser_unimplemented(position p)
+void errors::parser_unimplemented(location l)
 {
-	report(p, "operator commit implementation missing");
+	report(l, "operator commit implementation missing");
 }
