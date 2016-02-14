@@ -8,24 +8,21 @@
 
 using std::string;
 
-void lexer::read_line(const string &input)
-{
+void lexer::read_line(const string &input) {
 	pos.col = 1;
 	for (auto i = input.begin(); i != input.end(); next(i, input.end())) {
 		pos.col = 1 + i - input.begin();
 	}
 }
 
-void lexer::read_file(std::istream &in)
-{
+void lexer::read_file(std::istream &in) {
 	pos.row = 1;
 	for (string line; std::getline(in, line); ++pos.row) {
 		read_line(line);
 	}
 }
 
-void lexer::next(string::const_iterator &i, string::const_iterator end)
-{
+void lexer::next(string::const_iterator &i, string::const_iterator end) {
 	loc.begin = pos;
 	auto tokenstart = i;
 	adv(i);
@@ -36,23 +33,23 @@ void lexer::next(string::const_iterator &i, string::const_iterator end)
 			break;
 
 		case '(': switch (i != end? *i: 0) {
-			case ')': adv(i); out.token_paren_empty(loc); break;
-			default: out.token_paren_open(loc);
+			case ')': adv(i); out.token_paren_pair(loc); break;
+			default: out.token_paren_left(loc);
 		} break;
+		case ')': out.token_paren_right(loc); break;
 
 		case '[': switch (i != end? *i: 0) {
-			case ']': adv(i); out.token_bracket_empty(loc); break;
-			default: out.token_bracket_open(loc);
+			case ']': adv(i); out.token_bracket_pair(loc); break;
+			default: out.token_bracket_left(loc);
 		} break;
+		case ']': out.token_bracket_right(loc); break;
 
 		case '{': switch (i != end? *i: 0) {
-			case '}': adv(i); out.token_brace_empty(loc); break;
-			default: out.token_brace_open(loc);
+			case '}': adv(i); out.token_brace_pair(loc); break;
+			default: out.token_brace_left(loc);
 		} break;
+		case '}': out.token_brace_right(loc); break;
 
-		case ')': out.token_paren_close(loc); break;
-		case ']': out.token_bracket_close(loc); break;
-		case '}': out.token_brace_close(loc); break;
 		case ',': out.token_comma(loc); break;
 		case ':': out.token_colon(loc); break;
 		case ';': out.token_semicolon(loc); break;
@@ -72,20 +69,20 @@ void lexer::next(string::const_iterator &i, string::const_iterator end)
 
 		case '!': switch (i != end? *i: 0) {
 			case '=': adv(i); out.token_bang_equal(loc); break;
-			case '<': adv(i); out.token_bang_lesser(loc); break;
-			case '>': adv(i); out.token_bang_greater(loc); break;
+			case '<': adv(i); out.token_bang_angle_left(loc); break;
+			case '>': adv(i); out.token_bang_angle_right(loc); break;
 			default: out.token_bang(loc);
 		} break;
 
 		case '<': switch (i != end? *i: 0) {
 			case '-': adv(i); out.token_arrow_left(loc); break;
 			case '<': adv(i); out.token_shift_left(loc); break;
-			default: out.token_lesser(loc);
+			default: out.token_angle_left(loc);
 		} break;
 
 		case '>': switch (i != end? *i: 0) {
 			case '>': adv(i); out.token_shift_right(loc); break;
-			default: out.token_greater(loc);
+			default: out.token_angle_right(loc);
 		} break;
 
 		case '-': switch (i != end? *i: 0) {
@@ -131,7 +128,7 @@ void lexer::next(string::const_iterator &i, string::const_iterator end)
 			break;
 
 		case '_':
-			out.token_blank(loc);
+			out.token_underscore(loc);
 			break;
 
 		case 'A': case 'a':
@@ -173,8 +170,7 @@ void lexer::next(string::const_iterator &i, string::const_iterator end)
 	}
 }
 
-std::string::const_iterator &lexer::adv(std::string::const_iterator &i)
-{
+std::string::const_iterator &lexer::adv(std::string::const_iterator &i) {
 	++pos.col;
 	loc.end = pos;
 	return ++i;

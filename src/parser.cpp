@@ -62,8 +62,13 @@ enum {
 };
 }
 
-static int precedence(int op) { return op >> 4; }
-static bool rightassoc(int op) { return precedence(op) & 1; }
+static int precedence(int op) {
+	return op >> 4;
+}
+
+static bool rightassoc(int op) {
+	return precedence(op) & 1;
+}
 
 void parser::token_number(location l, std::string text) {
 	accept(out.rule_number(text));
@@ -77,18 +82,18 @@ void parser::token_string(location l, std::string text) {
 	accept(out.rule_string(text));
 }
 
-void parser::token_blank(location l) {
+void parser::token_underscore(location l) {
 	accept(out.rule_blank());
 }
 
-void parser::token_paren_empty(location l) {
+void parser::token_paren_pair(location l) {
 	if (!prefix) {
 		states.push({op::subscript, l});
 	}
 	accept(out.rule_paren_empty());
 }
 
-void parser::token_paren_open(location l) {
+void parser::token_paren_left(location l) {
 	if (!prefix) {
 		states.push({op::subscript, l});
 	}
@@ -96,7 +101,7 @@ void parser::token_paren_open(location l) {
 	prefix = true;
 }
 
-void parser::token_paren_close(location l) {
+void parser::token_paren_right(location l) {
 	if (close_group(op::paren)) {
 		accept(out.rule_paren_group(recall()));
 	} else {
@@ -105,14 +110,14 @@ void parser::token_paren_close(location l) {
 	prefix = false;
 }
 
-void parser::token_bracket_empty(location l) {
+void parser::token_bracket_pair(location l) {
 	if (!prefix) {
 		states.push({op::subscript, l});
 	}
 	accept(out.rule_bracket_empty());
 }
 
-void parser::token_bracket_open(location l) {
+void parser::token_bracket_left(location l) {
 	if (!prefix) {
 		states.push({op::subscript, l});
 	}
@@ -120,7 +125,7 @@ void parser::token_bracket_open(location l) {
 	prefix = true;
 }
 
-void parser::token_bracket_close(location l) {
+void parser::token_bracket_right(location l) {
 	if (close_group(op::bracket)) {
 		accept(out.rule_bracket_group(recall()));
 	} else {
@@ -129,14 +134,14 @@ void parser::token_bracket_close(location l) {
 	prefix = false;
 }
 
-void parser::token_brace_empty(location l) {
+void parser::token_brace_pair(location l) {
 	if (!prefix) {
 		states.push({op::subscript, l});
 	}
 	accept(out.rule_brace_empty());
 }
 
-void parser::token_brace_open(location l) {
+void parser::token_brace_left(location l) {
 	if (!prefix) {
 		states.push({op::subscript, l});
 	}
@@ -144,7 +149,7 @@ void parser::token_brace_open(location l) {
 	prefix = true;
 }
 
-void parser::token_brace_close(location l) {
+void parser::token_brace_right(location l) {
 	if (close_group(op::brace)) {
 		accept(out.rule_brace_group(recall()));
 	} else {
@@ -209,11 +214,11 @@ void parser::token_equal(location l) {
 	parse_infix(op::equal, l);
 }
 
-void parser::token_lesser(location l) {
+void parser::token_angle_left(location l) {
 	parse_infix(op::lesser, l);
 }
 
-void parser::token_greater(location l) {
+void parser::token_angle_right(location l) {
 	parse_infix(op::greater, l);
 }
 
@@ -221,11 +226,11 @@ void parser::token_bang_equal(location l) {
 	parse_infix(op::not_equal, l);
 }
 
-void parser::token_bang_lesser(location l) {
+void parser::token_bang_angle_left(location l) {
 	parse_infix(op::not_lesser, l);
 }
 
-void parser::token_bang_greater(location l) {
+void parser::token_bang_angle_right(location l) {
 	parse_infix(op::not_greater, l);
 }
 
