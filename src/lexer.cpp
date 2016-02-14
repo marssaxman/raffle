@@ -34,21 +34,21 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 
 		case '(': switch (i != end? *i: 0) {
 			case ')': adv(i); out.token_paren_pair(loc); break;
-			default: out.token_paren_left(loc);
+			default: out.token_paren(loc, direction::left);
 		} break;
-		case ')': out.token_paren_right(loc); break;
+		case ')': out.token_paren(loc, direction::right); break;
 
 		case '[': switch (i != end? *i: 0) {
 			case ']': adv(i); out.token_bracket_pair(loc); break;
-			default: out.token_bracket_left(loc);
+			default: out.token_bracket(loc, direction::left);
 		} break;
-		case ']': out.token_bracket_right(loc); break;
+		case ']': out.token_bracket(loc, direction::right); break;
 
 		case '{': switch (i != end? *i: 0) {
 			case '}': adv(i); out.token_brace_pair(loc); break;
-			default: out.token_brace_left(loc);
+			default: out.token_brace(loc, direction::left);
 		} break;
-		case '}': out.token_brace_right(loc); break;
+		case '}': out.token_brace(loc, direction::right); break;
 
 		case ',': out.token_comma(loc); break;
 		case ':': out.token_colon(loc); break;
@@ -69,24 +69,24 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 
 		case '!': switch (i != end? *i: 0) {
 			case '=': adv(i); out.token_bang_equal(loc); break;
-			case '<': adv(i); out.token_bang_angle_left(loc); break;
-			case '>': adv(i); out.token_bang_angle_right(loc); break;
+			case '<': adv(i); out.token_bang_angle(loc, direction::left); break;
+			case '>': adv(i); out.token_bang_angle(loc, direction::right); break;
 			default: out.token_bang(loc);
 		} break;
 
 		case '<': switch (i != end? *i: 0) {
-			case '-': adv(i); out.token_arrow_left(loc); break;
-			case '<': adv(i); out.token_shift_left(loc); break;
-			default: out.token_angle_left(loc);
+			case '-': adv(i); out.token_arrow(loc, direction::left); break;
+			case '<': adv(i); out.token_guillemet(loc, direction::left); break;
+			default: out.token_angle(loc, direction::left);
 		} break;
 
 		case '>': switch (i != end? *i: 0) {
-			case '>': adv(i); out.token_shift_right(loc); break;
-			default: out.token_angle_right(loc);
+			case '>': adv(i); out.token_guillemet(loc, direction::right); break;
+			default: out.token_angle(loc, direction::right);
 		} break;
 
 		case '-': switch (i != end? *i: 0) {
-			case '>': adv(i); out.token_arrow_right(loc); break;
+			case '>': adv(i); out.token_arrow(loc, direction::right); break;
 			default: out.token_hyphen(loc);
 		} break;
 

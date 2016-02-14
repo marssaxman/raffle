@@ -93,21 +93,24 @@ void parser::token_paren_pair(location l) {
 	accept(out.rule_paren_empty());
 }
 
-void parser::token_paren_left(location l) {
-	if (!prefix) {
-		states.push({op::subscript, l});
+void parser::token_paren(location l, direction d) {
+	switch (d) {
+		case direction::left:
+			if (!prefix) {
+				states.push({op::subscript, l});
+			}
+			states.push({op::paren, l});
+			prefix = true;
+			break;
+		case direction::right:
+			if (close_group(op::paren)) {
+				accept(out.rule_paren_group(recall()));
+			} else {
+				err.parser_mismatched_paren(l);
+			}
+			prefix = false;
+			break;
 	}
-	states.push({op::paren, l});
-	prefix = true;
-}
-
-void parser::token_paren_right(location l) {
-	if (close_group(op::paren)) {
-		accept(out.rule_paren_group(recall()));
-	} else {
-		err.parser_mismatched_paren(l);
-	}
-	prefix = false;
 }
 
 void parser::token_bracket_pair(location l) {
@@ -117,21 +120,24 @@ void parser::token_bracket_pair(location l) {
 	accept(out.rule_bracket_empty());
 }
 
-void parser::token_bracket_left(location l) {
-	if (!prefix) {
-		states.push({op::subscript, l});
+void parser::token_bracket(location l, direction d) {
+	switch (d) {
+		case direction::left:
+			if (!prefix) {
+				states.push({op::subscript, l});
+			}
+			states.push({op::bracket, l});
+			prefix = true;
+			break;
+		case direction::right:
+			if (close_group(op::bracket)) {
+				accept(out.rule_bracket_group(recall()));
+			} else {
+				err.parser_mismatched_bracket(l);
+			}
+			prefix = false;
+			break;
 	}
-	states.push({op::bracket, l});
-	prefix = true;
-}
-
-void parser::token_bracket_right(location l) {
-	if (close_group(op::bracket)) {
-		accept(out.rule_bracket_group(recall()));
-	} else {
-		err.parser_mismatched_bracket(l);
-	}
-	prefix = false;
 }
 
 void parser::token_brace_pair(location l) {
@@ -141,21 +147,24 @@ void parser::token_brace_pair(location l) {
 	accept(out.rule_brace_empty());
 }
 
-void parser::token_brace_left(location l) {
-	if (!prefix) {
-		states.push({op::subscript, l});
+void parser::token_brace(location l, direction d) {
+	switch (d) {
+		case direction::left:
+			if (!prefix) {
+				states.push({op::subscript, l});
+			}
+			states.push({op::brace, l});
+			prefix = true;
+			break;
+		case direction::right:
+			if (close_group(op::brace)) {
+				accept(out.rule_paren_group(recall()));
+			} else {
+				err.parser_mismatched_paren(l);
+			}
+			prefix = false;
+			break;
 	}
-	states.push({op::brace, l});
-	prefix = true;
-}
-
-void parser::token_brace_right(location l) {
-	if (close_group(op::brace)) {
-		accept(out.rule_brace_group(recall()));
-	} else {
-		err.parser_mismatched_brace(l);
-	}
-	prefix = false;
 }
 
 void parser::token_comma(location l) {
@@ -178,12 +187,15 @@ void parser::token_dot_dot(location l) {
 	parse_infix(op::range, l);
 }
 
-void parser::token_arrow_left(location l) {
-	parse_infix(op::define, l);
-}
-
-void parser::token_arrow_right(location l) {
-	parse_infix(op::capture, l);
+void parser::token_arrow(location l, direction d) {
+	switch (d) {
+		case direction::left:
+			parse_infix(op::define, l);
+			break;
+		case direction::right:
+			parse_infix(op::capture, l);
+			break;
+	}
 }
 
 void parser::token_plus(location l) {
@@ -214,24 +226,30 @@ void parser::token_equal(location l) {
 	parse_infix(op::equal, l);
 }
 
-void parser::token_angle_left(location l) {
-	parse_infix(op::lesser, l);
-}
-
-void parser::token_angle_right(location l) {
-	parse_infix(op::greater, l);
+void parser::token_angle(location l, direction d) {
+	switch (d) {
+		case direction::left:
+			parse_infix(op::lesser, l);
+			break;
+		case direction::right:
+			parse_infix(op::greater, l);
+			break;
+	}
 }
 
 void parser::token_bang_equal(location l) {
 	parse_infix(op::not_equal, l);
 }
 
-void parser::token_bang_angle_left(location l) {
-	parse_infix(op::not_lesser, l);
-}
-
-void parser::token_bang_angle_right(location l) {
-	parse_infix(op::not_greater, l);
+void parser::token_bang_angle(location l, direction d) {
+	switch (d) {
+		case direction::left:
+			parse_infix(op::not_lesser, l);
+			break;
+		case direction::right:
+			parse_infix(op::not_greater, l);
+			break;
+	}
 }
 
 void parser::token_bang(location l) {
@@ -250,12 +268,15 @@ void parser::token_caret(location l) {
 	parse_infix(op::exclude, l);
 }
 
-void parser::token_shift_left(location l) {
-	parse_infix(op::shift_left, l);
-}
-
-void parser::token_shift_right(location l) {
-	parse_infix(op::shift_right, l);
+void parser::token_guillemet(location l, lexer::direction d) {
+	switch (d) {
+		case direction::left:
+			parse_infix(op::shift_left, l);
+			break;
+		case direction::right:
+			parse_infix(op::shift_right, l);
+			break;
+	}
 }
 
 void parser::flush() {
