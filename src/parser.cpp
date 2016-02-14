@@ -67,17 +67,22 @@ static bool rightassoc(int op) { return precedence(op) & 1; }
 
 void parser::token_number(lexer::position p, std::string text)
 {
-	accept(out.parse_number(text));
+	accept(out.rule_number(text));
 }
 
 void parser::token_symbol(lexer::position p, std::string text)
 {
-	accept(out.parse_symbol(text));
+	accept(out.rule_symbol(text));
 }
 
 void parser::token_string(lexer::position p, std::string text)
 {
-	accept(out.parse_string(text));
+	accept(out.rule_string(text));
+}
+
+void parser::token_blank(lexer::position p)
+{
+	accept(out.rule_blank());
 }
 
 void parser::token_paren_empty(lexer::position p)
@@ -85,7 +90,7 @@ void parser::token_paren_empty(lexer::position p)
 	if (!prefix) {
 		states.push({op::subscript, p});
 	}
-	accept(out.parse_paren_empty());
+	accept(out.rule_paren_empty());
 }
 
 void parser::token_paren_open(lexer::position p)
@@ -100,9 +105,9 @@ void parser::token_paren_open(lexer::position p)
 void parser::token_paren_close(lexer::position p)
 {
 	if (close_group(op::paren)) {
-		accept(out.parse_paren_group(recall()));
+		accept(out.rule_paren_group(recall()));
 	} else {
-		err.parse_mismatched_paren(p);
+		err.parser_mismatched_paren(p);
 	}
 	prefix = false;
 }
@@ -112,7 +117,7 @@ void parser::token_bracket_empty(lexer::position p)
 	if (!prefix) {
 		states.push({op::subscript, p});
 	}
-	accept(out.parse_bracket_empty());
+	accept(out.rule_bracket_empty());
 }
 
 void parser::token_bracket_open(lexer::position p)
@@ -127,9 +132,9 @@ void parser::token_bracket_open(lexer::position p)
 void parser::token_bracket_close(lexer::position p)
 {
 	if (close_group(op::bracket)) {
-		accept(out.parse_bracket_group(recall()));
+		accept(out.rule_bracket_group(recall()));
 	} else {
-		err.parse_mismatched_bracket(p);
+		err.parser_mismatched_bracket(p);
 	}
 	prefix = false;
 }
@@ -139,7 +144,7 @@ void parser::token_brace_empty(lexer::position p)
 	if (!prefix) {
 		states.push({op::subscript, p});
 	}
-	accept(out.parse_brace_empty());
+	accept(out.rule_brace_empty());
 }
 
 void parser::token_brace_open(lexer::position p)
@@ -154,9 +159,9 @@ void parser::token_brace_open(lexer::position p)
 void parser::token_brace_close(lexer::position p)
 {
 	if (close_group(op::brace)) {
-		accept(out.parse_brace_group(recall()));
+		accept(out.rule_brace_group(recall()));
 	} else {
-		err.parse_mismatched_brace(p);
+		err.parser_mismatched_brace(p);
 	}
 	prefix = false;
 }
@@ -312,6 +317,10 @@ void parser::parse_prefix(int tk, lexer::position p)
 
 void parser::parse_infix(int tk, lexer::position p)
 {
+	if (prefix) {
+		err.parser_missing_operand(p);
+		return;
+	}
 	while (!states.empty()) {
 		int prev = states.top().id;
 		if (precedence(tk) > precedence(prev)) break;
@@ -328,33 +337,33 @@ void parser::commit_op()
 	states.pop();
 	int v = recall();
 	switch (tk.id) {
-		case op::sequence: accept(out.parse_sequence(recall(), v)); break;
-		case op::capture: accept(out.parse_capture(recall(), v)); break;
-		case op::define: accept(out.parse_define(recall(), v)); break;
-		case op::list: accept(out.parse_list(recall(), v)); break;
-		case op::caption: accept(out.parse_caption(recall(), v)); break;
-		case op::equal: accept(out.parse_equal(recall(), v)); break;
-		case op::lesser: accept(out.parse_lesser(recall(), v)); break;
-		case op::greater: accept(out.parse_greater(recall(), v)); break;
-		case op::not_equal: accept(out.parse_not_equal(recall(), v)); break;
-		case op::not_lesser: accept(out.parse_not_lesser(recall(), v)); break;
-		case op::not_greater: accept(out.parse_not_greater(recall(), v)); break;
-		case op::add: accept(out.parse_addition(recall(), v)); break;
-		case op::subtract: accept(out.parse_subtraction(recall(), v)); break;
-		case op::disjoin: accept(out.parse_or(recall(), v)); break;
-		case op::exclude: accept(out.parse_xor(recall(), v)); break;
-		case op::range: accept(out.parse_range(recall(), v)); break;
-		case op::multiply: accept(out.parse_multiplication(recall(), v)); break;
-		case op::divide: accept(out.parse_division(recall(), v)); break;
-		case op::modulo: accept(out.parse_modulo(recall(), v)); break;
-		case op::shift_left: accept(out.parse_shift_left(recall(), v)); break;
-		case op::shift_right: accept(out.parse_shift_right(recall(), v)); break;
-		case op::conjoin: accept(out.parse_and(recall(), v)); break;
-		case op::negate: accept(out.parse_negate(v)); break;
-		case op::complement: accept(out.parse_complement(v)); break;
-		case op::subscript: accept(out.parse_subscript(recall(), v)); break;
-		case op::lookup: accept(out.parse_lookup(recall(), v)); break;
-		default: err.parse_unimplemented(tk.pos); break;
+		case op::sequence: accept(out.rule_sequence(recall(), v)); break;
+		case op::capture: accept(out.rule_capture(recall(), v)); break;
+		case op::define: accept(out.rule_define(recall(), v)); break;
+		case op::list: accept(out.rule_list(recall(), v)); break;
+		case op::caption: accept(out.rule_caption(recall(), v)); break;
+		case op::equal: accept(out.rule_equal(recall(), v)); break;
+		case op::lesser: accept(out.rule_lesser(recall(), v)); break;
+		case op::greater: accept(out.rule_greater(recall(), v)); break;
+		case op::not_equal: accept(out.rule_not_equal(recall(), v)); break;
+		case op::not_lesser: accept(out.rule_not_lesser(recall(), v)); break;
+		case op::not_greater: accept(out.rule_not_greater(recall(), v)); break;
+		case op::add: accept(out.rule_addition(recall(), v)); break;
+		case op::subtract: accept(out.rule_subtraction(recall(), v)); break;
+		case op::disjoin: accept(out.rule_or(recall(), v)); break;
+		case op::exclude: accept(out.rule_xor(recall(), v)); break;
+		case op::range: accept(out.rule_range(recall(), v)); break;
+		case op::multiply: accept(out.rule_multiplication(recall(), v)); break;
+		case op::divide: accept(out.rule_division(recall(), v)); break;
+		case op::modulo: accept(out.rule_modulo(recall(), v)); break;
+		case op::shift_left: accept(out.rule_shift_left(recall(), v)); break;
+		case op::shift_right: accept(out.rule_shift_right(recall(), v)); break;
+		case op::conjoin: accept(out.rule_and(recall(), v)); break;
+		case op::negate: accept(out.rule_negate(v)); break;
+		case op::complement: accept(out.rule_complement(v)); break;
+		case op::subscript: accept(out.rule_subscript(recall(), v)); break;
+		case op::lookup: accept(out.rule_lookup(recall(), v)); break;
+		default: err.parser_unimplemented(tk.pos); break;
 	}
 }
 

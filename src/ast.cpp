@@ -7,211 +7,219 @@
 #include "ast.h"
 #include <iostream>
 
-int ast::parse_number(std::string t)
+using namespace ast;
+
+int builder::rule_number(std::string t)
 {
 	std::cout << t << " ";
 	return ++i;
 }
 
-int ast::parse_symbol(std::string t)
+int builder::rule_symbol(std::string t)
 {
 	std::cout << t << " ";
 	return ++i;
 }
 
-int ast::parse_string(std::string t)
+int builder::rule_string(std::string t)
 {
-	std::cout << t << " ";;
+	std::cout << t << " ";
 	return ++i;
 }
 
-int ast::parse_paren_empty()
+int builder::rule_blank()
+{
+	std::cout << "_";
+	return ++i;
+}
+
+int builder::rule_paren_empty()
 {
 	std::cout << "() ";
 	return ++i;
 }
 
-int ast::parse_bracket_empty()
+int builder::rule_bracket_empty()
 {
 	std::cout << "[] ";
 	return ++i;
 }
 
-int ast::parse_brace_empty()
+int builder::rule_brace_empty()
 {
 	std::cout << "{} ";
 	return ++i;
 }
 
-int ast::parse_sequence(int l, int r)
+int builder::rule_sequence(int l, int r)
 {
 	std::cout << "; ";
 	return ++i;
 }
 
-int ast::parse_capture(int, int)
+int builder::rule_capture(int, int)
 {
 	std::cout << "-> ";
 	return ++i;
 }
 
-int ast::parse_define(int, int)
+int builder::rule_define(int, int)
 {
 	std::cout << "<- ";
 	return ++i;
 }
 
-int ast::parse_list(int l, int r)
+int builder::rule_list(int l, int r)
 {
 	std::cout << ", ";
 	return ++i;
 }
 
-int ast::parse_caption(int l, int r)
+int builder::rule_caption(int l, int r)
 {
 	std::cout << ": ";
 	return ++i;
 }
 
-int ast::parse_equal(int l, int r)
+int builder::rule_equal(int l, int r)
 {
 	std::cout << "= ";
 	return ++i;
 }
 
-int ast::parse_lesser(int l, int r)
+int builder::rule_lesser(int l, int r)
 {
 	std::cout << "< ";
 	return ++i;
 }
 
-int ast::parse_greater(int l, int r)
+int builder::rule_greater(int l, int r)
 {
 	std::cout << "> ";
 	return ++i;
 }
 
-int ast::parse_not_equal(int l, int r)
+int builder::rule_not_equal(int l, int r)
 {
 	std::cout << "!= ";
 	return ++i;
 }
 
-int ast::parse_not_lesser(int l, int r)
+int builder::rule_not_lesser(int l, int r)
 {
 	std::cout << "!< ";
 	return ++i;
 }
 
-int ast::parse_not_greater(int l, int r)
+int builder::rule_not_greater(int l, int r)
 {
 	std::cout << "!> ";
 	return ++i;
 }
 
-int ast::parse_addition(int l, int r)
+int builder::rule_addition(int l, int r)
 {
 	std::cout << "+ ";
 	return ++i;
 }
 
-int ast::parse_subtraction(int l, int r)
+int builder::rule_subtraction(int l, int r)
 {
 	std::cout << "- ";
 	return ++i;
 }
 
-int ast::parse_or(int l, int r)
+int builder::rule_or(int l, int r)
 {
 	std::cout << "or ";
 	return ++i;
 }
 
-int ast::parse_xor(int l, int r)
+int builder::rule_xor(int l, int r)
 {
 	std::cout << "^ ";
 	return ++i;
 }
 
-int ast::parse_range(int l, int r)
+int builder::rule_range(int l, int r)
 {
 	std::cout << ".. ";
 	return ++i;
 }
 
-int ast::parse_multiplication(int l, int r)
+int builder::rule_multiplication(int l, int r)
 {
 	std::cout << "* ";
 	return ++i;
 }
 
-int ast::parse_division(int l, int r)
+int builder::rule_division(int l, int r)
 {
 	std::cout << "/ ";
 	return ++i;
 }
 
-int ast::parse_modulo(int l, int r)
+int builder::rule_modulo(int l, int r)
 {
 	std::cout << "% ";
 	return ++i;
 }
 
-int ast::parse_shift_left(int l, int r)
+int builder::rule_shift_left(int l, int r)
 {
 	std::cout << "<< ";
 	return ++i;
 }
 
-int ast::parse_shift_right(int l, int r)
+int builder::rule_shift_right(int l, int r)
 {
 	std::cout << ">> ";
 	return ++i;
 }
 
-int ast::parse_and(int l, int r)
+int builder::rule_and(int l, int r)
 {
 	std::cout << "and ";
 	return ++i;
 }
 
-int ast::parse_negate(int v)
+int builder::rule_negate(int v)
 {
 	std::cout << "neg ";
 	return ++i;
 }
 
-int ast::parse_complement(int v)
+int builder::rule_complement(int v)
 {
 	std::cout << "not ";
 	return ++i;
 }
 
-int ast::parse_paren_group(int v)
+int builder::rule_paren_group(int v)
 {
 	std::cout << "(*) ";
 	return ++i;
 }
 
-int ast::parse_bracket_group(int v)
+int builder::rule_bracket_group(int v)
 {
 	std::cout << "[*] ";
 	return ++i;
 }
 
-int ast::parse_brace_group(int v)
+int builder::rule_brace_group(int v)
 {
 	std::cout << "{*} ";
 	return ++i;
 }
 
-int ast::parse_subscript(int l, int r)
+int builder::rule_subscript(int l, int r)
 {
 	std::cout << "app ";
 	return ++i;
 }
 
-int ast::parse_lookup(int l, int r)
+int builder::rule_lookup(int l, int r)
 {
 	std::cout << ". ";
 	return ++i;

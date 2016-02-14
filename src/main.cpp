@@ -15,7 +15,7 @@
 
 int main(int argc, const char *argv[]) {
 	errors e;
-	ast o;
+	ast::builder o;
 	parser p(o, e);
 	lexer l(p, e);
 	for (std::string line; std::getline(std::cin, line);) {

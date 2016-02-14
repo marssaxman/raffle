@@ -84,7 +84,7 @@ void lexer::read_line(const std::string &input)
 				if (i != input.end()) {
 					out.token_string(pos, std::string(tokenstart, ++i));
 				} else {
-					err.token_nonterminated(pos);
+					err.lexer_nonterminated(pos);
 				}
 				break;
 
@@ -111,6 +111,9 @@ void lexer::read_line(const std::string &input)
 				break;
 
 			case '_':
+				out.token_blank(pos);
+				break;
+
 			case 'A': case 'a':
 			case 'B': case 'b':
 			case 'C': case 'c':
@@ -144,7 +147,7 @@ void lexer::read_line(const std::string &input)
 				break;
 
 			default:
-				err.token_unknown(pos, c);
+				err.lexer_unknown(pos, c);
 				pos.col = input.size();
 				break;
 		}

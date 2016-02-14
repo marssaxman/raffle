@@ -9,45 +9,50 @@
 
 #include "parser.h"
 
-struct ast: public parser::output {
-	virtual int parse_number(std::string t) override;
-	virtual int parse_symbol(std::string t) override;
-	virtual int parse_string(std::string t) override;
-	virtual int parse_paren_empty() override;
-	virtual int parse_bracket_empty() override;
-	virtual int parse_brace_empty() override;
-	virtual int parse_sequence(int l, int r) override;
-	virtual int parse_capture(int, int) override;
-	virtual int parse_define(int, int) override;
-	virtual int parse_list(int l, int r) override;
-	virtual int parse_caption(int l, int r) override;
-	virtual int parse_equal(int l, int r) override;
-	virtual int parse_lesser(int l, int r) override;
-	virtual int parse_greater(int l, int r) override;
-	virtual int parse_not_equal(int l, int r) override;
-	virtual int parse_not_lesser(int l, int r) override;
-	virtual int parse_not_greater(int l, int r) override;
-	virtual int parse_addition(int l, int r) override;
-	virtual int parse_subtraction(int l, int r) override;
-	virtual int parse_or(int l, int r) override;
-	virtual int parse_xor(int l, int r) override;
-	virtual int parse_range(int l, int r) override;
-	virtual int parse_multiplication(int l, int r) override;
-	virtual int parse_division(int l, int r) override;
-	virtual int parse_modulo(int l, int r) override;
-	virtual int parse_shift_left(int l, int r) override;
-	virtual int parse_shift_right(int l, int r) override;
-	virtual int parse_and(int l, int r) override;
-	virtual int parse_negate(int v) override;
-	virtual int parse_complement(int v) override;
-	virtual int parse_paren_group(int v) override;
-	virtual int parse_bracket_group(int v) override;
-	virtual int parse_brace_group(int v) override;
-	virtual int parse_subscript(int, int) override;
-	virtual int parse_lookup(int, int) override;
+namespace ast {
+
+struct builder: public parser::output {
+	virtual int rule_number(std::string t) override;
+	virtual int rule_symbol(std::string t) override;
+	virtual int rule_string(std::string t) override;
+	virtual int rule_blank() override;
+	virtual int rule_paren_empty() override;
+	virtual int rule_bracket_empty() override;
+	virtual int rule_brace_empty() override;
+	virtual int rule_sequence(int l, int r) override;
+	virtual int rule_capture(int, int) override;
+	virtual int rule_define(int, int) override;
+	virtual int rule_list(int l, int r) override;
+	virtual int rule_caption(int l, int r) override;
+	virtual int rule_equal(int l, int r) override;
+	virtual int rule_lesser(int l, int r) override;
+	virtual int rule_greater(int l, int r) override;
+	virtual int rule_not_equal(int l, int r) override;
+	virtual int rule_not_lesser(int l, int r) override;
+	virtual int rule_not_greater(int l, int r) override;
+	virtual int rule_addition(int l, int r) override;
+	virtual int rule_subtraction(int l, int r) override;
+	virtual int rule_or(int l, int r) override;
+	virtual int rule_xor(int l, int r) override;
+	virtual int rule_range(int l, int r) override;
+	virtual int rule_multiplication(int l, int r) override;
+	virtual int rule_division(int l, int r) override;
+	virtual int rule_modulo(int l, int r) override;
+	virtual int rule_shift_left(int l, int r) override;
+	virtual int rule_shift_right(int l, int r) override;
+	virtual int rule_and(int l, int r) override;
+	virtual int rule_negate(int v) override;
+	virtual int rule_complement(int v) override;
+	virtual int rule_paren_group(int v) override;
+	virtual int rule_bracket_group(int v) override;
+	virtual int rule_brace_group(int v) override;
+	virtual int rule_subscript(int, int) override;
+	virtual int rule_lookup(int, int) override;
 private:
 	unsigned i = 0;
 };
+
+} // namespace AST
 
 #endif //AST_H
 

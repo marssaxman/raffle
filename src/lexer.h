@@ -14,12 +14,12 @@
 // 	file: (line '\n')*
 // 	line: token* comment?
 // 	comment: '#' [^\n]*
-// 	token: number | symbol | string | space | null | delimiter | operator
+// 	token: number | symbol | string | space | blank | delimiter | operator
 // 	number: [0-9]+
-// 	symbol: [_A-Za-z] [_A-Za-z0-9]*
+// 	symbol: ([A-Za-z] [_A-Za-z0-9]*
 // 	string: ('\"' [^\"]* '\"') | ('\'' [^\']* '\'')
 // 	space: [\s\t]+
-//	null: '()' | '[]' | '{}'
+//	blank: '_' | '()' | '[]' | '{}'
 // 	delimiter: '(' | '[' | '{' | '}' | ']' | ')'
 // 	operator: arithmetic | relation | structure
 //	arithmetic: '+' | '-' | '*' | '/' | '%' | '<<' | '>>'
@@ -37,6 +37,7 @@ public:
 		virtual void token_number(position, std::string) = 0;
 		virtual void token_symbol(position, std::string) = 0;
 		virtual void token_string(position, std::string) = 0;
+		virtual void token_blank(position) = 0;
 		virtual void token_paren_empty(position) = 0;
 		virtual void token_paren_open(position) = 0;
 		virtual void token_paren_close(position) = 0;
@@ -72,8 +73,8 @@ public:
 		virtual void token_arrow_right(position) = 0;
 	};
 	struct error {
-		virtual void token_unknown(position, char) = 0;
-		virtual void token_nonterminated(position) = 0;
+		virtual void lexer_unknown(position, char) = 0;
+		virtual void lexer_nonterminated(position) = 0;
 	};
 	lexer(output &o, error &e): out(o), err(e) {}
 	void read_line(const std::string&);
