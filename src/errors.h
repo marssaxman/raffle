@@ -11,16 +11,16 @@
 #include "parser.h"
 
 struct errors: public lexer::error, public parser::error {
-	virtual void lexer_unknown(lexer::position p, char c) override;
-	virtual void lexer_nonterminated(lexer::position p) override;
-	virtual void parser_unexpected(lexer::position) override;
-	virtual void parser_missing_operand(lexer::position) override;
-	virtual void parser_mismatched_paren(lexer::position) override;
-	virtual void parser_mismatched_bracket(lexer::position) override;
-	virtual void parser_mismatched_brace(lexer::position) override;
-	virtual void parser_unimplemented(lexer::position) override;
+	virtual void lexer_unknown(position p, char c) override;
+	virtual void lexer_nonterminated(position p) override;
+	virtual void parser_unexpected(position) override;
+	virtual void parser_missing_operand(position) override;
+	virtual void parser_mismatched_paren(position) override;
+	virtual void parser_mismatched_bracket(position) override;
+	virtual void parser_mismatched_brace(position) override;
+	virtual void parser_unimplemented(position) override;
 private:
-	void report(lexer::position, std::string message);
+	void report(position, std::string message);
 };
 
 #endif //ERRORS_H

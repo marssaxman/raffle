@@ -9,6 +9,7 @@
 
 #include <string>
 #include <iostream>
+#include "position.h"
 
 // lexical grammar:
 // 	file: (line '\n')*
@@ -29,10 +30,6 @@
 
 class lexer {
 public:
-	struct position {
-		unsigned row = 0;
-		unsigned col = 0;
-	};
 	struct output {
 		virtual void token_number(position, std::string) = 0;
 		virtual void token_symbol(position, std::string) = 0;

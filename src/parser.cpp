@@ -65,27 +65,27 @@ enum {
 static int precedence(int op) { return op >> 4; }
 static bool rightassoc(int op) { return precedence(op) & 1; }
 
-void parser::token_number(lexer::position p, std::string text)
+void parser::token_number(position p, std::string text)
 {
 	accept(out.rule_number(text));
 }
 
-void parser::token_symbol(lexer::position p, std::string text)
+void parser::token_symbol(position p, std::string text)
 {
 	accept(out.rule_symbol(text));
 }
 
-void parser::token_string(lexer::position p, std::string text)
+void parser::token_string(position p, std::string text)
 {
 	accept(out.rule_string(text));
 }
 
-void parser::token_blank(lexer::position p)
+void parser::token_blank(position p)
 {
 	accept(out.rule_blank());
 }
 
-void parser::token_paren_empty(lexer::position p)
+void parser::token_paren_empty(position p)
 {
 	if (!prefix) {
 		states.push({op::subscript, p});
@@ -93,7 +93,7 @@ void parser::token_paren_empty(lexer::position p)
 	accept(out.rule_paren_empty());
 }
 
-void parser::token_paren_open(lexer::position p)
+void parser::token_paren_open(position p)
 {
 	if (!prefix) {
 		states.push({op::subscript, p});
@@ -102,7 +102,7 @@ void parser::token_paren_open(lexer::position p)
 	prefix = true;
 }
 
-void parser::token_paren_close(lexer::position p)
+void parser::token_paren_close(position p)
 {
 	if (close_group(op::paren)) {
 		accept(out.rule_paren_group(recall()));
@@ -112,7 +112,7 @@ void parser::token_paren_close(lexer::position p)
 	prefix = false;
 }
 
-void parser::token_bracket_empty(lexer::position p)
+void parser::token_bracket_empty(position p)
 {
 	if (!prefix) {
 		states.push({op::subscript, p});
@@ -120,7 +120,7 @@ void parser::token_bracket_empty(lexer::position p)
 	accept(out.rule_bracket_empty());
 }
 
-void parser::token_bracket_open(lexer::position p)
+void parser::token_bracket_open(position p)
 {
 	if (!prefix) {
 		states.push({op::subscript, p});
@@ -129,7 +129,7 @@ void parser::token_bracket_open(lexer::position p)
 	prefix = true;
 }
 
-void parser::token_bracket_close(lexer::position p)
+void parser::token_bracket_close(position p)
 {
 	if (close_group(op::bracket)) {
 		accept(out.rule_bracket_group(recall()));
@@ -139,7 +139,7 @@ void parser::token_bracket_close(lexer::position p)
 	prefix = false;
 }
 
-void parser::token_brace_empty(lexer::position p)
+void parser::token_brace_empty(position p)
 {
 	if (!prefix) {
 		states.push({op::subscript, p});
@@ -147,7 +147,7 @@ void parser::token_brace_empty(lexer::position p)
 	accept(out.rule_brace_empty());
 }
 
-void parser::token_brace_open(lexer::position p)
+void parser::token_brace_open(position p)
 {
 	if (!prefix) {
 		states.push({op::subscript, p});
@@ -156,7 +156,7 @@ void parser::token_brace_open(lexer::position p)
 	prefix = true;
 }
 
-void parser::token_brace_close(lexer::position p)
+void parser::token_brace_close(position p)
 {
 	if (close_group(op::brace)) {
 		accept(out.rule_brace_group(recall()));
@@ -166,47 +166,47 @@ void parser::token_brace_close(lexer::position p)
 	prefix = false;
 }
 
-void parser::token_comma(lexer::position p)
+void parser::token_comma(position p)
 {
 	parse_infix(op::list, p);
 }
 
-void parser::token_colon(lexer::position p)
+void parser::token_colon(position p)
 {
 	parse_infix(op::caption, p);
 }
 
-void parser::token_semicolon(lexer::position p)
+void parser::token_semicolon(position p)
 {
 	parse_infix(op::sequence, p);
 }
 
-void parser::token_dot(lexer::position p)
+void parser::token_dot(position p)
 {
 	parse_infix(op::lookup, p);
 }
 
-void parser::token_dot_dot(lexer::position p)
+void parser::token_dot_dot(position p)
 {
 	parse_infix(op::range, p);
 }
 
-void parser::token_arrow_left(lexer::position p)
+void parser::token_arrow_left(position p)
 {
 	parse_infix(op::define, p);
 }
 
-void parser::token_arrow_right(lexer::position p)
+void parser::token_arrow_right(position p)
 {
 	parse_infix(op::capture, p);
 }
 
-void parser::token_plus(lexer::position p)
+void parser::token_plus(position p)
 {
 	parse_infix(op::add, p);
 }
 
-void parser::token_hyphen(lexer::position p)
+void parser::token_hyphen(position p)
 {
 	if (prefix) {
 		parse_prefix(op::negate, p);
@@ -215,77 +215,77 @@ void parser::token_hyphen(lexer::position p)
 	}
 }
 
-void parser::token_star(lexer::position p)
+void parser::token_star(position p)
 {
 	parse_infix(op::multiply, p);
 }
 
-void parser::token_slash(lexer::position p)
+void parser::token_slash(position p)
 {
 	parse_infix(op::divide, p);
 }
 
-void parser::token_percent(lexer::position p)
+void parser::token_percent(position p)
 {
 	parse_infix(op::modulo, p);
 }
 
-void parser::token_equal(lexer::position p)
+void parser::token_equal(position p)
 {
 	parse_infix(op::equal, p);
 }
 
-void parser::token_lesser(lexer::position p)
+void parser::token_lesser(position p)
 {
 	parse_infix(op::lesser, p);
 }
 
-void parser::token_greater(lexer::position p)
+void parser::token_greater(position p)
 {
 	parse_infix(op::greater, p);
 }
 
-void parser::token_bang_equal(lexer::position p)
+void parser::token_bang_equal(position p)
 {
 	parse_infix(op::not_equal, p);
 }
 
-void parser::token_bang_lesser(lexer::position p)
+void parser::token_bang_lesser(position p)
 {
 	parse_infix(op::not_lesser, p);
 }
 
-void parser::token_bang_greater(lexer::position p)
+void parser::token_bang_greater(position p)
 {
 	parse_infix(op::not_greater, p);
 }
 
-void parser::token_bang(lexer::position p)
+void parser::token_bang(position p)
 {
 	parse_prefix(op::complement, p);
 }
 
-void parser::token_ampersand(lexer::position p)
+void parser::token_ampersand(position p)
 {
 	parse_infix(op::conjoin, p);
 }
 
-void parser::token_pipe(lexer::position p)
+void parser::token_pipe(position p)
 {
 	parse_infix(op::disjoin, p);
 }
 
-void parser::token_caret(lexer::position p)
+void parser::token_caret(position p)
 {
 	parse_infix(op::exclude, p);
 }
 
-void parser::token_shift_left(lexer::position p)
+void parser::token_shift_left(position p)
 {
 	parse_infix(op::shift_left, p);
 }
 
-void parser::token_shift_right(lexer::position p)
+void parser::token_shift_right(position p)
 {
 	parse_infix(op::shift_right, p);
 }
@@ -310,12 +310,12 @@ int parser::recall()
 	return val;
 }
 
-void parser::parse_prefix(int tk, lexer::position p)
+void parser::parse_prefix(int tk, position p)
 {
 	states.push({tk, p});
 }
 
-void parser::parse_infix(int tk, lexer::position p)
+void parser::parse_infix(int tk, position p)
 {
 	if (prefix) {
 		err.parser_missing_operand(p);

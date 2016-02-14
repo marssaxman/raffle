@@ -8,8 +8,27 @@
 #define AST_H
 
 #include "parser.h"
+#include <memory>
 
 namespace ast {
+
+struct node {
+};
+
+typedef const node &ref;
+
+struct leaf: public node {
+	std::string data;
+};
+
+struct twig: public node {
+	ref source;
+};
+
+struct branch: public node {
+	ref left;
+	ref right;
+};
 
 struct builder: public parser::output {
 	virtual int rule_number(std::string t) override;
