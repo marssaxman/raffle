@@ -6,65 +6,12 @@
 
 #include "parser.h"
 
-// Operators are grouped into precedence levels such that shifting the code
-// right by 4 yields the precedence group number. Even-numbered groups have
-// left associativity and odd-numbered groups have right associativity.
-
-
-namespace op {
-enum {
-	// groups
-	eval = 0x00,
-	list,
-	object,
-
-	// statements
-	sequence = 0x10,
-
-	// symbols
-	capture = 0x30,
-	define,
-
-	// structure
-	join = 0x50,
-	caption,
-
-	// relation
-	equal = 0x60,
-	lesser,
-	greater,
-
-	// additive
-	add = 0x80,
-	subtract,
-	disjoin,
-	exclude,
-	range,
-
-	// multiplicative
-	multiply = 0xA0,
-	divide,
-	modulo,
-	shift_left,
-	shift_right,
-	conjoin,
-
-	// unary
-	negate = 0xB0,
-	complement,
-
-	// primary
-	lookup = 0xC0,
-	subscript,
-};
+int parser::precedence(op x) {
+	return static_cast<int>(x) >> 4;
 }
 
-static int precedence(int op) {
-	return op >> 4;
-}
-
-static bool rightassoc(int op) {
-	return precedence(op) & 1;
+bool parser::rightassoc(op x) {
+	return precedence(x) & 1;
 }
 
 void parser::token_number(location l, std::string text) {
@@ -201,14 +148,14 @@ void parser::term(int (output::*rule)(std::string), location l, std::string t)
 	}
 }
 
-void parser::group(int tk, int (output::*rule)(int), location l, direction d) {
+void parser::group(op tk, int (output::*rule)(int), location l, direction d) {
 	switch (d) {
 		case direction::left: open_group(tk, l); break;
 		case direction::right: close_group(tk, rule, l); break;
 	}
 }
 
-void parser::open_group(int tk, location l) {
+void parser::open_group(op tk, location l) {
 	if (context == state::value) {
 		ops.push({op::subscript, l});
 	}
@@ -216,7 +163,7 @@ void parser::open_group(int tk, location l) {
 	context = state::empty;
 }
 
-void parser::close_group(int tk, int (output::*rule)(int), location l) {
+void parser::close_group(op tk, int (output::*rule)(int), location l) {
 	if (context == state::value) {
 		while (!ops.empty() && ops.top().id != tk) {
 			commit();
@@ -234,14 +181,14 @@ void parser::close_group(int tk, int (output::*rule)(int), location l) {
 	}
 }
 
-void parser::directional(int l, int r, location loc, direction dir) {
+void parser::directional(op l, op r, location loc, direction dir) {
 	switch (dir) {
 		case direction::left: binary(l, loc); break;
 		case direction::right: binary(r, loc); break;
 	}
 }
 
-void parser::unary(int tk, location l) {
+void parser::unary(op tk, location l) {
 	// a unary operator must precede a value, so it can only be used from
 	// prefix position
 	if (context == state::value) {
@@ -249,9 +196,10 @@ void parser::unary(int tk, location l) {
 		return;
 	}
 	ops.push({tk, l});
+	context = state::prefix;
 }
 
-void parser::binary(int tk, location l) {
+void parser::binary(op tk, location l) {
 	// a binary operator must be preceded by a value, so it cannot be used
 	// from prefix position
 	if (context != state::value) {

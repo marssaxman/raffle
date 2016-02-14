@@ -12,8 +12,30 @@
 
 class parser: public lexer::output {
 	// the classic shunting-yard algorithm
+	// operator precedence encoded in high nibble
+	// even precedence levels associate left, odd levels associate right
+	enum class op: int {
+		// bracketed groups
+		eval = 0x00, list, object,
+		// statements
+		sequence = 0x10,
+		// symbols
+		capture = 0x30, define,
+		// structure
+		join = 0x50, caption,
+		// relation
+		equal = 0x60, lesser, greater,
+		// additive
+		add = 0x80, subtract, disjoin, exclude, range,
+		// multiplicative
+		multiply = 0xA0, divide, modulo, shift_left, shift_right, conjoin,
+		// unary
+		negate = 0xB0, complement,
+		// primary
+		lookup = 0xC0, subscript,
+	};
 	struct token {
-		int id;
+		op id;
 		location loc;
 	};
 	std::stack<int> values;
@@ -93,15 +115,17 @@ public:
 	virtual void token_arrow(location, direction) override;
 	void flush();
 protected:
+	static int precedence(op x);
+	static bool rightassoc(op x);
 	void accept(int val);
 	int recall();
 	void term(int (output::*rule)(std::string), location, std::string);
-	void group(int tk, int (output::*rule)(int), location, direction);
-	void open_group(int tk, location);
-	void close_group(int tk, int (output::*rule)(int), location);
-	void directional(int l, int r, location, direction);
-	void unary(int, location);
-	void binary(int, location);
+	void group(op tk, int (output::*rule)(int), location, direction);
+	void open_group(op tk, location);
+	void close_group(op tk, int (output::*rule)(int), location);
+	void directional(op l, op r, location, direction);
+	void unary(op, location);
+	void binary(op, location);
 	void commit();
 private:
 	output &out;
