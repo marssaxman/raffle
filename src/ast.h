@@ -7,8 +7,10 @@
 #ifndef AST_H
 #define AST_H
 
-#include "parser.h"
+#include "syntax.h"
 #include <memory>
+#include <vector>
+#include <string>
 
 namespace ast {
 
@@ -43,7 +45,7 @@ struct branch: public node {
 
 typedef std::vector<std::unique_ptr<node>> tree;
 
-struct builder: public parser::output {
+struct builder: public syntax::delegate {
 	builder() { make(node::empty); }
 	virtual int rule_empty() override;
 	virtual int rule_number(std::string t) override;

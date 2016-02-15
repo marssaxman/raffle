@@ -6,11 +6,13 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "lexer.h"
+#include "token.h"
+#include "syntax.h"
 #include <stack>
 #include <queue>
 
-class parser: public lexer::output {
+class parser: public token::delegate {
+	typedef token::direction direction;
 	// the classic shunting-yard algorithm
 	// operator precedence encoded in high nibble
 	// even precedence levels associate left, odd levels associate right
@@ -34,12 +36,12 @@ class parser: public lexer::output {
 		// primary
 		lookup = 0xC0, subscript,
 	};
-	struct token {
+	struct oprec {
 		op id;
 		location loc;
 	};
 	std::stack<int> values;
-	std::stack<token> ops;
+	std::stack<oprec> ops;
 	// availability of operators depends on context
 	enum class state {
 		empty,	// initial state, no value yet
@@ -48,49 +50,13 @@ class parser: public lexer::output {
 		infix,	// after binary operator, expecting an operand
 	} context = state::empty;
 public:
-	struct output {
-		virtual int rule_empty() = 0; // for optional items
-		virtual int rule_number(std::string) = 0;
-		virtual int rule_symbol(std::string) = 0;
-		virtual int rule_string(std::string) = 0;
-		virtual int rule_placeholder() = 0; // 
-		virtual int rule_sequence(int, int) = 0;
-		virtual int rule_capture(int, int) = 0;
-		virtual int rule_define(int, int) = 0;
-		virtual int rule_join(int, int) = 0;
-		virtual int rule_caption(int, int) = 0;
-		virtual int rule_equal(int, int) = 0;
-		virtual int rule_lesser(int, int) = 0;
-		virtual int rule_greater(int, int) = 0;
-		virtual int rule_not_equal(int, int) = 0;
-		virtual int rule_not_lesser(int, int) = 0;
-		virtual int rule_not_greater(int, int) = 0;
-		virtual int rule_addition(int, int) = 0;
-		virtual int rule_subtraction(int, int) = 0;
-		virtual int rule_or(int, int) = 0;
-		virtual int rule_xor(int, int) = 0;
-		virtual int rule_range(int, int) = 0;
-		virtual int rule_multiplication(int, int) = 0;
-		virtual int rule_division(int, int) = 0;
-		virtual int rule_modulo(int, int) = 0;
-		virtual int rule_shift_left(int, int) = 0;
-		virtual int rule_shift_right(int, int) = 0;
-		virtual int rule_and(int, int) = 0;
-		virtual int rule_negate(int) = 0;
-		virtual int rule_complement(int) = 0;
-		virtual int rule_eval(int) = 0;
-		virtual int rule_list(int) = 0;
-		virtual int rule_object(int) = 0;
-		virtual int rule_subscript(int, int) = 0;
-		virtual int rule_lookup(int, int) = 0;
-	};
 	struct error {
 		virtual void parser_unexpected(location) = 0;
 		virtual void parser_missing_operand(location) = 0;
 		virtual void parser_mismatched_group(location) = 0;
 		virtual void parser_unimplemented(location) = 0;
 	};
-	parser(output &o, error &e): out(o), err(e) {}
+	parser(syntax::delegate &o, error &e): out(o), err(e) {}
 	virtual void token_number(location, std::string) override;
 	virtual void token_symbol(location, std::string) override;
 	virtual void token_string(location, std::string) override;
@@ -124,16 +90,19 @@ protected:
 	static bool rightassoc(op x);
 	void accept(int val);
 	int recall();
-	void term(int (output::*rule)(std::string), location, std::string);
-	void group(op tk, int (output::*rule)(int), location, direction);
-	void open_group(op tk, location);
-	void close_group(op tk, int (output::*rule)(int), location);
+	typedef int (syntax::delegate::*leaf_rule)(std::string);
+	typedef int (syntax::delegate::*unary_rule)(int);
+	typedef int (syntax::delegate::*binary_rule)(int, int);
+	void term(leaf_rule, location, std::string);
+	void group(op, unary_rule, location, direction);
+	void open_group(op, location);
+	void close_group(op, unary_rule, location);
 	void directional(op l, op r, location, direction);
 	void unary(op, location);
 	void binary(op, location);
 	void commit();
 private:
-	output &out;
+	syntax::delegate &out;
 	error &err;
 };
 

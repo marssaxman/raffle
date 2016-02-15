@@ -15,15 +15,15 @@ bool parser::rightassoc(op x) {
 }
 
 void parser::token_number(location l, std::string text) {
-	term(&output::rule_number, l, text);
+	term(&syntax::delegate::rule_number, l, text);
 }
 
 void parser::token_symbol(location l, std::string text) {
-	term(&output::rule_symbol, l, text);
+	term(&syntax::delegate::rule_symbol, l, text);
 }
 
 void parser::token_string(location l, std::string text) {
-	term(&output::rule_string, l, text);
+	term(&syntax::delegate::rule_string, l, text);
 }
 
 void parser::token_underscore(location l) {
@@ -35,15 +35,15 @@ void parser::token_underscore(location l) {
 }
 
 void parser::token_paren(location l, direction d) {
-	group(op::eval, &output::rule_eval, l, d);
+	group(op::eval, &syntax::delegate::rule_eval, l, d);
 }
 
 void parser::token_bracket(location l, direction d) {
-	group(op::list, &output::rule_list, l, d);
+	group(op::list, &syntax::delegate::rule_list, l, d);
 }
 
 void parser::token_brace(location l, direction d) {
-	group(op::object, &output::rule_object, l, d);
+	group(op::object, &syntax::delegate::rule_object, l, d);
 }
 
 void parser::token_comma(location l) {
@@ -126,7 +126,7 @@ void parser::token_caret(location l) {
 	binary(op::exclude, l);
 }
 
-void parser::token_guillemet(location l, lexer::direction d) {
+void parser::token_guillemet(location l, direction d) {
 	directional(op::shift_left, op::shift_right, l, d);
 }
 
@@ -148,7 +148,7 @@ int parser::recall() {
 	return val;
 }
 
-void parser::term(int (output::*rule)(std::string), location l, std::string t)
+void parser::term(leaf_rule rule, location l, std::string t)
 {
 	if (context != state::value) {
 		accept((out.*rule)(t));
@@ -157,7 +157,7 @@ void parser::term(int (output::*rule)(std::string), location l, std::string t)
 	}
 }
 
-void parser::group(op tk, int (output::*rule)(int), location l, direction d) {
+void parser::group(op tk, unary_rule rule, location l, direction d) {
 	switch (d) {
 		case direction::left: open_group(tk, l); break;
 		case direction::right: close_group(tk, rule, l); break;
@@ -172,7 +172,7 @@ void parser::open_group(op tk, location l) {
 	context = state::empty;
 }
 
-void parser::close_group(op tk, int (output::*rule)(int), location l) {
+void parser::close_group(op tk, unary_rule rule, location l) {
 	if (context == state::value) {
 		while (!ops.empty() && ops.top().id != tk) {
 			commit();
@@ -228,7 +228,7 @@ void parser::binary(op tk, location l) {
 }
 
 void parser::commit() {
-	token tk = ops.top();
+	oprec tk = ops.top();
 	ops.pop();
 	int v = recall();
 	switch (tk.id) {
