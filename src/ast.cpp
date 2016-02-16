@@ -6,22 +6,25 @@
 
 #include "ast.h"
 
+// singleton null value used for optional expressions
+ast::node ast::empty{};
+
 using namespace ast;
 
-subscript::subscript(opcode o, node &t, node &a, location l):
-		id(o), target(t), argument(a), tk_loc(l) {
+literal::literal(opcode o, std::string t, location l):
+		id(o), text(t), tk_loc(l) {
 }
 
-location subscript::loc() {
-	return target.loc() + argument.loc() + tk_loc;
+location literal::loc() {
+	return tk_loc;
 }
 
-binary::binary(opcode o, node &l, node &r):
-		id(o), left(l), right(r) {
+symbol::symbol(std::string t, location l):
+		text(t), tk_loc(l) {
 }
 
-location binary::loc() {
-	return left.loc() + right.loc();
+location symbol::loc() {
+	return tk_loc;
 }
 
 unary::unary(opcode o, node &s, location l):
@@ -30,5 +33,14 @@ unary::unary(opcode o, node &s, location l):
 
 location unary::loc() {
 	return tk_loc + source.loc();
+}
+
+constructor::constructor(opcode o, node &i, location l):
+		id(o), items(i), tk_loc(l) {
+}
+
+location constructor::loc() {
+	// would be nice to capture the opening delimiter, too
+	return items.loc() + tk_loc;
 }
 

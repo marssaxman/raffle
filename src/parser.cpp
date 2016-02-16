@@ -36,21 +36,15 @@ void parser::token_underscore(location l) {
 }
 
 void parser::token_paren(location l, direction d) {
-	tree_rule term = &syntax::delegate::rule_1_eval;
-	tree_rule sub = &syntax::delegate::rule_2_apply;
-	group(op::eval, term, sub, l, d);
+	group(op::tuple, &syntax::delegate::rule_1_tuple, l, d);
 }
 
 void parser::token_bracket(location l, direction d) {
-	tree_rule term = &syntax::delegate::rule_1_list;
-	tree_rule sub = &syntax::delegate::rule_2_select;
-	group(op::list, term, sub, l, d);
+	group(op::list, &syntax::delegate::rule_1_list, l, d);
 }
 
 void parser::token_brace(location l, direction d) {
-	tree_rule term = &syntax::delegate::rule_1_object;
-	tree_rule sub = &syntax::delegate::rule_2_expand;
-	group(op::object, term, sub, l, d);
+	group(op::object, &syntax::delegate::rule_1_object, l, d);
 }
 
 void parser::token_comma(location l) {
@@ -154,33 +148,25 @@ void parser::term(leaf_rule rule, location l, std::string t)
 	}
 }
 
-void parser::group(op id, tree_rule t, tree_rule s, location l, direction d) {
+void parser::group(op id, tree_rule r, location l, direction d) {
 	switch (d) {
 		case direction::left: open_group(id, l); break;
-		case direction::right: close_group(id, t, s, l); break;
+		case direction::right: close_group(id, r, l); break;
 	}
 }
 
 void parser::open_group(op id, location l) {
-	ops.push({id, l});
 	if (context == state::value) {
 		ops.push({op::subscript, l});
 	}
+	ops.push({id, l});
 	context = state::empty;
 }
 
-void parser::close_group(op id, tree_rule term, tree_rule sub, location l) {
-	bool subscript = false;
+void parser::close_group(op id, tree_rule rule, location l) {
 	if (context == state::value) {
-		while (!ops.empty()) {
-		 	if (ops.top().id == id) {
-		 		break;
-		 	} else if (ops.top().id == op::subscript) {
-				subscript = true;
-				ops.pop();
-			} else {
-				commit();
-			}
+		while (!ops.empty() && ops.top().id != id) {
+			commit();
 		}
 	} else if (context == state::empty) {
 		out.rule_0_empty();
@@ -190,7 +176,7 @@ void parser::close_group(op id, tree_rule term, tree_rule sub, location l) {
 	if (!ops.empty() && ops.top().id == id) {
 		l = ops.top().loc + l;
 		ops.pop();
-		(out.*(subscript? sub: term))(l);
+		(out.*(rule))(l);
 		context = state::value;
 	} else {
 		err.parser_mismatched_group(l);
@@ -260,6 +246,7 @@ void parser::commit() {
 		case op::conjoin: out.rule_2_and(); break;
 		case op::negate: out.rule_1_negate(ops.top().loc); break;
 		case op::complement: out.rule_1_complement(ops.top().loc); break;
+		case op::subscript: out.rule_2_subscript(); break;
 		case op::lookup: out.rule_2_lookup(); break;
 		default: err.parser_unimplemented(ops.top().loc); break;
 	}

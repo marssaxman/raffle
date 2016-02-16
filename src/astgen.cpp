@@ -7,177 +7,206 @@
 #include "astgen.h"
 #include <iostream>
 
+using namespace ast;
+
 void astgen::rule_0_empty() {
+	val.push(empty);
 }
 
 void astgen::rule_0_number(location loc, std::string text) {
-	std::cout << text << " ";
+	push(new literal(literal::number, text, loc));
 }
 
 void astgen::rule_0_symbol(location loc, std::string text) {
-	std::cout << text << " ";
+	push(new symbol(text, loc));
 }
 
 void astgen::rule_0_string(location loc, std::string text) {
-	std::cout << text << " ";
+	push(new literal(literal::string, text, loc));
 }
 
 void astgen::rule_0_placeholder(location loc) {
-	std::cout << "_ ";
+	push(new ast::placeholder(loc));
 }
 
 void astgen::rule_2_sequence() {
-	std::cout << "; ";
+	ast::node &next = pop();
+	ast::node &exp = pop();
+	push(new ast::sequence(exp, next));
 }
 
 void astgen::rule_2_capture() {
-	std::cout << "-> ";
+	ast::node &exp = pop();
+	ast::node &sym = pop();
+	push(new ast::definition(ast::definition::capture, sym, exp));
 }
 
 void astgen::rule_2_define() {
-	std::cout << "<- ";
+	ast::node &exp = pop();
+	ast::node &sym = pop();
+	push(new ast::definition(ast::definition::evaluate, sym, exp));
 }
 
 void astgen::rule_2_join() {
-	std::cout << ", ";
+	ast::node &next = pop();
+	ast::node &exp = pop();
+	push(new ast::join(exp, next));
 }
 
 void astgen::rule_2_caption() {
-	std::cout << ": ";
+	ast::node &arg = pop();
+	ast::node &target = pop();
+	push(new ast::invocation(ast::invocation::caption, target, arg));
 }
 
 void astgen::rule_2_equal() {
-	binary(ast::binary::equal);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::relation(ast::relation::equal, left, right));
 }
 
 void astgen::rule_2_lesser() {
-	binary(ast::binary::lesser);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::relation(ast::relation::lesser, left, right));
 }
 
 void astgen::rule_2_greater() {
-	binary(ast::binary::greater);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::relation(ast::relation::greater, left, right));
 }
 
 void astgen::rule_2_not_equal() {
-	binary(ast::binary::not_equal);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::relation(ast::relation::not_equal, left, right));
 }
 
 void astgen::rule_2_not_lesser() {
-	binary(ast::binary::not_lesser);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::relation(ast::relation::not_lesser, left, right));
 }
 
 void astgen::rule_2_not_greater() {
-	binary(ast::binary::not_greater);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::relation(ast::relation::not_greater, left, right));
 }
 
 void astgen::rule_2_add() {
-	binary(ast::binary::add);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::arithmetic(ast::arithmetic::add, left, right));
 }
 
 void astgen::rule_2_subtract() {
-	binary(ast::binary::subtract);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::arithmetic(ast::arithmetic::subtract, left, right));
 }
 
 void astgen::rule_2_or() {
-	binary(ast::binary::disjoin);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::logic(ast::logic::disjoin, left, right));
 }
 
 void astgen::rule_2_xor() {
-	binary(ast::binary::exclude);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::logic(ast::logic::exclude, left, right));
 }
 
 void astgen::rule_2_range() {
-	std::cout << ".. ";
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::range(left, right));
 }
 
 void astgen::rule_2_multiply() {
-	binary(ast::binary::multiply);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::arithmetic(ast::arithmetic::multiply, left, right));
 }
 
 void astgen::rule_2_divide() {
-	binary(ast::binary::divide);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::arithmetic(ast::arithmetic::divide, left, right));
 }
 
 void astgen::rule_2_modulo() {
-	binary(ast::binary::modulo);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::arithmetic(ast::arithmetic::modulo, left, right));
 }
 
 void astgen::rule_2_shift_left() {
-	binary(ast::binary::shift_left);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::arithmetic(ast::arithmetic::shift_left, left, right));
 }
 
 void astgen::rule_2_shift_right() {
-	binary(ast::binary::shift_right);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::arithmetic(ast::arithmetic::shift_right, left, right));
 }
 
 void astgen::rule_2_and() {
-	binary(ast::binary::conjoin);
+	ast::node &right = pop();
+	ast::node &left = pop();
+	push(new ast::logic(ast::logic::conjoin, left, right));
 }
 
 void astgen::rule_1_negate(location loc) {
-	unary(ast::unary::negate, loc);
+	ast::node &source = pop();
+	push(new ast::unary(ast::unary::negate, source, loc));
 }
 
 void astgen::rule_1_complement(location loc) {
-	unary(ast::unary::complement, loc);
+	ast::node &source = pop();
+	push(new ast::unary(ast::unary::complement, source, loc));
 }
 
-void astgen::rule_1_eval(location loc) {
-	// A parenthesis group returns the value of the expression it contains, so
-	// we don't need to generate an AST node which represents it. We'll simply
-	// leave the current expression on top of the stack.
+void astgen::rule_1_tuple(location loc) {
+	ast::node &exp = pop();
+	push(new ast::constructor(ast::constructor::tuple, exp, loc));
 }
 
 void astgen::rule_1_list(location loc) {
-	unary(ast::unary::list, loc);
+	ast::node &exp = pop();
+	push(new ast::constructor(ast::constructor::list, exp, loc));
 }
 
 void astgen::rule_1_object(location loc) {
-	unary(ast::unary::object, loc);
+	ast::node &exp = pop();
+	push(new ast::constructor(ast::constructor::object, exp, loc));
 }
 
-void astgen::rule_2_apply(location loc) {
+void astgen::rule_2_subscript() {
 	ast::node &arg = pop();
 	ast::node &target = pop();
-	push(new ast::subscript(ast::subscript::apply, target, arg, loc));
-}
-
-void astgen::rule_2_select(location loc) {
-	ast::node &arg = pop();
-	ast::node &target = pop();
-	push(new ast::subscript(ast::subscript::apply, target, arg, loc));
-}
-
-void astgen::rule_2_expand(location loc) {
-	ast::node &arg = pop();
-	ast::node &target = pop();
-	push(new ast::subscript(ast::subscript::apply, target, arg, loc));
+	push(new ast::invocation(ast::invocation::subscript, target, arg));
 }
 
 void astgen::rule_2_lookup() {
-	std::cout << ". ";
-}
-
-void astgen::unary(ast::unary::opcode id, location loc) {
-	ast::node &source = pop();
-	push(new ast::unary(id, source, loc));
-}
-
-void astgen::binary(ast::binary::opcode id) {
-	ast::node &right = pop();
-	ast::node &left = pop();
-	push(new ast::binary(id, left, right));
+	ast::node &arg = pop();
+	ast::node &target = pop();
+	push(new ast::invocation(ast::invocation::lookup, target, arg));
 }
 
 void astgen::push(ast::node *n) {
-	val.push(output.size());
 	output.emplace_back(n);
+	val.push(*output.back());
 }
 
 ast::node &astgen::pop() {
-	size_t i = val.top();
+	ast::node &out = val.top();
 	val.pop();
-	return *output[i];
+	return out;
 }
 
 
