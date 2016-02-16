@@ -11,22 +11,22 @@ void astgen::rule_0_empty()
 {
 }
 
-void astgen::rule_0_number(std::string t)
+void astgen::rule_0_number(location loc, std::string text)
 {
-	std::cout << t << " ";
+	std::cout << text << " ";
 }
 
-void astgen::rule_0_symbol(std::string t)
+void astgen::rule_0_symbol(location loc, std::string text)
 {
-	std::cout << t << " ";
+	std::cout << text << " ";
 }
 
-void astgen::rule_0_string(std::string t)
+void astgen::rule_0_string(location loc, std::string text)
 {
-	std::cout << t << " ";
+	std::cout << text << " ";
 }
 
-void astgen::rule_0_placeholder()
+void astgen::rule_0_placeholder(location loc)
 {
 	std::cout << "_ ";
 }
@@ -111,12 +111,12 @@ void astgen::rule_2_range()
 	std::cout << ".. ";
 }
 
-void astgen::rule_2_multiplication()
+void astgen::rule_2_multiply()
 {
 	std::cout << "* ";
 }
 
-void astgen::rule_2_division()
+void astgen::rule_2_divide()
 {
 	std::cout << "/ ";
 }
@@ -141,27 +141,27 @@ void astgen::rule_2_and()
 	std::cout << "and ";
 }
 
-void astgen::rule_1_negate()
+void astgen::rule_1_negate(location loc)
 {
 	std::cout << "neg ";
 }
 
-void astgen::rule_1_complement()
+void astgen::rule_1_complement(location loc)
 {
 	std::cout << "not ";
 }
 
-void astgen::rule_1_eval()
+void astgen::rule_1_eval(location loc)
 {
 	std::cout << "() ";
 }
 
-void astgen::rule_1_list()
+void astgen::rule_1_list(location loc)
 {
 	std::cout << "[] ";
 }
 
-void astgen::rule_1_object()
+void astgen::rule_1_object(location loc)
 {
 	std::cout << "{} ";
 }

@@ -11,10 +11,10 @@
 
 struct astgen: public syntax::delegate {
 	virtual void rule_0_empty() override;
-	virtual void rule_0_number(std::string) override;
-	virtual void rule_0_symbol(std::string) override;
-	virtual void rule_0_string(std::string) override;
-	virtual void rule_0_placeholder() override;
+	virtual void rule_0_number(location, std::string) override;
+	virtual void rule_0_symbol(location, std::string) override;
+	virtual void rule_0_string(location, std::string) override;
+	virtual void rule_0_placeholder(location) override;
 	virtual void rule_2_sequence() override;
 	virtual void rule_2_capture() override;
 	virtual void rule_2_define() override;
@@ -31,17 +31,17 @@ struct astgen: public syntax::delegate {
 	virtual void rule_2_or() override;
 	virtual void rule_2_xor() override;
 	virtual void rule_2_range() override;
-	virtual void rule_2_multiplication() override;
-	virtual void rule_2_division() override;
+	virtual void rule_2_multiply() override;
+	virtual void rule_2_divide() override;
 	virtual void rule_2_modulo() override;
 	virtual void rule_2_shift_left() override;
 	virtual void rule_2_shift_right() override;
 	virtual void rule_2_and() override;
-	virtual void rule_1_negate() override;
-	virtual void rule_1_complement() override;
-	virtual void rule_1_eval() override;
-	virtual void rule_1_list() override;
-	virtual void rule_1_object() override;
+	virtual void rule_1_negate(location) override;
+	virtual void rule_1_complement(location) override;
+	virtual void rule_1_eval(location) override;
+	virtual void rule_1_list(location) override;
+	virtual void rule_1_object(location) override;
 	virtual void rule_2_subscript() override;
 	virtual void rule_2_lookup() override;
 };

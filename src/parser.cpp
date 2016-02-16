@@ -28,7 +28,7 @@ void parser::token_string(location l, std::string text) {
 
 void parser::token_underscore(location l) {
 	if (context != state::value) {
-		out.rule_0_placeholder();
+		out.rule_0_placeholder(l);
 		context = state::value;
 	} else {
 		err.parser_unexpected(l);
@@ -141,7 +141,7 @@ void parser::flush() {
 void parser::term(leaf_rule rule, location l, std::string t)
 {
 	if (context != state::value) {
-		(out.*rule)(t);
+		(out.*rule)(l, t);
 		context = state::value;
 	} else {
 		err.parser_unexpected(l);
@@ -174,8 +174,9 @@ void parser::close_group(op id, tree_rule rule, location l) {
 		err.parser_unexpected(l);
 	}
 	if (!ops.empty() && ops.top().id == id) {
+		l = ops.top().loc + l;
 		ops.pop();
-		(out.*rule)();
+		(out.*rule)(l);
 		context = state::value;
 	} else {
 		err.parser_mismatched_group(l);
@@ -237,14 +238,14 @@ void parser::commit() {
 		case op::disjoin: out.rule_2_or(); break;
 		case op::exclude: out.rule_2_xor(); break;
 		case op::range: out.rule_2_range(); break;
-		case op::multiply: out.rule_2_multiplication(); break;
-		case op::divide: out.rule_2_division(); break;
+		case op::multiply: out.rule_2_multiply(); break;
+		case op::divide: out.rule_2_divide(); break;
 		case op::modulo: out.rule_2_modulo(); break;
 		case op::shift_left: out.rule_2_shift_left(); break;
 		case op::shift_right: out.rule_2_shift_right(); break;
 		case op::conjoin: out.rule_2_and(); break;
-		case op::negate: out.rule_1_negate(); break;
-		case op::complement: out.rule_1_complement(); break;
+		case op::negate: out.rule_1_negate(ops.top().loc); break;
+		case op::complement: out.rule_1_complement(ops.top().loc); break;
 		case op::subscript: out.rule_2_subscript(); break;
 		case op::lookup: out.rule_2_lookup(); break;
 		default: err.parser_unimplemented(ops.top().loc); break;

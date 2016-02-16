@@ -87,8 +87,8 @@ public:
 protected:
 	static int precedence(op x);
 	static bool rightassoc(op x);
-	typedef void (syntax::delegate::*leaf_rule)(std::string);
-	typedef void (syntax::delegate::*tree_rule)();
+	typedef void (syntax::delegate::*leaf_rule)(location, std::string);
+	typedef void (syntax::delegate::*tree_rule)(location);
 	void term(leaf_rule, location, std::string);
 	void group(op, tree_rule, location, direction);
 	void open_group(op, location);

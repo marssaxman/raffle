@@ -8,6 +8,7 @@
 #define SYNTAX_H
 
 #include <string>
+#include "location.h"
 
 // Delegate for stack-driven analysis
 // Each rule pops either 0, 1, or 2 values from the stack, then pushes one
@@ -16,10 +17,10 @@
 namespace syntax {
 struct delegate {
 	virtual void rule_0_empty() = 0;
-	virtual void rule_0_number(std::string) = 0;
-	virtual void rule_0_symbol(std::string) = 0;
-	virtual void rule_0_string(std::string) = 0;
-	virtual void rule_0_placeholder() = 0;
+	virtual void rule_0_number(location, std::string) = 0;
+	virtual void rule_0_symbol(location, std::string) = 0;
+	virtual void rule_0_string(location, std::string) = 0;
+	virtual void rule_0_placeholder(location) = 0;
 	virtual void rule_2_sequence() = 0;
 	virtual void rule_2_capture() = 0;
 	virtual void rule_2_define() = 0;
@@ -36,17 +37,17 @@ struct delegate {
 	virtual void rule_2_or() = 0;
 	virtual void rule_2_xor() = 0;
 	virtual void rule_2_range() = 0;
-	virtual void rule_2_multiplication() = 0;
-	virtual void rule_2_division() = 0;
+	virtual void rule_2_multiply() = 0;
+	virtual void rule_2_divide() = 0;
 	virtual void rule_2_modulo() = 0;
 	virtual void rule_2_shift_left() = 0;
 	virtual void rule_2_shift_right() = 0;
 	virtual void rule_2_and() = 0;
-	virtual void rule_1_negate() = 0;
-	virtual void rule_1_complement() = 0;
-	virtual void rule_1_eval() = 0;
-	virtual void rule_1_list() = 0;
-	virtual void rule_1_object() = 0;
+	virtual void rule_1_negate(location) = 0;
+	virtual void rule_1_complement(location) = 0;
+	virtual void rule_1_eval(location) = 0;
+	virtual void rule_1_list(location) = 0;
+	virtual void rule_1_object(location) = 0;
 	virtual void rule_2_subscript() = 0;
 	virtual void rule_2_lookup() = 0;
 };
