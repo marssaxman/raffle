@@ -12,7 +12,6 @@
 #include <queue>
 
 class parser: public token::delegate {
-	typedef token::direction direction;
 	// the classic shunting-yard algorithm
 	// operator precedence encoded in high nibble
 	// even precedence levels associate left, odd levels associate right
@@ -60,9 +59,12 @@ public:
 	virtual void token_symbol(location, std::string) override;
 	virtual void token_string(location, std::string) override;
 	virtual void token_underscore(location) override;
-	virtual void token_paren(location, direction) override;
-	virtual void token_bracket(location, direction) override;
-	virtual void token_brace(location, direction) override;
+	virtual void token_l_paren(location) override;
+	virtual void token_r_paren(location) override;
+	virtual void token_l_bracket(location) override;
+	virtual void token_r_bracket(location) override;
+	virtual void token_l_brace(location) override;
+	virtual void token_r_brace(location) override;
 	virtual void token_comma(location) override;
 	virtual void token_colon(location) override;
 	virtual void token_semicolon(location) override;
@@ -74,28 +76,31 @@ public:
 	virtual void token_slash(location) override;
 	virtual void token_percent(location) override;
 	virtual void token_equal(location) override;
-	virtual void token_angle(location, direction) override;
+	virtual void token_l_angle(location) override;
+	virtual void token_r_angle(location) override;
 	virtual void token_bang(location) override;
 	virtual void token_bang_equal(location) override;
-	virtual void token_bangle(location, direction) override;
+	virtual void token_l_bangle(location) override;
+	virtual void token_r_bangle(location) override;
 	virtual void token_ampersand(location) override;
 	virtual void token_pipe(location) override;
 	virtual void token_caret(location) override;
-	virtual void token_guillemet(location, direction) override;
-	virtual void token_arrow(location, direction) override;
+	virtual void token_l_guillemet(location) override;
+	virtual void token_r_guillemet(location) override;
+	virtual void token_l_arrow(location) override;
+	virtual void token_r_arrow(location) override;
 	void flush();
 protected:
 	static int precedence(op x);
 	static bool rightassoc(op x);
 	typedef void (syntax::delegate::*leaf_rule)(location, std::string);
-	typedef void (syntax::delegate::*tree_rule)(location);
+	typedef void (syntax::delegate::*group_rule)(location);
+	typedef void (syntax::delegate::*tree_rule)();
 	void term(leaf_rule, location, std::string);
-	void group(op, tree_rule, location, direction);
-	void open_group(op, location);
-	void close_group(op, tree_rule, location);
-	void directional(op l, op r, location, direction);
-	void unary(op, location);
-	void binary(op, location);
+	void open(op, location);
+	void close(op, group_rule, location);
+	void prefix(op, location);
+	void infix(op, location);
 	void commit();
 private:
 	syntax::delegate &out;

@@ -35,100 +35,128 @@ void parser::token_underscore(location l) {
 	}
 }
 
-void parser::token_paren(location l, direction d) {
-	group(op::tuple, &syntax::delegate::rule_1_tuple, l, d);
+void parser::token_l_paren(location l) {
+	open(op::tuple, l);
 }
 
-void parser::token_bracket(location l, direction d) {
-	group(op::list, &syntax::delegate::rule_1_list, l, d);
+void parser::token_r_paren(location l) {
+	close(op::tuple, &syntax::delegate::rule_1_tuple, l);
 }
 
-void parser::token_brace(location l, direction d) {
-	group(op::object, &syntax::delegate::rule_1_object, l, d);
+void parser::token_l_bracket(location l) {
+	open(op::list, l);
+}
+
+void parser::token_r_bracket(location l) {
+	close(op::list, &syntax::delegate::rule_1_list, l);
+}
+
+void parser::token_l_brace(location l) {
+	open(op::object, l);
+}
+
+void parser::token_r_brace(location l) {
+	close(op::object, &syntax::delegate::rule_1_object, l);
 }
 
 void parser::token_comma(location l) {
-	binary(op::join, l);
+	infix(op::join, l);
 }
 
 void parser::token_colon(location l) {
-	binary(op::caption, l);
+	infix(op::caption, l);
 }
 
 void parser::token_semicolon(location l) {
-	binary(op::sequence, l);
+	infix(op::sequence, l);
 }
 
 void parser::token_dot(location l) {
-	binary(op::lookup, l);
+	infix(op::lookup, l);
 }
 
 void parser::token_dot_dot(location l) {
-	binary(op::range, l);
+	infix(op::range, l);
 }
 
-void parser::token_arrow(location l, direction d) {
-	directional(op::define, op::capture, l, d);
+void parser::token_l_arrow(location l) {
+	infix(op::define, l);
+}
+
+void parser::token_r_arrow(location l) {
+	infix(op::capture, l);
 }
 
 void parser::token_plus(location l) {
-	binary(op::add, l);
+	infix(op::add, l);
 }
 
 void parser::token_hyphen(location l) {
 	if (context == state::value) {
-		binary(op::subtract, l);
+		infix(op::subtract, l);
 	} else {
-		unary(op::negate, l);
+		prefix(op::negate, l);
 	}
 }
 
 void parser::token_star(location l) {
-	binary(op::multiply, l);
+	infix(op::multiply, l);
 }
 
 void parser::token_slash(location l) {
-	binary(op::divide, l);
+	infix(op::divide, l);
 }
 
 void parser::token_percent(location l) {
-	binary(op::modulo, l);
+	infix(op::modulo, l);
 }
 
 void parser::token_equal(location l) {
-	binary(op::equal, l);
+	infix(op::equal, l);
 }
 
-void parser::token_angle(location l, direction d) {
-	directional(op::lesser, op::greater, l, d);
+void parser::token_l_angle(location l) {
+	infix(op::lesser, l);
+}
+
+void parser::token_r_angle(location l) {
+	infix(op::greater, l);
 }
 
 void parser::token_bang(location l) {
-	unary(op::complement, l);
+	prefix(op::complement, l);
 }
 
 void parser::token_bang_equal(location l) {
-	binary(op::not_equal, l);
+	infix(op::not_equal, l);
 }
 
-void parser::token_bangle(location l, direction d) {
-	directional(op::not_lesser, op::not_greater, l, d);
+void parser::token_l_bangle(location l) {
+	infix(op::not_lesser, l);
+}
+
+void parser::token_r_bangle(location l) {
+	infix(op::not_greater, l);
 }
 
 void parser::token_ampersand(location l) {
-	binary(op::conjoin, l);
+	infix(op::conjoin, l);
 }
 
 void parser::token_pipe(location l) {
-	binary(op::disjoin, l);
+	infix(op::disjoin, l);
 }
 
 void parser::token_caret(location l) {
-	binary(op::exclude, l);
+	infix(op::exclude, l);
 }
 
-void parser::token_guillemet(location l, direction d) {
-	directional(op::shift_left, op::shift_right, l, d);
+void parser::token_l_guillemet(location l) {
+	infix(op::shift_left, l);
+}
+
+void parser::token_r_guillemet(location l) {
+	infix(op::shift_right, l);
 }
 
 void parser::flush() {
@@ -148,14 +176,7 @@ void parser::term(leaf_rule rule, location l, std::string t)
 	}
 }
 
-void parser::group(op id, tree_rule r, location l, direction d) {
-	switch (d) {
-		case direction::left: open_group(id, l); break;
-		case direction::right: close_group(id, r, l); break;
-	}
-}
-
-void parser::open_group(op id, location l) {
+void parser::open(op id, location l) {
 	if (context == state::value) {
 		ops.push({op::subscript, l});
 	}
@@ -163,7 +184,7 @@ void parser::open_group(op id, location l) {
 	context = state::empty;
 }
 
-void parser::close_group(op id, tree_rule rule, location l) {
+void parser::close(op id, group_rule rule, location l) {
 	if (context == state::value) {
 		while (!ops.empty() && ops.top().id != id) {
 			commit();
@@ -183,14 +204,7 @@ void parser::close_group(op id, tree_rule rule, location l) {
 	}
 }
 
-void parser::directional(op l, op r, location loc, direction dir) {
-	switch (dir) {
-		case direction::left: binary(l, loc); break;
-		case direction::right: binary(r, loc); break;
-	}
-}
-
-void parser::unary(op id, location l) {
+void parser::prefix(op id, location l) {
 	// a unary operator must precede a value, so it can only be used from
 	// prefix position
 	if (context == state::value) {
@@ -201,7 +215,7 @@ void parser::unary(op id, location l) {
 	context = state::prefix;
 }
 
-void parser::binary(op id, location l) {
+void parser::infix(op id, location l) {
 	// a binary operator must be preceded by a value, so it cannot be used
 	// from prefix position
 	if (context != state::value) {

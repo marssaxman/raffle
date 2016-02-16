@@ -30,7 +30,6 @@
 //	structure: ',' | ':' | ';' | '<-' | '->' | '.' | '..'
 
 class lexer {
-	typedef token::direction direction;
 public:
 	struct error {
 		virtual void lexer_unknown(location, char) = 0;

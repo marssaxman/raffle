@@ -12,19 +12,17 @@
 
 namespace token {
 
-enum class direction {
-	left,
-	right
-};
-
 struct delegate {
 	virtual void token_number(location, std::string) = 0;
 	virtual void token_symbol(location, std::string) = 0;
 	virtual void token_string(location, std::string) = 0;
 	virtual void token_underscore(location) = 0;
-	virtual void token_paren(location, direction) = 0;
-	virtual void token_bracket(location, direction) = 0;
-	virtual void token_brace(location, direction) = 0;
+	virtual void token_l_paren(location) = 0;
+	virtual void token_r_paren(location) = 0;
+	virtual void token_l_bracket(location) = 0;
+	virtual void token_r_bracket(location) = 0;
+	virtual void token_l_brace(location) = 0;
+	virtual void token_r_brace(location) = 0;
 	virtual void token_comma(location) = 0;
 	virtual void token_semicolon(location) = 0;
 	virtual void token_colon(location) = 0;
@@ -40,11 +38,15 @@ struct delegate {
 	virtual void token_caret(location) = 0;
 	virtual void token_bang(location) = 0;
 	virtual void token_equal(location) = 0;
-	virtual void token_angle(location, direction) = 0;
 	virtual void token_bang_equal(location) = 0;
-	virtual void token_bangle(location, direction) = 0;
-	virtual void token_guillemet(location, direction) = 0;
-	virtual void token_arrow(location, direction) = 0;
+	virtual void token_l_angle(location) = 0;
+	virtual void token_r_angle(location) = 0;
+	virtual void token_l_bangle(location) = 0;
+	virtual void token_r_bangle(location) = 0;
+	virtual void token_l_guillemet(location) = 0;
+	virtual void token_r_guillemet(location) = 0;
+	virtual void token_l_arrow(location) = 0;
+	virtual void token_r_arrow(location) = 0;
 };
 
 } // namespace token
