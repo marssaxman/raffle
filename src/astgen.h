@@ -8,6 +8,10 @@
 #define ASTGEN_H
 
 #include "syntax.h"
+#include <stack>
+#include <vector>
+#include <memory>
+#include "ast.h"
 
 struct astgen: public syntax::delegate {
 	virtual void rule_0_empty() override;
@@ -44,6 +48,12 @@ struct astgen: public syntax::delegate {
 	virtual void rule_1_object(location) override;
 	virtual void rule_2_subscript() override;
 	virtual void rule_2_lookup() override;
+private:
+	void binop(ast::binop::opcode id);
+	void push(ast::node*);
+	ast::node &pop();
+	std::stack<size_t> val;
+	std::vector<std::unique_ptr<ast::node>> output;
 };
 
 #endif //ASTGEN_H
