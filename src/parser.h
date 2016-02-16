@@ -18,7 +18,7 @@ class parser: public token::delegate {
 	// even precedence levels associate left, odd levels associate right
 	enum class op: int {
 		// bracketed groups
-		eval = 0x00, list, object,
+		eval = 0x00, list, object, subscript,
 		// statements
 		sequence = 0x10,
 		// symbols
@@ -34,7 +34,7 @@ class parser: public token::delegate {
 		// unary
 		negate = 0xB0, complement,
 		// primary
-		lookup = 0xC0, subscript,
+		lookup = 0xC0,
 	};
 	struct oprec {
 		op id;
@@ -90,9 +90,9 @@ protected:
 	typedef void (syntax::delegate::*leaf_rule)(location, std::string);
 	typedef void (syntax::delegate::*tree_rule)(location);
 	void term(leaf_rule, location, std::string);
-	void group(op, tree_rule, location, direction);
+	void group(op, tree_rule term, tree_rule sub, location, direction);
 	void open_group(op, location);
-	void close_group(op, tree_rule, location);
+	void close_group(op, tree_rule term, tree_rule sub, location);
 	void directional(op l, op r, location, direction);
 	void unary(op, location);
 	void binary(op, location);

@@ -47,43 +47,43 @@ void astgen::rule_2_caption() {
 }
 
 void astgen::rule_2_equal() {
-	infix(ast::binary::equal);
+	binary(ast::binary::equal);
 }
 
 void astgen::rule_2_lesser() {
-	infix(ast::binary::lesser);
+	binary(ast::binary::lesser);
 }
 
 void astgen::rule_2_greater() {
-	infix(ast::binary::greater);
+	binary(ast::binary::greater);
 }
 
 void astgen::rule_2_not_equal() {
-	infix(ast::binary::not_equal);
+	binary(ast::binary::not_equal);
 }
 
 void astgen::rule_2_not_lesser() {
-	infix(ast::binary::not_lesser);
+	binary(ast::binary::not_lesser);
 }
 
 void astgen::rule_2_not_greater() {
-	infix(ast::binary::not_greater);
+	binary(ast::binary::not_greater);
 }
 
 void astgen::rule_2_add() {
-	infix(ast::binary::add);
+	binary(ast::binary::add);
 }
 
 void astgen::rule_2_subtract() {
-	infix(ast::binary::subtract);
+	binary(ast::binary::subtract);
 }
 
 void astgen::rule_2_or() {
-	infix(ast::binary::disjoin);
+	binary(ast::binary::disjoin);
 }
 
 void astgen::rule_2_xor() {
-	infix(ast::binary::exclude);
+	binary(ast::binary::exclude);
 }
 
 void astgen::rule_2_range() {
@@ -91,66 +91,82 @@ void astgen::rule_2_range() {
 }
 
 void astgen::rule_2_multiply() {
-	infix(ast::binary::multiply);
+	binary(ast::binary::multiply);
 }
 
 void astgen::rule_2_divide() {
-	infix(ast::binary::divide);
+	binary(ast::binary::divide);
 }
 
 void astgen::rule_2_modulo() {
-	infix(ast::binary::modulo);
+	binary(ast::binary::modulo);
 }
 
 void astgen::rule_2_shift_left() {
-	infix(ast::binary::shift_left);
+	binary(ast::binary::shift_left);
 }
 
 void astgen::rule_2_shift_right() {
-	infix(ast::binary::shift_right);
+	binary(ast::binary::shift_right);
 }
 
 void astgen::rule_2_and() {
-	infix(ast::binary::conjoin);
+	binary(ast::binary::conjoin);
 }
 
 void astgen::rule_1_negate(location loc) {
-	prefix(ast::unary::negate, loc);
+	unary(ast::unary::negate, loc);
 }
 
 void astgen::rule_1_complement(location loc) {
-	prefix(ast::unary::complement, loc);
+	unary(ast::unary::complement, loc);
 }
 
 void astgen::rule_1_eval(location loc) {
-	std::cout << "() ";
+	// A parenthesis group returns the value of the expression it contains, so
+	// we don't need to generate an AST node which represents it. We'll simply
+	// leave the current expression on top of the stack.
 }
 
 void astgen::rule_1_list(location loc) {
-	std::cout << "[] ";
+	unary(ast::unary::list, loc);
 }
 
 void astgen::rule_1_object(location loc) {
-	std::cout << "{} ";
+	unary(ast::unary::object, loc);
 }
 
-void astgen::rule_2_subscript() {
-	std::cout << "app ";
+void astgen::rule_2_apply(location loc) {
+	ast::node &arg = pop();
+	ast::node &target = pop();
+	push(new ast::subscript(ast::subscript::apply, target, arg, loc));
+}
+
+void astgen::rule_2_select(location loc) {
+	ast::node &arg = pop();
+	ast::node &target = pop();
+	push(new ast::subscript(ast::subscript::apply, target, arg, loc));
+}
+
+void astgen::rule_2_expand(location loc) {
+	ast::node &arg = pop();
+	ast::node &target = pop();
+	push(new ast::subscript(ast::subscript::apply, target, arg, loc));
 }
 
 void astgen::rule_2_lookup() {
 	std::cout << ". ";
 }
 
-void astgen::infix(ast::binary::opcode id) {
+void astgen::unary(ast::unary::opcode id, location loc) {
+	ast::node &source = pop();
+	push(new ast::unary(id, source, loc));
+}
+
+void astgen::binary(ast::binary::opcode id) {
 	ast::node &right = pop();
 	ast::node &left = pop();
 	push(new ast::binary(id, left, right));
-}
-
-void astgen::prefix(ast::unary::opcode id, location loc) {
-	ast::node &source = pop();
-	push(new ast::unary(id, source, loc));
 }
 
 void astgen::push(ast::node *n) {

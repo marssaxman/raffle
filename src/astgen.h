@@ -46,11 +46,13 @@ struct astgen: public syntax::delegate {
 	virtual void rule_1_eval(location) override;
 	virtual void rule_1_list(location) override;
 	virtual void rule_1_object(location) override;
-	virtual void rule_2_subscript() override;
+	virtual void rule_2_apply(location) override;
+	virtual void rule_2_select(location) override;
+	virtual void rule_2_expand(location) override;
 	virtual void rule_2_lookup() override;
 private:
-	void infix(ast::binary::opcode);
-	void prefix(ast::unary::opcode, location);
+	void unary(ast::unary::opcode, location);
+	void binary(ast::binary::opcode);
 	void push(ast::node*);
 	ast::node &pop();
 	std::stack<size_t> val;

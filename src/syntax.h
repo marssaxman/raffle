@@ -48,7 +48,9 @@ struct delegate {
 	virtual void rule_1_eval(location) = 0;
 	virtual void rule_1_list(location) = 0;
 	virtual void rule_1_object(location) = 0;
-	virtual void rule_2_subscript() = 0;
+	virtual void rule_2_apply(location) = 0;
+	virtual void rule_2_select(location) = 0;
+	virtual void rule_2_expand(location) = 0;
 	virtual void rule_2_lookup() = 0;
 };
 } // namespace syntax
