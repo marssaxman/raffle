@@ -12,11 +12,18 @@
 
 namespace ast {
 
+struct visitor;
+
 struct node {
-	virtual location loc() { return location(); }
+	virtual ~node() {}
+	virtual void accept(visitor&) = 0;
+	virtual location loc() = 0;
 };
 
-extern node empty;
+struct empty: public node {
+	virtual void accept(visitor&) override;
+	virtual location loc() override { return location{}; }
+};
 
 struct literal: public node {
 	typedef enum {
@@ -25,6 +32,7 @@ struct literal: public node {
 	opcode id;
 	std::string text;
 	literal(opcode o, std::string t, location l);
+	virtual void accept(visitor &v) override;
 	virtual location loc() override;
 private:
 	location tk_loc;
@@ -33,6 +41,7 @@ private:
 struct symbol: public node {
 	std::string text;
 	symbol(std::string t, location l);
+	virtual void accept(visitor &v) override;
 	virtual location loc() override;
 private:
 	location tk_loc;
@@ -40,6 +49,7 @@ private:
 
 struct placeholder: public node {
 	placeholder(location l): tk_loc(l) {}
+	virtual void accept(visitor &v) override;
 	virtual location loc() override { return tk_loc; }
 private:
 	location tk_loc;
@@ -53,6 +63,7 @@ struct invocation: public node {
 	node &target;
 	node &argument;
 	invocation(opcode o, node &t, node &a): target(t), argument(a) {}
+	virtual void accept(visitor &v) override;
 	virtual location loc() override { return target.loc() + argument.loc(); }
 };
 
@@ -64,6 +75,7 @@ struct definition: public node {
 	node &sym;
 	node &exp;
 	definition(opcode o, node &s, node &e): sym(s), exp(e) {}
+	virtual void accept(visitor &v) override;
 	virtual location loc() override { return sym.loc() + exp.loc(); }
 };
 
@@ -80,6 +92,7 @@ struct arithmetic: public binary {
 	} opcode;
 	opcode id;
 	arithmetic(opcode o, node &l, node &r): binary(l, r), id(o) {}
+	virtual void accept(visitor &v) override;
 };
 
 struct logic: public binary {
@@ -88,6 +101,7 @@ struct logic: public binary {
 	} opcode;
 	opcode id;
 	logic(opcode o, node &l, node &r): binary(l, r), id(o) {}
+	virtual void accept(visitor &v) override;
 };
 
 struct relation: public binary {
@@ -96,10 +110,12 @@ struct relation: public binary {
 	} opcode;
 	opcode id;
 	relation(opcode o, node &l, node &r): binary(l, r), id(o) {}
+	virtual void accept(visitor &v) override;
 };
 
 struct range: public binary {
 	range(node &l, node &r): binary(l, r) {}
+	virtual void accept(visitor &v) override;
 };
 
 struct join: public node {
@@ -107,6 +123,7 @@ struct join: public node {
 	node &next;
 	join(node &e, node &n): exp(e), next(n) {}
 	virtual location loc() override { return exp.loc() + next.loc(); }
+	virtual void accept(visitor &v) override;
 };
 
 struct sequence: public node {
@@ -114,16 +131,18 @@ struct sequence: public node {
 	node &next;
 	sequence(node &e, node &n): exp(e), next(n) {}
 	virtual location loc() override { return exp.loc() + next.loc(); }
+	virtual void accept(visitor &v) override;
 };
 
-struct unary: public node {
+struct invert: public node {
 	typedef enum {
 		negate, complement,
 	} opcode;
 	opcode id;
 	node &source;
-	unary(opcode o, node &s, location l);
-	virtual location loc() override;
+	invert(opcode o, node &s, location l): id(o), source(s), tk_loc(l) {}
+	virtual location loc() override { return tk_loc + source.loc(); }
+	virtual void accept(visitor &v) override;
 private:
 	location tk_loc;
 };
@@ -136,8 +155,26 @@ struct constructor: public node {
 	node &items;
 	constructor(opcode o, node &i, location l);
 	virtual location loc() override;
+	virtual void accept(visitor &v) override;
 private:
 	location tk_loc;
+};
+
+struct visitor {
+	virtual void visit(empty&) = 0;
+	virtual void visit(literal&) = 0;
+	virtual void visit(symbol&) = 0;
+	virtual void visit(placeholder&) = 0;
+	virtual void visit(invocation&) = 0;
+	virtual void visit(definition&) = 0;
+	virtual void visit(arithmetic&) = 0;
+	virtual void visit(logic&) = 0;
+	virtual void visit(relation&) = 0;
+	virtual void visit(range&) = 0;
+	virtual void visit(join&) = 0;
+	virtual void visit(sequence&) = 0;
+	virtual void visit(invert&) = 0;
+	virtual void visit(constructor&) = 0;
 };
 
 } // namespace ast

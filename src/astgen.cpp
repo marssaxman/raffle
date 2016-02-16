@@ -10,7 +10,7 @@
 using namespace ast;
 
 void astgen::rule_0_empty() {
-	val.push(empty);
+	push(new ast::empty);
 }
 
 void astgen::rule_0_number(location loc, std::string text) {
@@ -163,12 +163,12 @@ void astgen::rule_2_and() {
 
 void astgen::rule_1_negate(location loc) {
 	ast::node &source = pop();
-	push(new ast::unary(ast::unary::negate, source, loc));
+	push(new ast::invert(ast::invert::negate, source, loc));
 }
 
 void astgen::rule_1_complement(location loc) {
 	ast::node &source = pop();
-	push(new ast::unary(ast::unary::complement, source, loc));
+	push(new ast::invert(ast::invert::complement, source, loc));
 }
 
 void astgen::rule_1_tuple(location loc) {

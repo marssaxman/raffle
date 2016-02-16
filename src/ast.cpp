@@ -6,10 +6,11 @@
 
 #include "ast.h"
 
-// singleton null value used for optional expressions
-ast::node ast::empty{};
-
 using namespace ast;
+
+void empty::accept(visitor &v) {
+	v.visit(*this);
+}
 
 literal::literal(opcode o, std::string t, location l):
 		id(o), text(t), tk_loc(l) {
@@ -17,6 +18,10 @@ literal::literal(opcode o, std::string t, location l):
 
 location literal::loc() {
 	return tk_loc;
+}
+
+void literal::accept(visitor &v) {
+	v.visit(*this);
 }
 
 symbol::symbol(std::string t, location l):
@@ -27,12 +32,48 @@ location symbol::loc() {
 	return tk_loc;
 }
 
-unary::unary(opcode o, node &s, location l):
-		id(o), source(s), tk_loc(l) {
+void symbol::accept(visitor &v) {
+	v.visit(*this);
 }
 
-location unary::loc() {
-	return tk_loc + source.loc();
+void placeholder::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void invocation::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void definition::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void arithmetic::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void logic::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void relation::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void range::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void join::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void sequence::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void invert::accept(visitor &v) {
+	v.visit(*this);
 }
 
 constructor::constructor(opcode o, node &i, location l):
@@ -42,5 +83,9 @@ constructor::constructor(opcode o, node &i, location l):
 location constructor::loc() {
 	// would be nice to capture the opening delimiter, too
 	return items.loc() + tk_loc;
+}
+
+void constructor::accept(visitor &v) {
+	v.visit(*this);
 }
 
