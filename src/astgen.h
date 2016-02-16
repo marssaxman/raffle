@@ -49,7 +49,8 @@ struct astgen: public syntax::delegate {
 	virtual void rule_2_subscript() override;
 	virtual void rule_2_lookup() override;
 private:
-	void binop(ast::binop::opcode id);
+	void infix(ast::binary::opcode);
+	void prefix(ast::unary::opcode, location);
 	void push(ast::node*);
 	ast::node &pop();
 	std::stack<size_t> val;

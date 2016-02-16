@@ -16,7 +16,7 @@ struct node {
 	virtual location loc() = 0;
 };
 
-struct binop: public node {
+struct binary: public node {
 	typedef enum {
 		add, subtract, multiply, divide, modulo, shift_left, shift_right,
 		conjoin, disjoin, exclude,
@@ -25,11 +25,23 @@ struct binop: public node {
 	opcode id;
 	node &left;
 	node &right;
-	binop(opcode o, node &l, node &r): id(o), left(l), right(r) {}
+	binary(opcode o, node &l, node &r): id(o), left(l), right(r) {}
 	virtual location loc() override { return left.loc() + right.loc(); }
 };
 
+struct unary: public node {
+	typedef enum {
+		negate, complement
+	} opcode;
+	opcode id;
+	node &source;
+	unary(opcode o, node &s, location l): id(o), source(s), tk_loc(l) {}
+	virtual location loc() override { return tk_loc + source.loc(); }
+private:
+	location tk_loc;
 };
+
+} // namespace ast
 
 #endif //AST_H
 

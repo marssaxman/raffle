@@ -47,43 +47,43 @@ void astgen::rule_2_caption() {
 }
 
 void astgen::rule_2_equal() {
-	binop(ast::binop::equal);
+	infix(ast::binary::equal);
 }
 
 void astgen::rule_2_lesser() {
-	binop(ast::binop::lesser);
+	infix(ast::binary::lesser);
 }
 
 void astgen::rule_2_greater() {
-	binop(ast::binop::greater);
+	infix(ast::binary::greater);
 }
 
 void astgen::rule_2_not_equal() {
-	binop(ast::binop::not_equal);
+	infix(ast::binary::not_equal);
 }
 
 void astgen::rule_2_not_lesser() {
-	binop(ast::binop::not_lesser);
+	infix(ast::binary::not_lesser);
 }
 
 void astgen::rule_2_not_greater() {
-	binop(ast::binop::not_greater);
+	infix(ast::binary::not_greater);
 }
 
 void astgen::rule_2_add() {
-	binop(ast::binop::add);
+	infix(ast::binary::add);
 }
 
 void astgen::rule_2_subtract() {
-	binop(ast::binop::subtract);
+	infix(ast::binary::subtract);
 }
 
 void astgen::rule_2_or() {
-	binop(ast::binop::disjoin);
+	infix(ast::binary::disjoin);
 }
 
 void astgen::rule_2_xor() {
-	binop(ast::binop::exclude);
+	infix(ast::binary::exclude);
 }
 
 void astgen::rule_2_range() {
@@ -91,35 +91,35 @@ void astgen::rule_2_range() {
 }
 
 void astgen::rule_2_multiply() {
-	binop(ast::binop::multiply);
+	infix(ast::binary::multiply);
 }
 
 void astgen::rule_2_divide() {
-	binop(ast::binop::divide);
+	infix(ast::binary::divide);
 }
 
 void astgen::rule_2_modulo() {
-	binop(ast::binop::modulo);
+	infix(ast::binary::modulo);
 }
 
 void astgen::rule_2_shift_left() {
-	binop(ast::binop::shift_left);
+	infix(ast::binary::shift_left);
 }
 
 void astgen::rule_2_shift_right() {
-	binop(ast::binop::shift_right);
+	infix(ast::binary::shift_right);
 }
 
 void astgen::rule_2_and() {
-	binop(ast::binop::conjoin);
+	infix(ast::binary::conjoin);
 }
 
 void astgen::rule_1_negate(location loc) {
-	std::cout << "neg ";
+	prefix(ast::unary::negate, loc);
 }
 
 void astgen::rule_1_complement(location loc) {
-	std::cout << "not ";
+	prefix(ast::unary::complement, loc);
 }
 
 void astgen::rule_1_eval(location loc) {
@@ -142,10 +142,15 @@ void astgen::rule_2_lookup() {
 	std::cout << ". ";
 }
 
-void astgen::binop(ast::binop::opcode id) {
+void astgen::infix(ast::binary::opcode id) {
 	ast::node &right = pop();
 	ast::node &left = pop();
-	push(new ast::binop(id, left, right));
+	push(new ast::binary(id, left, right));
+}
+
+void astgen::prefix(ast::unary::opcode id, location loc) {
+	ast::node &source = pop();
+	push(new ast::unary(id, source, loc));
 }
 
 void astgen::push(ast::node *n) {
