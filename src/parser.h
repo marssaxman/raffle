@@ -40,7 +40,6 @@ class parser: public token::delegate {
 		op id;
 		location loc;
 	};
-	std::stack<int> values;
 	std::stack<oprec> ops;
 	// availability of operators depends on context
 	enum class state {
@@ -88,15 +87,12 @@ public:
 protected:
 	static int precedence(op x);
 	static bool rightassoc(op x);
-	void accept(int val);
-	int recall();
-	typedef int (syntax::delegate::*leaf_rule)(std::string);
-	typedef int (syntax::delegate::*unary_rule)(int);
-	typedef int (syntax::delegate::*binary_rule)(int, int);
+	typedef void (syntax::delegate::*leaf_rule)(std::string);
+	typedef void (syntax::delegate::*tree_rule)();
 	void term(leaf_rule, location, std::string);
-	void group(op, unary_rule, location, direction);
+	void group(op, tree_rule, location, direction);
 	void open_group(op, location);
-	void close_group(op, unary_rule, location);
+	void close_group(op, tree_rule, location);
 	void directional(op l, op r, location, direction);
 	void unary(op, location);
 	void binary(op, location);

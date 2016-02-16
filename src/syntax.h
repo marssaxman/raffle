@@ -9,42 +9,46 @@
 
 #include <string>
 
+// Delegate for stack-driven analysis
+// Each rule pops either 0, 1, or 2 values from the stack, then pushes one
+// value onto the stack (which is implicit, to be managed by the delegate).
+// The number of digits to pop is embedded in the method name.
 namespace syntax {
 struct delegate {
-	virtual int rule_empty() = 0; // for optional items
-	virtual int rule_number(std::string) = 0;
-	virtual int rule_symbol(std::string) = 0;
-	virtual int rule_string(std::string) = 0;
-	virtual int rule_placeholder() = 0; // 
-	virtual int rule_sequence(int, int) = 0;
-	virtual int rule_capture(int, int) = 0;
-	virtual int rule_define(int, int) = 0;
-	virtual int rule_join(int, int) = 0;
-	virtual int rule_caption(int, int) = 0;
-	virtual int rule_equal(int, int) = 0;
-	virtual int rule_lesser(int, int) = 0;
-	virtual int rule_greater(int, int) = 0;
-	virtual int rule_not_equal(int, int) = 0;
-	virtual int rule_not_lesser(int, int) = 0;
-	virtual int rule_not_greater(int, int) = 0;
-	virtual int rule_addition(int, int) = 0;
-	virtual int rule_subtraction(int, int) = 0;
-	virtual int rule_or(int, int) = 0;
-	virtual int rule_xor(int, int) = 0;
-	virtual int rule_range(int, int) = 0;
-	virtual int rule_multiplication(int, int) = 0;
-	virtual int rule_division(int, int) = 0;
-	virtual int rule_modulo(int, int) = 0;
-	virtual int rule_shift_left(int, int) = 0;
-	virtual int rule_shift_right(int, int) = 0;
-	virtual int rule_and(int, int) = 0;
-	virtual int rule_negate(int) = 0;
-	virtual int rule_complement(int) = 0;
-	virtual int rule_eval(int) = 0;
-	virtual int rule_list(int) = 0;
-	virtual int rule_object(int) = 0;
-	virtual int rule_subscript(int, int) = 0;
-	virtual int rule_lookup(int, int) = 0;
+	virtual void rule_0_empty() = 0;
+	virtual void rule_0_number(std::string) = 0;
+	virtual void rule_0_symbol(std::string) = 0;
+	virtual void rule_0_string(std::string) = 0;
+	virtual void rule_0_placeholder() = 0;
+	virtual void rule_2_sequence() = 0;
+	virtual void rule_2_capture() = 0;
+	virtual void rule_2_define() = 0;
+	virtual void rule_2_join() = 0;
+	virtual void rule_2_caption() = 0;
+	virtual void rule_2_equal() = 0;
+	virtual void rule_2_lesser() = 0;
+	virtual void rule_2_greater() = 0;
+	virtual void rule_2_not_equal() = 0;
+	virtual void rule_2_not_lesser() = 0;
+	virtual void rule_2_not_greater() = 0;
+	virtual void rule_2_add() = 0;
+	virtual void rule_2_subtract() = 0;
+	virtual void rule_2_or() = 0;
+	virtual void rule_2_xor() = 0;
+	virtual void rule_2_range() = 0;
+	virtual void rule_2_multiplication() = 0;
+	virtual void rule_2_division() = 0;
+	virtual void rule_2_modulo() = 0;
+	virtual void rule_2_shift_left() = 0;
+	virtual void rule_2_shift_right() = 0;
+	virtual void rule_2_and() = 0;
+	virtual void rule_1_negate() = 0;
+	virtual void rule_1_complement() = 0;
+	virtual void rule_1_eval() = 0;
+	virtual void rule_1_list() = 0;
+	virtual void rule_1_object() = 0;
+	virtual void rule_2_subscript() = 0;
+	virtual void rule_2_lookup() = 0;
 };
 } // namespace syntax
 

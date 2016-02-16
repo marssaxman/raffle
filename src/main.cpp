@@ -10,12 +10,12 @@
 #include <stack>
 #include "lexer.h"
 #include "parser.h"
-#include "ast.h"
+#include "astgen.h"
 #include "errors.h"
 
 int main(int argc, const char *argv[]) {
 	errors e;
-	ast::builder o;
+	astgen o;
 	parser p(o, e);
 	lexer l(p, e);
 	for (std::string line; std::getline(std::cin, line);) {

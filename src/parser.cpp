@@ -15,35 +15,36 @@ bool parser::rightassoc(op x) {
 }
 
 void parser::token_number(location l, std::string text) {
-	term(&syntax::delegate::rule_number, l, text);
+	term(&syntax::delegate::rule_0_number, l, text);
 }
 
 void parser::token_symbol(location l, std::string text) {
-	term(&syntax::delegate::rule_symbol, l, text);
+	term(&syntax::delegate::rule_0_symbol, l, text);
 }
 
 void parser::token_string(location l, std::string text) {
-	term(&syntax::delegate::rule_string, l, text);
+	term(&syntax::delegate::rule_0_string, l, text);
 }
 
 void parser::token_underscore(location l) {
 	if (context != state::value) {
-		accept(out.rule_placeholder());
+		out.rule_0_placeholder();
+		context = state::value;
 	} else {
 		err.parser_unexpected(l);
 	}
 }
 
 void parser::token_paren(location l, direction d) {
-	group(op::eval, &syntax::delegate::rule_eval, l, d);
+	group(op::eval, &syntax::delegate::rule_1_eval, l, d);
 }
 
 void parser::token_bracket(location l, direction d) {
-	group(op::list, &syntax::delegate::rule_list, l, d);
+	group(op::list, &syntax::delegate::rule_1_list, l, d);
 }
 
 void parser::token_brace(location l, direction d) {
-	group(op::object, &syntax::delegate::rule_object, l, d);
+	group(op::object, &syntax::delegate::rule_1_object, l, d);
 }
 
 void parser::token_comma(location l) {
@@ -137,54 +138,45 @@ void parser::flush() {
 	context = state::empty;
 }
 
-void parser::accept(int val) {
-	values.push(val);
-	context = state::value;
-}
-
-int parser::recall() {
-	int val = values.top();
-	values.pop();
-	return val;
-}
-
 void parser::term(leaf_rule rule, location l, std::string t)
 {
 	if (context != state::value) {
-		accept((out.*rule)(t));
+		(out.*rule)(t);
+		context = state::value;
 	} else {
 		err.parser_unexpected(l);
 	}
 }
 
-void parser::group(op tk, unary_rule rule, location l, direction d) {
+void parser::group(op id, tree_rule rule, location l, direction d) {
 	switch (d) {
-		case direction::left: open_group(tk, l); break;
-		case direction::right: close_group(tk, rule, l); break;
+		case direction::left: open_group(id, l); break;
+		case direction::right: close_group(id, rule, l); break;
 	}
 }
 
-void parser::open_group(op tk, location l) {
+void parser::open_group(op id, location l) {
 	if (context == state::value) {
 		ops.push({op::subscript, l});
 	}
-	ops.push({tk, l});
+	ops.push({id, l});
 	context = state::empty;
 }
 
-void parser::close_group(op tk, unary_rule rule, location l) {
+void parser::close_group(op id, tree_rule rule, location l) {
 	if (context == state::value) {
-		while (!ops.empty() && ops.top().id != tk) {
+		while (!ops.empty() && ops.top().id != id) {
 			commit();
 		}
 	} else if (context == state::empty) {
-		accept(out.rule_empty());
+		out.rule_0_empty();
 	} else {
 		err.parser_unexpected(l);
 	}
-	if (!ops.empty() && ops.top().id == tk) {
+	if (!ops.empty() && ops.top().id == id) {
 		ops.pop();
-		accept((out.*rule)(recall()));
+		(out.*rule)();
+		context = state::value;
 	} else {
 		err.parser_mismatched_group(l);
 	}
@@ -197,68 +189,67 @@ void parser::directional(op l, op r, location loc, direction dir) {
 	}
 }
 
-void parser::unary(op tk, location l) {
+void parser::unary(op id, location l) {
 	// a unary operator must precede a value, so it can only be used from
 	// prefix position
 	if (context == state::value) {
 		err.parser_unexpected(l);
 		return;
 	}
-	ops.push({tk, l});
+	ops.push({id, l});
 	context = state::prefix;
 }
 
-void parser::binary(op tk, location l) {
+void parser::binary(op id, location l) {
 	// a binary operator must be preceded by a value, so it cannot be used
 	// from prefix position
 	if (context != state::value) {
 		err.parser_missing_operand(l);
 		return;
 	}
-	int prec = precedence(tk);
-	bool rightward = rightassoc(tk);
+	int prec = precedence(id);
+	bool rightward = rightassoc(id);
 	while (!ops.empty()) {
 		int prev = precedence(ops.top().id);
 		if (prec > prev) break;
 		if (rightward && prec == prev) break;
 		commit();
 	}
-	ops.push({tk, l});
+	ops.push({id, l});
 	context = state::infix;
 }
 
 void parser::commit() {
-	oprec tk = ops.top();
-	ops.pop();
-	int v = recall();
-	switch (tk.id) {
-		case op::sequence: accept(out.rule_sequence(recall(), v)); break;
-		case op::capture: accept(out.rule_capture(recall(), v)); break;
-		case op::define: accept(out.rule_define(recall(), v)); break;
-		case op::join: accept(out.rule_join(recall(), v)); break;
-		case op::caption: accept(out.rule_caption(recall(), v)); break;
-		case op::equal: accept(out.rule_equal(recall(), v)); break;
-		case op::lesser: accept(out.rule_lesser(recall(), v)); break;
-		case op::greater: accept(out.rule_greater(recall(), v)); break;
-		case op::not_equal: accept(out.rule_not_equal(recall(), v)); break;
-		case op::not_lesser: accept(out.rule_not_lesser(recall(), v)); break;
-		case op::not_greater: accept(out.rule_not_greater(recall(), v)); break;
-		case op::add: accept(out.rule_addition(recall(), v)); break;
-		case op::subtract: accept(out.rule_subtraction(recall(), v)); break;
-		case op::disjoin: accept(out.rule_or(recall(), v)); break;
-		case op::exclude: accept(out.rule_xor(recall(), v)); break;
-		case op::range: accept(out.rule_range(recall(), v)); break;
-		case op::multiply: accept(out.rule_multiplication(recall(), v)); break;
-		case op::divide: accept(out.rule_division(recall(), v)); break;
-		case op::modulo: accept(out.rule_modulo(recall(), v)); break;
-		case op::shift_left: accept(out.rule_shift_left(recall(), v)); break;
-		case op::shift_right: accept(out.rule_shift_right(recall(), v)); break;
-		case op::conjoin: accept(out.rule_and(recall(), v)); break;
-		case op::negate: accept(out.rule_negate(v)); break;
-		case op::complement: accept(out.rule_complement(v)); break;
-		case op::subscript: accept(out.rule_subscript(recall(), v)); break;
-		case op::lookup: accept(out.rule_lookup(recall(), v)); break;
-		default: err.parser_unimplemented(tk.loc); break;
+	switch (ops.top().id) {
+		case op::sequence: out.rule_2_sequence(); break;
+		case op::capture: out.rule_2_capture(); break;
+		case op::define: out.rule_2_define(); break;
+		case op::join: out.rule_2_join(); break;
+		case op::caption: out.rule_2_caption(); break;
+		case op::equal: out.rule_2_equal(); break;
+		case op::lesser: out.rule_2_lesser(); break;
+		case op::greater: out.rule_2_greater(); break;
+		case op::not_equal: out.rule_2_not_equal(); break;
+		case op::not_lesser: out.rule_2_not_lesser(); break;
+		case op::not_greater: out.rule_2_not_greater(); break;
+		case op::add: out.rule_2_add(); break;
+		case op::subtract: out.rule_2_subtract(); break;
+		case op::disjoin: out.rule_2_or(); break;
+		case op::exclude: out.rule_2_xor(); break;
+		case op::range: out.rule_2_range(); break;
+		case op::multiply: out.rule_2_multiplication(); break;
+		case op::divide: out.rule_2_division(); break;
+		case op::modulo: out.rule_2_modulo(); break;
+		case op::shift_left: out.rule_2_shift_left(); break;
+		case op::shift_right: out.rule_2_shift_right(); break;
+		case op::conjoin: out.rule_2_and(); break;
+		case op::negate: out.rule_1_negate(); break;
+		case op::complement: out.rule_1_complement(); break;
+		case op::subscript: out.rule_2_subscript(); break;
+		case op::lookup: out.rule_2_lookup(); break;
+		default: err.parser_unimplemented(ops.top().loc); break;
 	}
+	ops.pop();
+	context = state::value;
 }
 
