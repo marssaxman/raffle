@@ -27,6 +27,8 @@ struct printast: public ast::visitor {
 	virtual void visit(ast::invert&) override;
 	virtual void visit(ast::constructor&) override;
 private:
+	void open() { out << " \xC2\xAB"; }
+	void close() { out << "\xC2\xBB "; }
 	std::ostream &out;
 };
 

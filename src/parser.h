@@ -81,7 +81,7 @@ private:
 	bool accept_prefix(location);
 	bool accept_infix(location);
 	void push(ast::node*);
-	ast::ptr &&pop();
+	ast::ptr pop();
 	void term(location);
 	void prefix(oprec);
 	void infix(oprec);

@@ -26,89 +26,89 @@ void printast::visit(ast::invocation& n) {
 	n.target->accept(*this);
 	switch (n.id) {
 		case ast::invocation::subscript: break;
-		case ast::invocation::lookup: out << " . "; break;
-		case ast::invocation::caption: out << " : "; break;
+		case ast::invocation::lookup: out << "."; break;
+		case ast::invocation::caption: out << ":"; break;
 	}
 	n.argument->accept(*this);
 	out << "\xBB";
 }
 
 void printast::visit(ast::definition& n) {
-	out << "\xAB";
+	open();
 	n.sym->accept(*this);
 	switch (n.id) {
-		case ast::definition::evaluate: out << " <- "; break;
-		case ast::definition::capture: out << " -> "; break;
+		case ast::definition::evaluate: out << "<-"; break;
+		case ast::definition::capture: out << "->"; break;
 	}
 	n.exp->accept(*this);
-	out << "\xBB";
+	close();
 }
 
 void printast::visit(ast::arithmetic& n) {
-	out << "\xAB";
+	open();
 	n.left->accept(*this);
 	switch (n.id) {
-		case ast::arithmetic::add: out << " + "; break;
-		case ast::arithmetic::subtract: out << " - "; break;
-		case ast::arithmetic::multiply: out << " * "; break;
-		case ast::arithmetic::divide: out << " / "; break;
-		case ast::arithmetic::modulo: out << " % "; break;
-		case ast::arithmetic::shift_left: out << " << "; break;
-		case ast::arithmetic::shift_right: out << " >> "; break;
+		case ast::arithmetic::add: out << "+"; break;
+		case ast::arithmetic::subtract: out << "-"; break;
+		case ast::arithmetic::multiply: out << "*"; break;
+		case ast::arithmetic::divide: out << "/"; break;
+		case ast::arithmetic::modulo: out << "%"; break;
+		case ast::arithmetic::shift_left: out << "<<"; break;
+		case ast::arithmetic::shift_right: out << ">>"; break;
 	}
 	n.right->accept(*this);
-	out << "\xBB";
+	close();
 }
 
 void printast::visit(ast::logic& n) {
-	out << "\xAB";
+	open();
 	n.left->accept(*this);
 	switch (n.id) {
-		case ast::logic::conjoin: out << " & "; break;
-		case ast::logic::disjoin: out << " | "; break;
-		case ast::logic::exclude: out << " ^ "; break;
+		case ast::logic::conjoin: out << "&"; break;
+		case ast::logic::disjoin: out << "|"; break;
+		case ast::logic::exclude: out << "^"; break;
 	}
 	n.right->accept(*this);
-	out << "\xBB";
+	close();
 }
 
 void printast::visit(ast::relation& n) {
-	out << "\xAB";
+	open();
 	n.left->accept(*this);
 	switch (n.id) {
-		case ast::relation::equal: out << " = "; break;
-		case ast::relation::lesser: out << " < "; break;
-		case ast::relation::greater: out << " > "; break;
-		case ast::relation::not_equal: out << " != "; break;
-		case ast::relation::not_lesser: out << " !< "; break;
-		case ast::relation::not_greater: out << " !> "; break;
+		case ast::relation::equal: out << "="; break;
+		case ast::relation::lesser: out << "<"; break;
+		case ast::relation::greater: out << ">"; break;
+		case ast::relation::not_equal: out << "!="; break;
+		case ast::relation::not_lesser: out << "!<"; break;
+		case ast::relation::not_greater: out << "!>"; break;
 	}
 	n.right->accept(*this);
-	out << "\xBB";
+	close();
 }
 
 void printast::visit(ast::range& n) {
-	out << "\xAB";
+	open();
 	n.left->accept(*this);
 	out << "..";
 	n.right->accept(*this);
-	out << "\xBB";
+	close();
 }
 
 void printast::visit(ast::join& n) {
-	out << "\xAB";
+	open();
 	n.exp->accept(*this);
-	out << ", ";
+	out << ",";
 	n.next->accept(*this);
-	out << "\xBB";
+	close();
 }
 
 void printast::visit(ast::sequence& n) {
-	out << "\xAB";
+	open();
 	n.exp->accept(*this);
-	out << "; ";
+	out << ";";
 	n.next->accept(*this);
-	out << "\xBB";
+	close();
 }
 
 void printast::visit(ast::invert& n) {

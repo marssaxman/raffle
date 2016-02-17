@@ -39,6 +39,7 @@ public:
 	void read_line(const std::string&);
 	void read_file(std::istream &in);
 private:
+	void read(const std::string&);
 	void next(std::string::const_iterator &i, std::string::const_iterator end);
 	std::string::const_iterator &adv(std::string::const_iterator &i);
 	position pos;

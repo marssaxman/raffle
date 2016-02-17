@@ -5,7 +5,6 @@
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
 #include "parser.h"
-#include "printast.h"
 #include <assert.h>
 
 bool parser::rightassoc(precedence x) {
@@ -122,25 +121,7 @@ void parser::token_r_arrow(location l) {
 
 void parser::token_plus(location l) {
 	infix({precedence::additive, l, [this]() {
-		ast::ptr l = std::move(pop());
-		assert(l);
-		ast::ptr r = std::move(pop());
-		assert(l);
-		assert(r);
-		ast::arithmetic *n = new ast::arithmetic(
-			ast::arithmetic::add,
-			std::move(l),
-			std::move(r)
-		);
-		assert(!l);
-		assert(!r);
-		assert(n->left);
-		assert(n->right);
-		printast d(std::cout);
-		std::cout << "dump: ";
-		n->accept(d);
-		std::cout << std::endl;
-		push(n);
+		push(new ast::arithmetic(ast::arithmetic::add, pop(), pop()));
 	}});
 }
 
@@ -253,9 +234,6 @@ void parser::prefix(oprec op) {
 
 void parser::infix(oprec op) {
 	if (!accept_infix(op.loc)) return;
-	std::cout << "infix, prec=" << (int)op.prec << ", assoc=";
-	std::cout << (rightassoc(op.prec)? "right": "left");
-	std::cout << std::endl;
 	if (rightassoc(op.prec)) {
 		while (!ops.empty() && ops.top().prec < op.prec) {
 			commit();
@@ -269,10 +247,8 @@ void parser::infix(oprec op) {
 }
 
 void parser::commit() {
-	std::cout << "  beginning commit..." << std::endl;
 	ops.top().commit();
 	ops.pop();
-	std::cout << "  commited (" << ops.size() << "left)" << std::endl;
 }
 
 bool parser::accept_term(location l) {
@@ -305,22 +281,13 @@ bool parser::accept_infix(location l) {
 }
 
 void parser::push(ast::node *n) {
-	std::cout << "push: ";
-	printast d(std::cout);
-	n->accept(d);
 	vals.emplace(n);
-	std::cout << " (" << vals.size() << " items)" << std::endl;
 }
 
-ast::ptr &&parser::pop() {
+ast::ptr parser::pop() {
 	assert(!vals.empty());
-	assert(vals.front());
-	std::cout << "pop: ";
 	ast::ptr n = std::move(vals.front());
 	vals.pop();
-	printast d(std::cout);
-	n->accept(d);
-	std::cout << " (" << vals.size() << " left)" << std::endl;
-	return std::move(n);
+	return n;
 }
 
