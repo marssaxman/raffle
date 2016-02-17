@@ -28,15 +28,20 @@ struct node {
 	virtual location loc() = 0;
 };
 
-struct literal: public node {
-	typedef enum {
-		number, string
-	} opcode;
-	opcode id;
+struct number: public node {
 	std::string text;
-	literal(opcode o, std::string t, location l);
+	number(std::string t, location l): text(t), tk_loc(l) {}
 	virtual void accept(visitor &v) override;
-	virtual location loc() override;
+	virtual location loc() override { return tk_loc; }
+private:
+	location tk_loc;
+};
+
+struct string: public node {
+	std::string text;
+	string(std::string t, location l): text(t), tk_loc(l) {}
+	virtual void accept(visitor &v) override;
+	virtual location loc() override { return tk_loc; }
 private:
 	location tk_loc;
 };
@@ -148,7 +153,8 @@ private:
 };
 
 struct visitor {
-	virtual void visit(literal&) = 0;
+	virtual void visit(number&) = 0;
+	virtual void visit(string&) = 0;
 	virtual void visit(symbol&) = 0;
 	virtual void visit(placeholder&) = 0;
 	virtual void visit(invocation&) = 0;

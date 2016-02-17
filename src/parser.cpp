@@ -31,7 +31,7 @@ void parser::token_eof(location l) {
 
 void parser::token_number(location l, std::string text) {
 	if (!accept_term(l)) return;
-	emit(new ast::literal(ast::literal::number, text, l));
+	emit(new ast::number(text, l));
 }
 
 void parser::token_symbol(location l, std::string text) {
@@ -41,7 +41,7 @@ void parser::token_symbol(location l, std::string text) {
 
 void parser::token_string(location l, std::string text) {
 	if (!accept_term(l)) return;
-	emit(new ast::literal(ast::literal::string, text, l));
+	emit(new ast::string(text, l));
 }
 
 void parser::token_underscore(location l) {

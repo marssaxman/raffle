@@ -12,7 +12,8 @@
 
 struct printast: public ast::visitor {
 	printast(std::ostream &o): out(o) {}
-	virtual void visit(ast::literal&) override;
+	virtual void visit(ast::number&) override;
+	virtual void visit(ast::string&) override;
 	virtual void visit(ast::symbol&) override;
 	virtual void visit(ast::placeholder&) override;
 	virtual void visit(ast::invocation&) override;

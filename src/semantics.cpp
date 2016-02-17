@@ -15,7 +15,10 @@ void semantics::ast_process(ptr &&n) {
 void semantics::ast_done() {
 }
 
-void semantics::visit(literal &n) {
+void semantics::visit(number &n) {
+}
+
+void semantics::visit(string &n) {
 }
 
 void semantics::visit(symbol &n) {

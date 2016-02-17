@@ -8,10 +8,12 @@
 
 using namespace ast;
 
-void printast::visit(ast::literal& n) {
-	if (n.id == ast::literal::string) out << "\"";
+void printast::visit(ast::number& n) {
 	out << n.text;
-	if (n.id == ast::literal::string) out << "\"";
+}
+
+void printast::visit(ast::string& n) {
+	out << "\"" << n.text << "\"";
 }
 
 void printast::visit(ast::symbol& n) {

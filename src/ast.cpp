@@ -9,15 +9,11 @@
 
 using namespace ast;
 
-literal::literal(opcode o, std::string t, location l):
-		id(o), text(t), tk_loc(l) {
+void number::accept(visitor &v) {
+	v.visit(*this);
 }
 
-location literal::loc() {
-	return tk_loc;
-}
-
-void literal::accept(visitor &v) {
+void string::accept(visitor &v) {
 	v.visit(*this);
 }
 

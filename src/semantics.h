@@ -13,7 +13,8 @@ struct semantics: public ast::delegate, private ast::visitor {
 	virtual void ast_process(ast::ptr&&) override;
 	virtual void ast_done() override;
 private:
-	virtual void visit(ast::literal&) override;
+	virtual void visit(ast::number&) override;
+	virtual void visit(ast::string&) override;
 	virtual void visit(ast::symbol&) override;
 	virtual void visit(ast::placeholder&) override;
 	virtual void visit(ast::invocation&) override;
