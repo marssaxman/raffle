@@ -6,6 +6,8 @@
 
 #include "printast.h"
 
+using namespace ast;
+
 void printast::visit(ast::empty&) {
 }
 
@@ -22,99 +24,67 @@ void printast::visit(ast::placeholder& n) {
 }
 
 void printast::visit(ast::invocation& n) {
-	out << "\xAB";
-	n.target->accept(*this);
 	switch (n.id) {
-		case ast::invocation::subscript: break;
-		case ast::invocation::lookup: out << "."; break;
-		case ast::invocation::caption: out << ":"; break;
+		case invocation::subscript: seq(*n.target, "", *n.argument); break;
+		case invocation::lookup: seq(*n.target, ".", *n.argument); break;
+		case invocation::caption: infix(*n.target, ":", *n.argument); break;
 	}
-	n.argument->accept(*this);
-	out << "\xBB";
 }
 
 void printast::visit(ast::definition& n) {
-	open();
-	n.sym->accept(*this);
 	switch (n.id) {
-		case ast::definition::evaluate: out << "<-"; break;
-		case ast::definition::capture: out << "->"; break;
+		case definition::evaluate: infix(*n.sym, "<-", *n.exp); break;
+		case definition::capture: infix(*n.sym, "->", *n.exp); break;
 	}
-	n.exp->accept(*this);
-	close();
 }
 
 void printast::visit(ast::arithmetic& n) {
-	open();
-	n.left->accept(*this);
 	switch (n.id) {
-		case ast::arithmetic::add: out << "+"; break;
-		case ast::arithmetic::subtract: out << "-"; break;
-		case ast::arithmetic::multiply: out << "*"; break;
-		case ast::arithmetic::divide: out << "/"; break;
-		case ast::arithmetic::modulo: out << "%"; break;
-		case ast::arithmetic::shift_left: out << "<<"; break;
-		case ast::arithmetic::shift_right: out << ">>"; break;
+		case arithmetic::add: infix(n, "+"); break;
+		case arithmetic::subtract: infix(n, "-"); break;
+		case arithmetic::multiply: infix(n, "*"); break;
+		case arithmetic::divide: infix(n, "/"); break;
+		case arithmetic::modulo: infix(n, "%"); break;
+		case arithmetic::shift_left: infix(n, "<<"); break;
+		case arithmetic::shift_right: infix(n, ">>"); break;
 	}
-	n.right->accept(*this);
-	close();
 }
 
 void printast::visit(ast::logic& n) {
-	open();
-	n.left->accept(*this);
 	switch (n.id) {
-		case ast::logic::conjoin: out << "&"; break;
-		case ast::logic::disjoin: out << "|"; break;
-		case ast::logic::exclude: out << "^"; break;
+		case logic::conjoin: infix(n, "&"); break;
+		case logic::disjoin: infix(n, "|"); break;
+		case logic::exclude: infix(n, "^"); break;
 	}
-	n.right->accept(*this);
-	close();
 }
 
 void printast::visit(ast::relation& n) {
-	open();
-	n.left->accept(*this);
 	switch (n.id) {
-		case ast::relation::equal: out << "="; break;
-		case ast::relation::lesser: out << "<"; break;
-		case ast::relation::greater: out << ">"; break;
-		case ast::relation::not_equal: out << "!="; break;
-		case ast::relation::not_lesser: out << "!<"; break;
-		case ast::relation::not_greater: out << "!>"; break;
+		case relation::equal: infix(n, "="); break;
+		case relation::lesser: infix(n, "<"); break;
+		case relation::greater: infix(n, ">"); break;
+		case relation::not_equal: infix(n, "!="); break;
+		case relation::not_lesser: infix(n, "!<"); break;
+		case relation::not_greater: infix(n, "!>"); break;
 	}
-	n.right->accept(*this);
-	close();
 }
 
 void printast::visit(ast::range& n) {
-	open();
-	n.left->accept(*this);
-	out << "..";
-	n.right->accept(*this);
-	close();
+	infix(n, "..");
 }
 
 void printast::visit(ast::join& n) {
-	open();
-	n.exp->accept(*this);
-	out << ",";
-	n.next->accept(*this);
-	close();
+	seq(*n.exp, ", ", *n.next);
 }
 
 void printast::visit(ast::sequence& n) {
-	open();
-	n.exp->accept(*this);
-	out << ";";
-	n.next->accept(*this);
-	close();
+	seq(*n.exp, "; ", *n.next);
 }
 
-void printast::visit(ast::invert& n) {
+void printast::visit(invert& n) {
 	switch (n.id) {
-		case ast::invert::negate: out << "-"; break;
-		case ast::invert::complement: out << "!"; break;
+		case invert::negate: out << "-"; break;
+		case invert::complement: out << "!"; break;
 	}
 	n.source->accept(*this);
 }
@@ -133,4 +103,18 @@ void printast::visit(ast::constructor& n) {
 	}
 }
 
+void printast::infix(binary &n, std::string t) {
+	infix(*n.left, t, *n.right);
+}
 
+void printast::infix(node &l, std::string t, node &r) {
+	out << "\xC2\xAB";
+	seq(l, " " + t + " ", r);
+	out << "\xC2\xBB";
+}
+
+void printast::seq(node &l, std::string t, node &r) {
+	l.accept(*this);
+	out << t;
+	r.accept(*this);
+}
