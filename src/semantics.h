@@ -18,14 +18,16 @@ private:
 	virtual void visit(ast::symbol&) override;
 	virtual void visit(ast::wildcard&) override;
 	virtual void visit(ast::apply&) override;
+	virtual void visit(ast::compose&) override;
 	virtual void visit(ast::assign&) override;
 	virtual void visit(ast::capture&) override;
+	virtual void visit(ast::define&) override;
 	virtual void visit(ast::arithmetic&) override;
 	virtual void visit(ast::logic&) override;
 	virtual void visit(ast::relation&) override;
 	virtual void visit(ast::range&) override;
 	virtual void visit(ast::invert&) override;
-	virtual void visit(ast::constructor&) override;
+	virtual void visit(ast::group&) override;
 };
 
 #endif //SEMANTICS_H

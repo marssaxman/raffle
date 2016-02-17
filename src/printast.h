@@ -27,7 +27,7 @@ struct printast: public ast::visitor {
 	virtual void visit(ast::range &n) override { infix(n, ".."); }
 	virtual void visit(ast::invert&) override;
 	virtual void visit(ast::tuple &n) override { infix(n, ", "); }
-	virtual void visit(ast::constructor&) override;
+	virtual void visit(ast::group&) override;
 private:
 	void seq(ast::node &l, std::string, ast::node &r);
 	void infix(ast::node &l, std::string, ast::node &r);

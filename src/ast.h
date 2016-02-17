@@ -145,13 +145,13 @@ struct tuple: public binary {
 	virtual void accept(visitor &v) override;
 };
 
-struct constructor: public node {
+struct group: public node {
 	typedef enum {
-		tuple, list, object
+		value, construct, scope
 	} opcode;
 	opcode id;
 	std::list<ptr> items;
-	constructor(opcode o, std::list<ptr> &&i, location l);
+	group(opcode o, std::list<ptr> &&i, location l);
 	virtual location loc() override { return tk_loc; }
 	virtual void accept(visitor &v) override;
 private:
@@ -174,7 +174,7 @@ struct visitor {
 	virtual void visit(range&) = 0;
 	virtual void visit(invert&) = 0;
 	virtual void visit(tuple&) = 0;
-	virtual void visit(constructor&) = 0;
+	virtual void visit(group&) = 0;
 };
 
 } // namespace ast

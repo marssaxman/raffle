@@ -55,7 +55,7 @@ void parser::token_l_paren(location l) {
 
 void parser::token_r_paren(location r) {
 	if (!accept_delim(r, state::delim::paren)) return;
-	close(ast::constructor::tuple, r);
+	close(ast::group::value, r);
 }
 
 void parser::token_l_bracket(location l) {
@@ -64,7 +64,7 @@ void parser::token_l_bracket(location l) {
 
 void parser::token_r_bracket(location r) {
 	if (!accept_delim(r, state::delim::bracket)) return;
-	close(ast::constructor::list, r);
+	close(ast::group::construct, r);
 }
 
 void parser::token_l_brace(location l) {
@@ -73,7 +73,7 @@ void parser::token_l_brace(location l) {
 
 void parser::token_r_brace(location r) {
 	if (!accept_delim(r, state::delim::brace)) return;
-	close(ast::constructor::object, r);
+	close(ast::group::scope, r);
 }
 
 void parser::token_comma(location l) {
@@ -280,7 +280,7 @@ void parser::open(location l, state::delim g) {
 	context.grouping = g;
 }
 
-void parser::close(ast::constructor::opcode c, location r) {
+void parser::close(ast::group::opcode c, location r) {
 	if (context.exp) {
 		context.items.push_back(std::move(context.exp));
 	}
@@ -289,7 +289,7 @@ void parser::close(ast::constructor::opcode c, location r) {
 	context = std::move(outer.top());
 	outer.pop();
 	assert(!context.exp);
-	emit(new ast::constructor(c, std::move(result), l));
+	emit(new ast::group(c, std::move(result), l));
 }
 
 bool parser::accept_delim(location l, state::delim g) {

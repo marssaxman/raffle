@@ -127,11 +127,11 @@ void tuple::accept(visitor &v) {
 	v.visit(*this);
 }
 
-constructor::constructor(opcode o, std::list<ptr> &&i, location l):
+group::group(opcode o, std::list<ptr> &&i, location l):
 		id(o), items(std::move(i)), tk_loc(l) {
 }
 
-void constructor::accept(visitor &v) {
+void group::accept(visitor &v) {
 	v.visit(*this);
 }
 

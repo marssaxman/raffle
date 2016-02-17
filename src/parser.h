@@ -94,7 +94,7 @@ private:
 	// Previous states, from outer expressions
 	std::stack<state> outer;
 	void open(location, state::delim);
-	void close(ast::constructor::opcode, location r);
+	void close(ast::group::opcode, location r);
 	bool accept_delim(location, state::delim);
 	bool expecting_term();;
 	bool accept_term(location);

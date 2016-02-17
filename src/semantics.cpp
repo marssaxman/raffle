@@ -30,10 +30,16 @@ void semantics::visit(wildcard &n) {
 void semantics::visit(apply &n) {
 }
 
+void semantics::visit(compose &n) {
+}
+
 void semantics::visit(assign &n) {
 }
 
 void semantics::visit(capture &n) {
+}
+
+void semantics::visit(define &n) {
 }
 
 void semantics::visit(arithmetic &n) {
@@ -51,7 +57,7 @@ void semantics::visit(range &n) {
 void semantics::visit(invert &n) {
 }
 
-void semantics::visit(constructor &n) {
+void semantics::visit(group &n) {
 }
 
 

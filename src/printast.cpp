@@ -63,13 +63,13 @@ void printast::visit(invert& n) {
 	n.source->accept(*this);
 }
 
-void printast::visit(ast::constructor& n) {
+void printast::visit(ast::group& n) {
 	unsigned saved = level;
 	level = 0;
 	switch (n.id) {
-		case ast::constructor::tuple: out << "("; break;
-		case ast::constructor::list: out << "["; break;
-		case ast::constructor::object: out << "{"; break;
+		case ast::group::value: out << "("; break;
+		case ast::group::construct: out << "["; break;
+		case ast::group::scope: out << "{"; break;
 	}
 	bool pre = false;
 	for (auto &i: n.items) {
@@ -78,9 +78,9 @@ void printast::visit(ast::constructor& n) {
 		pre = true;
 	}
 	switch (n.id) {
-		case ast::constructor::tuple: out << ")"; break;
-		case ast::constructor::list: out << "]"; break;
-		case ast::constructor::object: out << "}"; break;
+		case ast::group::value: out << ")"; break;
+		case ast::group::construct: out << "]"; break;
+		case ast::group::scope: out << "}"; break;
 	}
 	level = saved;
 }
