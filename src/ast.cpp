@@ -115,11 +115,6 @@ constructor::constructor(opcode o, ptr &&i, location l):
 		id(o), items(std::move(i)), tk_loc(l) {
 }
 
-location constructor::loc() {
-	// would be nice to capture the opening delimiter, too
-	return items->loc() + tk_loc;
-}
-
 void constructor::accept(visitor &v) {
 	v.visit(*this);
 }

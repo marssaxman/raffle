@@ -7,6 +7,8 @@
 #include "parser.h"
 #include <assert.h>
 
+using namespace ast;
+
 bool parser::rightassoc(precedence x) {
 	switch (x) {
 		case precedence::statement: return true;
@@ -49,39 +51,27 @@ void parser::token_l_paren(location l) {
 	open(l, state::delim::paren);
 }
 
-void parser::token_r_paren(location l) {
-	if (!close(l, state::delim::paren)) return;
-	if (context.exp) {
-		emit(new ast::constructor(ast::constructor::tuple, cur(), l));
-	} else {
-		emit(new ast::empty(ast::empty::tuple, l));
-	}
+void parser::token_r_paren(location r) {
+	if (!accept_delim(r, state::delim::paren)) return;
+	close(constructor::tuple, empty::tuple, r);
 }
 
 void parser::token_l_bracket(location l) {
 	open(l, state::delim::bracket);
 }
 
-void parser::token_r_bracket(location l) {
-	if (!close(l, state::delim::bracket)) return;
-	if (context.exp) {
-		emit(new ast::constructor(ast::constructor::list, cur(), l));
-	} else {
-		emit(new ast::empty(ast::empty::list, l));
-	}
+void parser::token_r_bracket(location r) {
+	if (!accept_delim(r, state::delim::bracket)) return;
+	close(constructor::list, empty::list, r);
 }
 
 void parser::token_l_brace(location l) {
 	open(l, state::delim::brace);
 }
 
-void parser::token_r_brace(location l) {
-	if (!close(l, state::delim::brace)) return;
-	if (context.exp) {
-		emit(new ast::constructor(ast::constructor::object, cur(), l));
-	} else {
-		emit(new ast::empty(ast::empty::object, l));
-	}
+void parser::token_r_brace(location r) {
+	if (!accept_delim(r, state::delim::brace)) return;
+	close(constructor::object, empty::object, r);
 }
 
 void parser::token_comma(location l) {
@@ -270,14 +260,17 @@ void parser::open(location l, state::delim g) {
 	context.grouping = g;
 }
 
-bool parser::close(location l, state::delim g) {
-	if (!accept_delim(l, g)) return false;
+void parser::close(constructor::opcode c, empty::opcode e, location r) {
 	ast::ptr result = std::move(context.exp);
+	location l = context.startloc + r;
 	context = std::move(outer.top());
 	outer.pop();
 	assert(!context.exp);
-	context.exp = std::move(result);
-	return true;
+	if (result) {
+		emit(new ast::constructor(c, std::move(result), l));
+	} else {
+		emit(new ast::empty(e, l));
+	}
 }
 
 bool parser::accept_delim(location l, state::delim g) {

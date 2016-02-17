@@ -155,7 +155,7 @@ struct constructor: public node {
 	opcode id;
 	ptr items;
 	constructor(opcode o, ptr &&i, location l);
-	virtual location loc() override;
+	virtual location loc() override { return tk_loc; }
 	virtual void accept(visitor &v) override;
 private:
 	location tk_loc;
