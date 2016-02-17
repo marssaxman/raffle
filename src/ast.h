@@ -14,14 +14,17 @@
 namespace ast {
 
 struct visitor;
+struct node;
+typedef std::unique_ptr<node> ptr;
+struct delegate {
+	virtual void ast_process(ptr&&) = 0;
+};
 
 struct node {
 	virtual ~node() {}
 	virtual void accept(visitor&) = 0;
 	virtual location loc() = 0;
 };
-
-typedef std::unique_ptr<node> ptr;
 
 struct empty: public node {
 	virtual void accept(visitor&) override;
@@ -85,7 +88,7 @@ struct definition: public node {
 struct binary: public node {
 	ptr left;
 	ptr right;
-	binary(ptr &&l, ptr &&r): left(std::move(l)), right(std::move(r)) {}
+	binary(ptr &&l, ptr &&r);
 	virtual location loc() override { return left->loc() + right->loc(); }
 };
 
@@ -178,6 +181,24 @@ struct visitor {
 	virtual void visit(sequence&) = 0;
 	virtual void visit(invert&) = 0;
 	virtual void visit(constructor&) = 0;
+};
+
+struct basicvisit: public visitor {
+	virtual void visit_other(node&) = 0;
+	virtual void visit(empty &n) override { visit_other(n); }
+	virtual void visit(literal &n) override { visit_other(n); }
+	virtual void visit(symbol &n) override { visit_other(n); }
+	virtual void visit(placeholder &n) override { visit_other(n); }
+	virtual void visit(invocation &n) override { visit_other(n); }
+	virtual void visit(definition &n) override { visit_other(n); }
+	virtual void visit(arithmetic &n) override { visit_other(n); }
+	virtual void visit(logic &n) override { visit_other(n); }
+	virtual void visit(relation &n) override { visit_other(n); }
+	virtual void visit(range &n) override { visit_other(n); }
+	virtual void visit(join &n) override { visit_other(n); }
+	virtual void visit(sequence &n) override { visit_other(n); }
+	virtual void visit(invert &n) override { visit_other(n); }
+	virtual void visit(constructor &n) override { visit_other(n); }
 };
 
 } // namespace ast

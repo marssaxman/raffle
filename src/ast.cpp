@@ -5,6 +5,7 @@
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
 #include "ast.h"
+#include <assert.h>
 
 using namespace ast;
 
@@ -58,6 +59,12 @@ definition::definition(opcode o, ptr &&s, ptr &&e):
 
 void definition::accept(visitor &v) {
 	v.visit(*this);
+}
+
+binary::binary(ptr &&l, ptr &&r):
+		left(std::move(l)), right(std::move(r)) {
+	assert(left);
+	assert(right);
 }
 
 arithmetic::arithmetic(opcode o, ptr &&l, ptr &&r):

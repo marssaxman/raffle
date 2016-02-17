@@ -5,21 +5,27 @@
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
 #include <iostream>
-#include <fstream>
-#include <deque>
-#include <stack>
 #include "lexer.h"
 #include "parser.h"
 #include "errors.h"
+#include "printast.h"
+
+struct receiver: public ast::delegate {
+	virtual void ast_process(ast::ptr &&n) override {
+		printast printer(std::cout);
+		n->accept(printer);
+	}
+};
 
 int main(int argc, const char *argv[]) {
-	errors e;
-	parser p(e);
-	lexer l(p, e);
+	std::cout << "$> ";
 	for (std::string line; std::getline(std::cin, line);) {
+		errors e;
+		receiver o;
+		parser p(o, e);
+		lexer l(p, e);
 		l.read_line(line);
-		p.flush();
-		std::cout << std::endl;
+		std::cout << std::endl << "$> ";
 	}
 	return EXIT_SUCCESS;
 }

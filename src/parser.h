@@ -19,7 +19,8 @@ struct parser: public token::delegate {
 		virtual void parser_mismatched_group(location) = 0;
 		virtual void parser_unimplemented(location) = 0;
 	};
-	parser(error &e): err(e) {}
+	parser(ast::delegate &o, error &e): out(o), err(e) {}
+	virtual void token_eof(location) override;
 	virtual void token_number(location, std::string) override;
 	virtual void token_symbol(location, std::string) override;
 	virtual void token_string(location, std::string) override;
@@ -54,7 +55,6 @@ struct parser: public token::delegate {
 	virtual void token_r_guillemet(location) override;
 	virtual void token_l_arrow(location) override;
 	virtual void token_r_arrow(location) override;
-	void flush();
 private:
 	// the classic shunting-yard algorithm
 	enum class precedence {
@@ -86,6 +86,7 @@ private:
 	void prefix(oprec);
 	void infix(oprec);
 	void commit();
+	ast::delegate &out;
 	error &err;
 };
 

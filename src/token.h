@@ -13,6 +13,7 @@
 namespace token {
 
 struct delegate {
+	virtual void token_eof(location) = 0;
 	virtual void token_number(location, std::string) = 0;
 	virtual void token_symbol(location, std::string) = 0;
 	virtual void token_string(location, std::string) = 0;

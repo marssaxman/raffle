@@ -8,18 +8,26 @@
 
 using std::string;
 
+void lexer::read(const string &input) {
+	unsigned start = pos.col;
+	for (auto i = input.begin(); i != input.end(); next(i, input.end())) {
+		pos.col = start + i - input.begin();
+	}
+}
+
 void lexer::read_line(const string &input) {
 	pos.col = 1;
-	for (auto i = input.begin(); i != input.end(); next(i, input.end())) {
-		pos.col = 1 + i - input.begin();
-	}
+	read(input);
+	out.token_eof({pos, pos});
 }
 
 void lexer::read_file(std::istream &in) {
 	pos.row = 1;
 	for (string line; std::getline(in, line); ++pos.row) {
-		read_line(line);
+		pos.col = 1;
+		read(line);
 	}
+	out.token_eof({pos, pos});
 }
 
 void lexer::next(string::const_iterator &i, string::const_iterator end) {
