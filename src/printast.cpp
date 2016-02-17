@@ -24,29 +24,6 @@ void printast::visit(ast::wildcard& n) {
 	out << "_";
 }
 
-void printast::visit(ast::invocation& n) {
-	switch (n.id) {
-		case invocation::subscript:
-			seq(*n.target.get(), "", *n.argument.get());
-			break;
-		case invocation::lookup:
-			seq(*n.target.get(), ".", *n.argument.get());
-			break;
-	}
-}
-
-void printast::visit(ast::assign& n) {
-	infix(*n.sym, "<-", *n.exp);
-}
-
-void printast::visit(ast::capture& n) {
-	infix(*n.sym, "->", *n.exp);
-}
-
-void printast::visit(ast::define& n) {
-	infix(*n.sym, ":", *n.exp);
-}
-
 void printast::visit(ast::arithmetic& n) {
 	switch (n.id) {
 		case arithmetic::add: infix(n, "+"); break;
@@ -78,20 +55,12 @@ void printast::visit(ast::relation& n) {
 	}
 }
 
-void printast::visit(ast::range& n) {
-	infix(n, "..");
-}
-
 void printast::visit(invert& n) {
 	switch (n.id) {
 		case invert::negate: out << "-"; break;
 		case invert::complement: out << "!"; break;
 	}
 	n.source->accept(*this);
-}
-
-void printast::visit(tuple &n) {
-	seq(*n.left, ", ", *n.right);
 }
 
 void printast::visit(ast::constructor& n) {

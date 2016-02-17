@@ -15,6 +15,7 @@ bool parser::rightassoc(precedence x) {
 		case precedence::additive: return false;
 		case precedence::multiplicative: return false;
 		case precedence::unary: return true;
+		case precedence::compose: return false;
 		case precedence::primary: return false;
 	}
 }
@@ -90,21 +91,19 @@ void parser::token_colon(location l) {
 void parser::token_semicolon(location l) {
 	if (!accept_infix(l)) return;
 	commit_all(l);
-	switch (context.grouping) {
-		case state::delim::file:
-			out.ast_process(cur());
-			context.exp.reset();
-			break;
-		case state::delim::brace:
-			context.items.push_back(cur());
-			break;
-		default: err.parser_mismatched_separator(l);
+	if (context.grouping == state::delim::file) {
+		// Top-level statements should be reported to the delegate.
+		out.ast_process(cur());
+		context.exp.reset();
+	} else {
+		// Statements in nested scopes are queued for later use.
+		context.items.push_back(cur());
 	}
 }
 
 void parser::token_dot(location l) {
-	infix({precedence::lookup, l, [this]() {
-		emit(new ast::invocation(ast::invocation::lookup, pop(), cur()));
+	infix({precedence::compose, l, [this]() {
+		emit(new ast::compose(pop(), cur()));
 	}});
 }
 
@@ -273,7 +272,7 @@ void parser::commit_all(location l) {
 void parser::open(location l, state::delim g) {
 	if (!expecting_term()) {
 		infix({precedence::primary, l, [this](){
-			emit(new ast::invocation(ast::invocation::subscript, pop(), cur()));
+			emit(new ast::apply(pop(), cur()));
 		}});
 	}
 	outer.push(std::move(context));

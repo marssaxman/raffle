@@ -16,16 +16,17 @@ struct printast: public ast::visitor {
 	virtual void visit(ast::string&) override;
 	virtual void visit(ast::symbol&) override;
 	virtual void visit(ast::wildcard&) override;
-	virtual void visit(ast::invocation&) override;
-	virtual void visit(ast::assign&) override;
-	virtual void visit(ast::capture&) override;
-	virtual void visit(ast::define&) override;
+	virtual void visit(ast::apply &n) override { infix(n, " "); }
+	virtual void visit(ast::compose &n) override { infix(n, "."); }
+	virtual void visit(ast::assign &n) override { infix(n, "<-"); }
+	virtual void visit(ast::capture &n) override { infix(n, "->"); }
+	virtual void visit(ast::define &n) override { infix(n, ":"); }
 	virtual void visit(ast::arithmetic&) override;
 	virtual void visit(ast::logic&) override;
 	virtual void visit(ast::relation&) override;
-	virtual void visit(ast::range&) override;
+	virtual void visit(ast::range &n) override { infix(n, ".."); }
 	virtual void visit(ast::invert&) override;
-	virtual void visit(ast::tuple&) override;
+	virtual void visit(ast::tuple &n) override { infix(n, ", "); }
 	virtual void visit(ast::constructor&) override;
 private:
 	void seq(ast::node &l, std::string, ast::node &r);

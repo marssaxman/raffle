@@ -33,20 +33,24 @@ void wildcard::accept(visitor &v) {
 	v.visit(*this);
 }
 
-invocation::invocation(opcode o, ptr &&t, ptr &&a):
-		id(o), target(std::move(t)), argument(std::move(a)) {
+apply::apply(ptr &&t, ptr &&a):
+		binary(std::move(t), std::move(a)) {
 }
 
-void invocation::accept(visitor &v) {
+void apply::accept(visitor &v) {
 	v.visit(*this);
 }
 
-location invocation::loc() {
-	return target->loc() + argument->loc();
+compose::compose(ptr &&a, ptr &&t):
+		binary(std::move(a), std::move(t)) {
+}
+
+void compose::accept(visitor &v) {
+	v.visit(*this);
 }
 
 assign::assign(ptr &&s, ptr &&e):
-		sym(std::move(s)), exp(std::move(e)) {
+		binary(std::move(s), std::move(e)) {
 }
 
 void assign::accept(visitor &v) {
@@ -54,7 +58,7 @@ void assign::accept(visitor &v) {
 }
 
 capture::capture(ptr &&s, ptr &&e):
-		sym(std::move(s)), exp(std::move(e)) {
+		binary(std::move(s), std::move(e)) {
 }
 
 void capture::accept(visitor &v) {
@@ -62,7 +66,7 @@ void capture::accept(visitor &v) {
 }
 
 define::define(ptr &&s, ptr &&e):
-		sym(std::move(s)), exp(std::move(e)) {
+		binary(std::move(s), std::move(e)) {
 }
 
 void define::accept(visitor &v) {

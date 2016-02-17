@@ -27,7 +27,7 @@ void semantics::visit(symbol &n) {
 void semantics::visit(wildcard &n) {
 }
 
-void semantics::visit(invocation &n) {
+void semantics::visit(apply &n) {
 }
 
 void semantics::visit(assign &n) {

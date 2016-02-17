@@ -64,7 +64,7 @@ private:
 		additive, //L
 		multiplicative, //L
 		unary, //R
-		lookup, //L
+		compose, //L
 		primary //L
 	};
 	static bool rightassoc(precedence);
