@@ -30,6 +30,7 @@ private:
 	void seq(ast::node &l, std::string, ast::node &r);
 	void infix(ast::node &l, std::string, ast::node &r);
 	void infix(ast::binary&, std::string);
+	unsigned level = 0;
 	std::ostream &out;
 };
 

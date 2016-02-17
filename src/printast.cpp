@@ -90,6 +90,8 @@ void printast::visit(invert& n) {
 }
 
 void printast::visit(ast::constructor& n) {
+	unsigned saved = level;
+	level = 0;
 	switch (n.id) {
 		case ast::constructor::tuple: out << "("; break;
 		case ast::constructor::list: out << "["; break;
@@ -101,6 +103,7 @@ void printast::visit(ast::constructor& n) {
 		case ast::constructor::list: out << "]"; break;
 		case ast::constructor::object: out << "}"; break;
 	}
+	level = saved;
 }
 
 void printast::infix(binary &n, std::string t) {
@@ -108,9 +111,9 @@ void printast::infix(binary &n, std::string t) {
 }
 
 void printast::infix(node &l, std::string t, node &r) {
-	out << "\xC2\xAB";
+	if (level++) out << "\xC2\xAB";
 	seq(l, " " + t + " ", r);
-	out << "\xC2\xBB";
+	if (--level) out << "\xC2\xBB";
 }
 
 void printast::seq(node &l, std::string t, node &r) {
