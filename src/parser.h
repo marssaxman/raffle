@@ -7,39 +7,34 @@
 #define PARSER_H
 
 #include "token.h"
-#include "syntax.h"
+#include "ast.h"
 #include <stack>
 #include <queue>
+#include <functional>
+#include <vector>
+#include <memory>
 
 class parser: public token::delegate {
 	// the classic shunting-yard algorithm
-	// operator precedence encoded in high nibble
-	// even precedence levels associate left, odd levels associate right
-	enum class op: int {
-		// bracketed constructors
-		tuple = 0x00, list, object,
-		// statements
-		sequence = 0x10,
-		// symbols
-		capture = 0x30, define,
-		// structure
-		join = 0x50, caption,
-		// relation
-		equal = 0x60, lesser, greater, not_equal, not_lesser, not_greater,
-		// additive
-		add = 0x80, subtract, disjoin, exclude, range,
-		// multiplicative
-		multiply = 0xA0, divide, modulo, shift_left, shift_right, conjoin,
-		// unary
-		negate = 0xB0, complement,
-		// primary
-		lookup = 0xC0, subscript,
+	enum class precedence {
+		statement, //R
+		definition, //R
+		structure, //R
+		relation, //L
+		additive, //L
+		multiplicative, //L
+		unary, //R
+		primary //L
 	};
+	static bool rightassoc(precedence);
 	struct oprec {
-		op id;
+		precedence prec;
 		location loc;
+		std::function<void(void)> commit;
 	};
 	std::stack<oprec> ops;
+	std::queue<ast::node*> vals;
+	std::vector<std::unique_ptr<ast::node>> output;
 	// availability of operators depends on context
 	enum class state {
 		empty,	// initial state, no value yet
@@ -54,7 +49,7 @@ public:
 		virtual void parser_mismatched_group(location) = 0;
 		virtual void parser_unimplemented(location) = 0;
 	};
-	parser(syntax::delegate &o, error &e): out(o), err(e) {}
+	parser(error &e): err(e) {}
 	virtual void token_number(location, std::string) override;
 	virtual void token_symbol(location, std::string) override;
 	virtual void token_string(location, std::string) override;
@@ -90,20 +85,12 @@ public:
 	virtual void token_l_arrow(location) override;
 	virtual void token_r_arrow(location) override;
 	void flush();
-protected:
-	static int precedence(op x);
-	static bool rightassoc(op x);
-	typedef void (syntax::delegate::*leaf_rule)(location, std::string);
-	typedef void (syntax::delegate::*group_rule)(location);
-	typedef void (syntax::delegate::*tree_rule)();
-	void term(leaf_rule, location, std::string);
-	void open(op, location);
-	void close(op, group_rule, location);
-	void prefix(op, location);
-	void infix(op, location);
-	void commit();
 private:
-	syntax::delegate &out;
+	void push(ast::node*);
+	ast::node &pop();
+	void prefix(oprec);
+	void infix(oprec);
+	void commit();
 	error &err;
 };
 
