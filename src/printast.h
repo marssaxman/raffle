@@ -19,6 +19,7 @@ struct printast: public ast::visitor {
 	virtual void visit(ast::invocation&) override;
 	virtual void visit(ast::assign&) override;
 	virtual void visit(ast::capture&) override;
+	virtual void visit(ast::define&) override;
 	virtual void visit(ast::arithmetic&) override;
 	virtual void visit(ast::logic&) override;
 	virtual void visit(ast::relation&) override;

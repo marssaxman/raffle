@@ -32,9 +32,6 @@ void printast::visit(ast::invocation& n) {
 		case invocation::lookup:
 			seq(*n.target.get(), ".", *n.argument.get());
 			break;
-		case invocation::caption:
-			infix(*n.target, ":", *n.argument);
-			break;
 	}
 }
 
@@ -44,6 +41,10 @@ void printast::visit(ast::assign& n) {
 
 void printast::visit(ast::capture& n) {
 	infix(*n.sym, "->", *n.exp);
+}
+
+void printast::visit(ast::define& n) {
+	infix(*n.sym, ":", *n.exp);
 }
 
 void printast::visit(ast::arithmetic& n) {

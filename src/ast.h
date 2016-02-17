@@ -65,7 +65,7 @@ private:
 
 struct invocation: public node {
 	typedef enum {
-		subscript, lookup, caption
+		subscript, lookup
 	} opcode;
 	opcode id;
 	ptr target;
@@ -87,6 +87,14 @@ struct capture: public node {
 	ptr sym;
 	ptr exp;
 	capture(ptr &&s, ptr &&e);
+	virtual void accept(visitor &v) override;
+	virtual location loc() override { return sym->loc() + exp->loc(); }
+};
+
+struct define: public node {
+	ptr sym;
+	ptr exp;
+	define(ptr &&s, ptr &&e);
 	virtual void accept(visitor &v) override;
 	virtual location loc() override { return sym->loc() + exp->loc(); }
 };
@@ -169,6 +177,7 @@ struct visitor {
 	virtual void visit(invocation&) = 0;
 	virtual void visit(assign&) = 0;
 	virtual void visit(capture&) = 0;
+	virtual void visit(define&) = 0;
 	virtual void visit(arithmetic&) = 0;
 	virtual void visit(logic&) = 0;
 	virtual void visit(relation&) = 0;

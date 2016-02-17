@@ -61,6 +61,14 @@ void capture::accept(visitor &v) {
 	v.visit(*this);
 }
 
+define::define(ptr &&s, ptr &&e):
+		sym(std::move(s)), exp(std::move(e)) {
+}
+
+void define::accept(visitor &v) {
+	v.visit(*this);
+}
+
 binary::binary(ptr &&l, ptr &&r):
 		left(std::move(l)), right(std::move(r)) {
 	assert(left);

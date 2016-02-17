@@ -83,7 +83,7 @@ void parser::token_comma(location l) {
 
 void parser::token_colon(location l) {
 	infix({precedence::primary, l, [this]() {
-		emit(new ast::invocation(ast::invocation::caption, pop(), cur()));
+		emit(new ast::define(pop(), cur()));
 	}});
 }
 
