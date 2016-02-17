@@ -38,11 +38,12 @@ void printast::visit(ast::invocation& n) {
 	}
 }
 
-void printast::visit(ast::definition& n) {
-	switch (n.id) {
-		case definition::evaluate: infix(*n.sym, "<-", *n.exp); break;
-		case definition::capture: infix(*n.sym, "->", *n.exp); break;
-	}
+void printast::visit(ast::assign& n) {
+	infix(*n.sym, "<-", *n.exp);
+}
+
+void printast::visit(ast::capture& n) {
+	infix(*n.sym, "->", *n.exp);
 }
 
 void printast::visit(ast::arithmetic& n) {
@@ -88,26 +89,29 @@ void printast::visit(invert& n) {
 	n.source->accept(*this);
 }
 
+void printast::visit(tuple &n) {
+	seq(*n.left, ", ", *n.right);
+}
+
 void printast::visit(ast::constructor& n) {
 	unsigned saved = level;
 	level = 0;
-	std::string sep;
-	std::string close;
 	switch (n.id) {
-		case ast::constructor::tuple:
-			out << "("; sep = ", "; close = ")"; break;
-		case ast::constructor::list:
-			out << "["; sep = ", "; close = "]"; break;
-		case ast::constructor::object:
-			out << "{"; sep = "; "; close = "}"; break;
+		case ast::constructor::tuple: out << "("; break;
+		case ast::constructor::list: out << "["; break;
+		case ast::constructor::object: out << "{"; break;
 	}
 	bool pre = false;
 	for (auto &i: n.items) {
-		if (pre) out << sep;
+		if (pre) out << "; ";
 		i->accept(*this);
 		pre = true;
 	}
-	out << close;
+	switch (n.id) {
+		case ast::constructor::tuple: out << ")"; break;
+		case ast::constructor::list: out << "]"; break;
+		case ast::constructor::object: out << "}"; break;
+	}
 	level = saved;
 }
 

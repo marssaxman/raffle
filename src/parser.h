@@ -59,12 +59,12 @@ private:
 	// the classic shunting-yard algorithm
 	enum class precedence {
 		statement, //R
-		definition, //R
 		structure, //R
 		relation, //L
 		additive, //L
 		multiplicative, //L
 		unary, //R
+		lookup, //L
 		primary //L
 	};
 	static bool rightassoc(precedence);

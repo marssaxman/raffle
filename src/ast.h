@@ -75,14 +75,18 @@ struct invocation: public node {
 	virtual location loc() override;
 };
 
-struct definition: public node {
-	typedef enum {
-		evaluate, capture
-	} opcode;
-	opcode id;
+struct assign: public node {
 	ptr sym;
 	ptr exp;
-	definition(opcode o, ptr &&s, ptr &&e);
+	assign(ptr &&s, ptr &&e);
+	virtual void accept(visitor &v) override;
+	virtual location loc() override { return sym->loc() + exp->loc(); }
+};
+
+struct capture: public node {
+	ptr sym;
+	ptr exp;
+	capture(ptr &&s, ptr &&e);
 	virtual void accept(visitor &v) override;
 	virtual location loc() override { return sym->loc() + exp->loc(); }
 };
@@ -139,6 +143,11 @@ private:
 	location tk_loc;
 };
 
+struct tuple: public binary {
+	tuple(ptr &&l, ptr &&r);
+	virtual void accept(visitor &v) override;
+};
+
 struct constructor: public node {
 	typedef enum {
 		tuple, list, object
@@ -158,12 +167,14 @@ struct visitor {
 	virtual void visit(symbol&) = 0;
 	virtual void visit(wildcard&) = 0;
 	virtual void visit(invocation&) = 0;
-	virtual void visit(definition&) = 0;
+	virtual void visit(assign&) = 0;
+	virtual void visit(capture&) = 0;
 	virtual void visit(arithmetic&) = 0;
 	virtual void visit(logic&) = 0;
 	virtual void visit(relation&) = 0;
 	virtual void visit(range&) = 0;
 	virtual void visit(invert&) = 0;
+	virtual void visit(tuple&) = 0;
 	virtual void visit(constructor&) = 0;
 };
 

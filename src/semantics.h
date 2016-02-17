@@ -18,7 +18,8 @@ private:
 	virtual void visit(ast::symbol&) override;
 	virtual void visit(ast::wildcard&) override;
 	virtual void visit(ast::invocation&) override;
-	virtual void visit(ast::definition&) override;
+	virtual void visit(ast::assign&) override;
+	virtual void visit(ast::capture&) override;
 	virtual void visit(ast::arithmetic&) override;
 	virtual void visit(ast::logic&) override;
 	virtual void visit(ast::relation&) override;

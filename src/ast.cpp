@@ -45,11 +45,19 @@ location invocation::loc() {
 	return target->loc() + argument->loc();
 }
 
-definition::definition(opcode o, ptr &&s, ptr &&e):
-		id(o), sym(std::move(s)), exp(std::move(e)) {
+assign::assign(ptr &&s, ptr &&e):
+		sym(std::move(s)), exp(std::move(e)) {
 }
 
-void definition::accept(visitor &v) {
+void assign::accept(visitor &v) {
+	v.visit(*this);
+}
+
+capture::capture(ptr &&s, ptr &&e):
+		sym(std::move(s)), exp(std::move(e)) {
+}
+
+void capture::accept(visitor &v) {
 	v.visit(*this);
 }
 
@@ -96,6 +104,14 @@ invert::invert(opcode o, ptr &&s, location l):
 }
 
 void invert::accept(visitor &v) {
+	v.visit(*this);
+}
+
+tuple::tuple(ptr &&l, ptr &&r):
+		binary(std::move(l), std::move(r)) {
+}
+
+void tuple::accept(visitor &v) {
 	v.visit(*this);
 }
 

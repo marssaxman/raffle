@@ -30,7 +30,10 @@ void semantics::visit(wildcard &n) {
 void semantics::visit(invocation &n) {
 }
 
-void semantics::visit(definition &n) {
+void semantics::visit(assign &n) {
+}
+
+void semantics::visit(capture &n) {
 }
 
 void semantics::visit(arithmetic &n) {

@@ -10,7 +10,6 @@
 bool parser::rightassoc(precedence x) {
 	switch (x) {
 		case precedence::statement: return true;
-		case precedence::definition: return true;
 		case precedence::structure: return true;
 		case precedence::relation: return false;
 		case precedence::additive: return false;
@@ -77,17 +76,13 @@ void parser::token_r_brace(location r) {
 }
 
 void parser::token_comma(location l) {
-	if (!accept_infix(l)) return;
-	if (context.grouping == state::delim::file ||
-			context.grouping == state::delim::brace) {
-		err.parser_mismatched_separator(l);
-	}
-	commit_all(l);
-	context.items.push_back(std::move(context.exp));
+	infix({precedence::structure, l, [this]() {
+		emit(new ast::tuple(pop(), cur()));
+	}});
 }
 
 void parser::token_colon(location l) {
-	infix({precedence::structure, l, [this]() {
+	infix({precedence::primary, l, [this]() {
 		emit(new ast::invocation(ast::invocation::caption, pop(), cur()));
 	}});
 }
@@ -108,7 +103,7 @@ void parser::token_semicolon(location l) {
 }
 
 void parser::token_dot(location l) {
-	infix({precedence::primary, l, [this]() {
+	infix({precedence::lookup, l, [this]() {
 		emit(new ast::invocation(ast::invocation::lookup, pop(), cur()));
 	}});
 }
@@ -120,14 +115,14 @@ void parser::token_dot_dot(location l) {
 }
 
 void parser::token_l_arrow(location l) {
-	infix({precedence::definition, l, [this]() {
-		emit(new ast::definition(ast::definition::evaluate, pop(), cur()));
+	infix({precedence::statement, l, [this]() {
+		emit(new ast::assign(pop(), cur()));
 	}});
 }
 
 void parser::token_r_arrow(location l) {
-	infix({precedence::definition, l, [this]() {
-		emit(new ast::definition(ast::definition::capture, pop(), cur()));
+	infix({precedence::statement, l, [this]() {
+		emit(new ast::capture(pop(), cur()));
 	}});
 }
 
