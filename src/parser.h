@@ -12,34 +12,7 @@
 #include <queue>
 #include <functional>
 
-class parser: public token::delegate {
-	// the classic shunting-yard algorithm
-	enum class precedence {
-		statement, //R
-		definition, //R
-		structure, //R
-		relation, //L
-		additive, //L
-		multiplicative, //L
-		unary, //R
-		primary //L
-	};
-	static bool rightassoc(precedence);
-	struct oprec {
-		precedence prec;
-		location loc;
-		std::function<void(void)> commit;
-	};
-	std::stack<oprec> ops;
-	std::queue<ast::ptr> vals;
-	// availability of operators depends on context
-	enum class state {
-		empty,	// initial state, no value yet
-		value,	// last token completed an expression value
-		prefix,	// after unary operator, expecting an operand
-		infix,	// after binary operator, expecting an operand
-	} context = state::empty;
-public:
+struct parser: public token::delegate {
 	struct error {
 		virtual void parser_unexpected(location) = 0;
 		virtual void parser_missing_operand(location) = 0;
@@ -83,8 +56,33 @@ public:
 	virtual void token_r_arrow(location) override;
 	void flush();
 private:
+	// the classic shunting-yard algorithm
+	enum class precedence {
+		statement, //R
+		definition, //R
+		structure, //R
+		relation, //L
+		additive, //L
+		multiplicative, //L
+		unary, //R
+		primary //L
+	};
+	static bool rightassoc(precedence);
+	struct oprec {
+		precedence prec;
+		location loc;
+		std::function<void(void)> commit;
+	};
+	std::stack<oprec> ops;
+	std::queue<ast::ptr> vals;
+	// availability of operators depends on context
+	bool expecting_term = true;
+	bool accept_term(location);
+	bool accept_prefix(location);
+	bool accept_infix(location);
 	void push(ast::node*);
 	ast::ptr &&pop();
+	void term(location);
 	void prefix(oprec);
 	void infix(oprec);
 	void commit();

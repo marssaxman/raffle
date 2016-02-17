@@ -20,18 +20,22 @@ bool parser::rightassoc(precedence x) {
 }
 
 void parser::token_number(location l, std::string text) {
+	if (!accept_term(l)) return;
 	push(new ast::literal(ast::literal::number, text, l));
 }
 
 void parser::token_symbol(location l, std::string text) {
+	if (!accept_term(l)) return;
 	push(new ast::symbol(text, l));
 }
 
 void parser::token_string(location l, std::string text) {
+	if (!accept_term(l)) return;
 	push(new ast::literal(ast::literal::string, text, l));
 }
 
 void parser::token_underscore(location l) {
+	if (!accept_term(l)) return;
 	push(new ast::placeholder(l));
 }
 
@@ -108,13 +112,13 @@ void parser::token_plus(location l) {
 }
 
 void parser::token_hyphen(location l) {
-	if (context == state::value) {
-		infix({precedence::additive, l, [this]() {
-			push(new ast::arithmetic(ast::arithmetic::subtract, pop(), pop()));
-		}});
-	} else {
+	if (expecting_term) {
 		prefix({precedence::unary, l, [this, l]() {
 			push(new ast::invert(ast::invert::negate, pop(), l));
+		}});
+	} else {
+		infix({precedence::additive, l, [this]() {
+			push(new ast::arithmetic(ast::arithmetic::subtract, pop(), pop()));
 		}});
 	}
 }
@@ -213,27 +217,15 @@ void parser::flush() {
 	while (!ops.empty()) {
 		commit();
 	}
-	context = state::empty;
 }
 
 void parser::prefix(oprec op) {
-	// a unary operator must precede a value, so it can only be used from
-	// prefix position
-	if (context == state::value) {
-		err.parser_unexpected(op.loc);
-		return;
-	}
+	if (!accept_prefix(op.loc)) return;
 	ops.push(op);
-	context = state::prefix;
 }
 
 void parser::infix(oprec op) {
-	// a binary operator must be preceded by a value, so it cannot be used
-	// from prefix position
-	if (context != state::value) {
-		err.parser_missing_operand(op.loc);
-		return;
-	}
+	if (!accept_infix(op.loc)) return;
 	bool rightward = rightassoc(op.prec);
 	while (!ops.empty()) {
 		precedence prev = ops.top().prec;
@@ -242,22 +234,45 @@ void parser::infix(oprec op) {
 		commit();
 	}
 	ops.push(op);
-	context = state::infix;
 }
 
 void parser::commit() {
 	ops.top().commit();
 	ops.pop();
-	context = state::value;
+}
+
+bool parser::accept_term(location l) {
+	if (expecting_term) {
+		expecting_term = false;
+		return true;
+	} else {
+		err.parser_unexpected(l);
+		return false;
+	}
+}
+
+bool parser::accept_prefix(location l) {
+	if (expecting_term) {
+		return true;
+	} else {
+		err.parser_unexpected(l);
+		return false;
+	}
+}
+
+bool parser::accept_infix(location l) {
+	if (expecting_term) {
+		err.parser_missing_operand(l);
+		return false;
+	} else {
+		expecting_term = true;
+		return true;
+	}
 }
 
 void parser::push(ast::node *n) {
-	if (context == state::value) {
-		err.parser_unexpected(n->loc());
-	}
 	std::unique_ptr<ast::node> ptr(n);
 	vals.push(std::move(ptr));
-	context = state::value;
 }
 
 ast::ptr &&parser::pop() {
