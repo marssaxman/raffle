@@ -8,6 +8,7 @@
 #define DFG_H
 
 namespace dfg {
+
 struct node {
 };
 
@@ -16,6 +17,8 @@ struct atom: struct node {
 
 struct op: struct node {
 };
+
+}
 
 #endif //DFG_H
 

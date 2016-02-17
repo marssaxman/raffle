@@ -24,7 +24,7 @@ void semantics::visit(string &n) {
 void semantics::visit(symbol &n) {
 }
 
-void semantics::visit(placeholder &n) {
+void semantics::visit(wildcard &n) {
 }
 
 void semantics::visit(invocation &n) {

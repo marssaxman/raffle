@@ -46,7 +46,7 @@ void parser::token_string(location l, std::string text) {
 
 void parser::token_underscore(location l) {
 	if (!accept_term(l)) return;
-	emit(new ast::placeholder(l));
+	emit(new ast::wildcard(l));
 }
 
 void parser::token_l_paren(location l) {
@@ -267,7 +267,7 @@ void parser::commit_next() {
 void parser::commit_all(location l) {
 	if (expecting_term() && !context.ops.empty()) {
 		err.parser_missing_right_operand(l);
-		emit(new ast::placeholder(l));
+		emit(new ast::wildcard(l));
 	}
 	while (!context.ops.empty()) {
 		commit_next();

@@ -55,8 +55,8 @@ private:
 	location tk_loc;
 };
 
-struct placeholder: public node {
-	placeholder(location l): tk_loc(l) {}
+struct wildcard: public node {
+	wildcard(location l): tk_loc(l) {}
 	virtual void accept(visitor &v) override;
 	virtual location loc() override { return tk_loc; }
 private:
@@ -156,7 +156,7 @@ struct visitor {
 	virtual void visit(number&) = 0;
 	virtual void visit(string&) = 0;
 	virtual void visit(symbol&) = 0;
-	virtual void visit(placeholder&) = 0;
+	virtual void visit(wildcard&) = 0;
 	virtual void visit(invocation&) = 0;
 	virtual void visit(definition&) = 0;
 	virtual void visit(arithmetic&) = 0;

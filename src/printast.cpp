@@ -20,7 +20,7 @@ void printast::visit(ast::symbol& n) {
 	out << n.text;
 }
 
-void printast::visit(ast::placeholder& n) {
+void printast::visit(ast::wildcard& n) {
 	out << "_";
 }
 

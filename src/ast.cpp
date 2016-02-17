@@ -29,7 +29,7 @@ void symbol::accept(visitor &v) {
 	v.visit(*this);
 }
 
-void placeholder::accept(visitor &v) {
+void wildcard::accept(visitor &v) {
 	v.visit(*this);
 }
 
