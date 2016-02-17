@@ -87,7 +87,7 @@ void parser::token_colon(location l) {
 }
 
 void parser::token_semicolon(location l) {
-	infix({precedence::structure, l, [this]() {
+	infix({precedence::statement, l, [this]() {
 		emit(new ast::sequence(pop(), cur()));
 	}});
 }
@@ -279,7 +279,7 @@ bool parser::accept_delim(location l, state::delim g) {
 		return false;
 	}
 	if (expecting_term() && !context.ops.empty()) {
-		err.parser_missing_operand(l);
+		err.parser_missing_right_operand(l);
 		emit(new ast::placeholder(l));
 	}
 	while (!context.ops.empty()) {
@@ -313,7 +313,7 @@ bool parser::accept_prefix(location l) {
 
 bool parser::accept_infix(location l) {
 	if (expecting_term()) {
-		err.parser_missing_operand(l);
+		err.parser_missing_left_operand(l);
 		return false;
 	} else {
 		return true;

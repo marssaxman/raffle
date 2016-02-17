@@ -23,8 +23,12 @@ void errors::parser_unexpected(location l) {
 	report(l, "syntax error");
 }
 
-void errors::parser_missing_operand(location l) {
+void errors::parser_missing_left_operand(location l) {
 	report(l, "expected expression before this operator");
+}
+
+void errors::parser_missing_right_operand(location l) {
+	report(l, "expected expression after this operator");
 }
 
 void errors::parser_mismatched_group(location l) {

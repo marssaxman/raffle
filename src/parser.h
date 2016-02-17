@@ -14,7 +14,8 @@
 struct parser: public token::delegate {
 	struct error {
 		virtual void parser_unexpected(location) = 0;
-		virtual void parser_missing_operand(location) = 0;
+		virtual void parser_missing_left_operand(location) = 0;
+		virtual void parser_missing_right_operand(location) = 0;
 		virtual void parser_mismatched_group(location) = 0;
 	};
 	parser(ast::delegate &o, error &e): out(o), err(e) {}

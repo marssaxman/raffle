@@ -50,7 +50,7 @@ location invocation::loc() {
 }
 
 definition::definition(opcode o, ptr &&s, ptr &&e):
-		sym(std::move(s)), exp(std::move(e)) {
+		id(o), sym(std::move(s)), exp(std::move(e)) {
 }
 
 void definition::accept(visitor &v) {
