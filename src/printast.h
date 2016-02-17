@@ -16,7 +16,7 @@ struct printast: public ast::visitor {
 	virtual void visit(ast::string&) override;
 	virtual void visit(ast::symbol&) override;
 	virtual void visit(ast::wildcard&) override;
-	virtual void visit(ast::apply &n) override { infix(n, " "); }
+	virtual void visit(ast::apply &n) override { infix(n, ""); }
 	virtual void visit(ast::compose &n) override { infix(n, "."); }
 	virtual void visit(ast::assign &n) override { infix(n, "<-"); }
 	virtual void visit(ast::capture &n) override { infix(n, "->"); }
@@ -26,10 +26,9 @@ struct printast: public ast::visitor {
 	virtual void visit(ast::relation&) override;
 	virtual void visit(ast::range &n) override { infix(n, ".."); }
 	virtual void visit(ast::invert&) override;
-	virtual void visit(ast::tuple &n) override { infix(n, ", "); }
+	virtual void visit(ast::tuple &n) override;
 	virtual void visit(ast::group&) override;
 private:
-	void seq(ast::node &l, std::string, ast::node &r);
 	void infix(ast::node &l, std::string, ast::node &r);
 	void infix(ast::binary&, std::string);
 	unsigned level = 0;

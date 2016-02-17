@@ -59,12 +59,11 @@ private:
 	// the classic shunting-yard algorithm
 	enum class precedence {
 		statement, //R
-		structure, //R
+		tuple, //R
 		relation, //L
 		additive, //L
 		multiplicative, //L
 		unary, //R
-		compose, //L
 		primary //L
 	};
 	static bool rightassoc(precedence);
@@ -96,7 +95,7 @@ private:
 	void open(location, state::delim);
 	void close(ast::group::opcode, location r);
 	bool accept_delim(location, state::delim);
-	bool expecting_term();;
+	bool expecting_term();
 	bool accept_term(location);
 	bool accept_prefix(location);
 	bool accept_infix(location);

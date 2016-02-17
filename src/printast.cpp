@@ -63,6 +63,10 @@ void printast::visit(invert& n) {
 	n.source->accept(*this);
 }
 
+void printast::visit(ast::tuple &n) {
+	infix(*n.left, ",", *n.right);
+}
+
 void printast::visit(ast::group& n) {
 	unsigned saved = level;
 	level = 0;
@@ -91,12 +95,10 @@ void printast::infix(binary &n, std::string t) {
 
 void printast::infix(node &l, std::string t, node &r) {
 	if (level++) out << "\xC2\xAB";
-	seq(l, " " + t + " ", r);
+	l.accept(*this);
+	if (!t.empty()) out << " " << t;
+	out << " ";
+	r.accept(*this);
 	if (--level) out << "\xC2\xBB";
 }
 
-void printast::seq(node &l, std::string t, node &r) {
-	l.accept(*this);
-	out << t;
-	r.accept(*this);
-}

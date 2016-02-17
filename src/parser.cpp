@@ -9,13 +9,12 @@
 
 bool parser::rightassoc(precedence x) {
 	switch (x) {
+		case precedence::tuple: return true;
 		case precedence::statement: return true;
-		case precedence::structure: return true;
 		case precedence::relation: return false;
 		case precedence::additive: return false;
 		case precedence::multiplicative: return false;
 		case precedence::unary: return true;
-		case precedence::compose: return false;
 		case precedence::primary: return false;
 	}
 }
@@ -50,6 +49,7 @@ void parser::token_underscore(location l) {
 }
 
 void parser::token_l_paren(location l) {
+	if (!accept_term(l)) return;
 	open(l, state::delim::paren);
 }
 
@@ -59,6 +59,7 @@ void parser::token_r_paren(location r) {
 }
 
 void parser::token_l_bracket(location l) {
+	if (!accept_term(l)) return;
 	open(l, state::delim::bracket);
 }
 
@@ -68,6 +69,7 @@ void parser::token_r_bracket(location r) {
 }
 
 void parser::token_l_brace(location l) {
+	if (!accept_term(l)) return;
 	open(l, state::delim::brace);
 }
 
@@ -77,7 +79,7 @@ void parser::token_r_brace(location r) {
 }
 
 void parser::token_comma(location l) {
-	infix({precedence::structure, l, [this]() {
+	infix({precedence::tuple, l, [this]() {
 		emit(new ast::tuple(pop(), cur()));
 	}});
 }
@@ -102,7 +104,7 @@ void parser::token_semicolon(location l) {
 }
 
 void parser::token_dot(location l) {
-	infix({precedence::compose, l, [this]() {
+	infix({precedence::primary, l, [this]() {
 		emit(new ast::compose(pop(), cur()));
 	}});
 }
@@ -270,11 +272,6 @@ void parser::commit_all(location l) {
 }
 
 void parser::open(location l, state::delim g) {
-	if (!expecting_term()) {
-		infix({precedence::primary, l, [this](){
-			emit(new ast::apply(pop(), cur()));
-		}});
-	}
 	outer.push(std::move(context));
 	context.startloc = l;
 	context.grouping = g;
@@ -306,12 +303,12 @@ bool parser::expecting_term() {
 }
 
 bool parser::accept_term(location l) {
-	if (expecting_term()) {
-		return true;
-	} else {
-		err.parser_unexpected(l);
-		return false;
+	if (!expecting_term()) {
+		infix({precedence::primary, l, [this](){
+			emit(new ast::apply(pop(), cur()));
+		}});
 	}
+	return true;
 }
 
 bool parser::accept_prefix(location l) {
