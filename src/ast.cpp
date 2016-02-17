@@ -9,10 +9,6 @@
 
 using namespace ast;
 
-void empty::accept(visitor &v) {
-	v.visit(*this);
-}
-
 literal::literal(opcode o, std::string t, location l):
 		id(o), text(t), tk_loc(l) {
 }
@@ -42,7 +38,7 @@ void placeholder::accept(visitor &v) {
 }
 
 invocation::invocation(opcode o, ptr &&t, ptr &&a):
-		target(std::move(t)), argument(std::move(a)) {
+		id(o), target(std::move(t)), argument(std::move(a)) {
 }
 
 void invocation::accept(visitor &v) {
@@ -125,6 +121,10 @@ location constructor::loc() {
 }
 
 void constructor::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void empty::accept(visitor &v) {
 	v.visit(*this);
 }
 

@@ -8,9 +8,6 @@
 
 using namespace ast;
 
-void printast::visit(ast::empty&) {
-}
-
 void printast::visit(ast::literal& n) {
 	out << n.text;
 }
@@ -25,9 +22,15 @@ void printast::visit(ast::placeholder& n) {
 
 void printast::visit(ast::invocation& n) {
 	switch (n.id) {
-		case invocation::subscript: seq(*n.target, "", *n.argument); break;
-		case invocation::lookup: seq(*n.target, ".", *n.argument); break;
-		case invocation::caption: infix(*n.target, ":", *n.argument); break;
+		case invocation::subscript:
+			seq(*n.target.get(), "", *n.argument.get());
+			break;
+		case invocation::lookup:
+			seq(*n.target.get(), ".", *n.argument.get());
+			break;
+		case invocation::caption:
+			infix(*n.target, ":", *n.argument);
+			break;
 	}
 }
 
@@ -104,6 +107,14 @@ void printast::visit(ast::constructor& n) {
 		case ast::constructor::object: out << "}"; break;
 	}
 	level = saved;
+}
+
+void printast::visit(ast::empty &n) {
+	switch (n.id) {
+		case empty::tuple: out << "()"; break;
+		case empty::list: out << "[]"; break;
+		case empty::object: out << "{}"; break;
+	}
 }
 
 void printast::infix(binary &n, std::string t) {

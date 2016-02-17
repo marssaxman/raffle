@@ -26,11 +26,6 @@ struct node {
 	virtual location loc() = 0;
 };
 
-struct empty: public node {
-	virtual void accept(visitor&) override;
-	virtual location loc() override { return location{}; }
-};
-
 struct literal: public node {
 	typedef enum {
 		number, string
@@ -166,8 +161,19 @@ private:
 	location tk_loc;
 };
 
+struct empty: public node {
+	typedef enum {
+		tuple, list, object
+	} opcode;
+	opcode id;
+	empty(opcode o, location l): id(o), tk_loc(l) {}
+	virtual void accept(visitor&) override;
+	virtual location loc() override { return tk_loc; }
+private:
+	location tk_loc;
+};
+
 struct visitor {
-	virtual void visit(empty&) = 0;
 	virtual void visit(literal&) = 0;
 	virtual void visit(symbol&) = 0;
 	virtual void visit(placeholder&) = 0;
@@ -181,11 +187,11 @@ struct visitor {
 	virtual void visit(sequence&) = 0;
 	virtual void visit(invert&) = 0;
 	virtual void visit(constructor&) = 0;
+	virtual void visit(empty&) = 0;
 };
 
 struct basicvisit: public visitor {
 	virtual void visit_other(node&) = 0;
-	virtual void visit(empty &n) override { visit_other(n); }
 	virtual void visit(literal &n) override { visit_other(n); }
 	virtual void visit(symbol &n) override { visit_other(n); }
 	virtual void visit(placeholder &n) override { visit_other(n); }
@@ -199,6 +205,7 @@ struct basicvisit: public visitor {
 	virtual void visit(sequence &n) override { visit_other(n); }
 	virtual void visit(invert &n) override { visit_other(n); }
 	virtual void visit(constructor &n) override { visit_other(n); }
+	virtual void visit(empty &n) override { visit_other(n); }
 };
 
 } // namespace ast

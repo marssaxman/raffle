@@ -12,7 +12,6 @@
 
 struct printast: public ast::visitor {
 	printast(std::ostream &o): out(o) {}
-	virtual void visit(ast::empty&) override;
 	virtual void visit(ast::literal&) override;
 	virtual void visit(ast::symbol&) override;
 	virtual void visit(ast::placeholder&) override;
@@ -26,6 +25,7 @@ struct printast: public ast::visitor {
 	virtual void visit(ast::sequence&) override;
 	virtual void visit(ast::invert&) override;
 	virtual void visit(ast::constructor&) override;
+	virtual void visit(ast::empty&) override;
 private:
 	void seq(ast::node &l, std::string, ast::node &r);
 	void infix(ast::node &l, std::string, ast::node &r);

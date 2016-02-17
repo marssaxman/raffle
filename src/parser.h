@@ -71,10 +71,24 @@ private:
 		location loc;
 		std::function<void(void)> commit;
 	};
-	std::stack<oprec> ops;
-	ast::ptr exp;
-	std::stack<ast::ptr> vals;
-	// availability of operators depends on context
+	// Current state being evaluated
+	struct state {
+		location startloc;
+		enum class delim {
+			file,
+			paren,
+			bracket,
+			brace,
+		} grouping = delim::file;
+		std::stack<oprec> ops;
+		ast::ptr exp;
+		std::stack<ast::ptr> vals;
+	} context;
+	// Previous states, from outer expressions
+	std::stack<state> outer;
+	void open(location, state::delim);
+	bool close(location, state::delim);
+	bool accept_delim(location, state::delim);
 	bool expecting_term();;
 	bool accept_term(location);
 	bool accept_prefix(location);

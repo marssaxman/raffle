@@ -21,15 +21,8 @@ bool parser::rightassoc(precedence x) {
 }
 
 void parser::token_eof(location l) {
-	while (!ops.empty()) {
-		if (expecting_term()) {
-			err.parser_missing_operand(l);
-			return;
-		}
-		commit();
-	}
-	out.ast_process(std::move(exp));
-	assert(vals.empty());
+	if (!accept_delim(l, state::delim::file)) return;
+	out.ast_process(std::move(context.exp));
 }
 
 void parser::token_number(location l, std::string text) {
@@ -53,27 +46,42 @@ void parser::token_underscore(location l) {
 }
 
 void parser::token_l_paren(location l) {
-	err.parser_unexpected(l);
+	open(l, state::delim::paren);
 }
 
 void parser::token_r_paren(location l) {
-	err.parser_unexpected(l);
+	if (!close(l, state::delim::paren)) return;
+	if (context.exp) {
+		emit(new ast::constructor(ast::constructor::tuple, cur(), l));
+	} else {
+		emit(new ast::empty(ast::empty::tuple, l));
+	}
 }
 
 void parser::token_l_bracket(location l) {
-	err.parser_unexpected(l);
+	open(l, state::delim::bracket);
 }
 
 void parser::token_r_bracket(location l) {
-	err.parser_unexpected(l);
+	if (!close(l, state::delim::bracket)) return;
+	if (context.exp) {
+		emit(new ast::constructor(ast::constructor::list, cur(), l));
+	} else {
+		emit(new ast::empty(ast::empty::list, l));
+	}
 }
 
 void parser::token_l_brace(location l) {
-	err.parser_unexpected(l);
+	open(l, state::delim::brace);
 }
 
 void parser::token_r_brace(location l) {
-	err.parser_unexpected(l);
+	if (!close(l, state::delim::brace)) return;
+	if (context.exp) {
+		emit(new ast::constructor(ast::constructor::object, cur(), l));
+	} else {
+		emit(new ast::empty(ast::empty::object, l));
+	}
 }
 
 void parser::token_comma(location l) {
@@ -228,31 +236,68 @@ void parser::token_r_guillemet(location l) {
 
 void parser::prefix(oprec op) {
 	if (!accept_prefix(op.loc)) return;
-	ops.push(op);
+	context.ops.push(op);
 }
 
 void parser::infix(oprec op) {
 	if (!accept_infix(op.loc)) return;
 	if (rightassoc(op.prec)) {
-		while (!ops.empty() && op.prec < ops.top().prec) {
+		while (!context.ops.empty() && op.prec < context.ops.top().prec) {
 			commit();
 		}
 	} else {
-		while (!ops.empty() && op.prec <= ops.top().prec) {
+		while (!context.ops.empty() && op.prec <= context.ops.top().prec) {
 			commit();
 		}
 	}
-	vals.push(std::move(exp));
-	ops.push(op);
+	context.vals.push(std::move(context.exp));
+	context.ops.push(op);
 }
 
 void parser::commit() {
-	ops.top().commit();
-	ops.pop();
+	context.ops.top().commit();
+	context.ops.pop();
+}
+
+void parser::open(location l, state::delim g) {
+	if (!expecting_term()) {
+		infix({precedence::primary, l, [this](){
+			emit(new ast::invocation(ast::invocation::subscript, pop(), cur()));
+		}});
+	}
+	outer.push(std::move(context));
+	context.startloc = l;
+	context.grouping = g;
+}
+
+bool parser::close(location l, state::delim g) {
+	if (!accept_delim(l, g)) return false;
+	ast::ptr result = std::move(context.exp);
+	context = std::move(outer.top());
+	outer.pop();
+	assert(!context.exp);
+	context.exp = std::move(result);
+	return true;
+}
+
+bool parser::accept_delim(location l, state::delim g) {
+	if (context.grouping != g) {
+		err.parser_mismatched_group(l);
+		return false;
+	}
+	if (expecting_term() && !context.ops.empty()) {
+		err.parser_missing_operand(l);
+		emit(new ast::placeholder(l));
+	}
+	while (!context.ops.empty()) {
+		commit();
+	}
+	assert(context.vals.empty());
+	return true;
 }
 
 bool parser::expecting_term() {
-	return !exp;
+	return !context.exp;
 }
 
 bool parser::accept_term(location l) {
@@ -283,18 +328,18 @@ bool parser::accept_infix(location l) {
 }
 
 void parser::emit(ast::node *n) {
-	assert(!exp);
-	exp.reset(n);
+	assert(!context.exp);
+	context.exp.reset(n);
 }
 
 ast::ptr parser::pop() {
-	assert(!vals.empty());
-	ast::ptr n = std::move(vals.top());
-	vals.pop();
+	assert(!context.vals.empty());
+	ast::ptr n = std::move(context.vals.top());
+	context.vals.pop();
 	return n;
 }
 
 ast::ptr parser::cur() {
-	assert(exp);
-	return std::move(exp);
+	assert(context.exp);
+	return std::move(context.exp);
 }
