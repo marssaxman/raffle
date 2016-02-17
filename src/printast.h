@@ -21,11 +21,8 @@ struct printast: public ast::visitor {
 	virtual void visit(ast::logic&) override;
 	virtual void visit(ast::relation&) override;
 	virtual void visit(ast::range&) override;
-	virtual void visit(ast::join&) override;
-	virtual void visit(ast::sequence&) override;
 	virtual void visit(ast::invert&) override;
 	virtual void visit(ast::constructor&) override;
-	virtual void visit(ast::empty&) override;
 private:
 	void seq(ast::node &l, std::string, ast::node &r);
 	void infix(ast::node &l, std::string, ast::node &r);

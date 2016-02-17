@@ -95,14 +95,6 @@ void range::accept(visitor &v) {
 	v.visit(*this);
 }
 
-void join::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void sequence::accept(visitor &v) {
-	v.visit(*this);
-}
-
 invert::invert(opcode o, ptr &&s, location l):
 		id(o), source(std::move(s)), tk_loc(l) {
 }
@@ -111,15 +103,11 @@ void invert::accept(visitor &v) {
 	v.visit(*this);
 }
 
-constructor::constructor(opcode o, ptr &&i, location l):
+constructor::constructor(opcode o, std::list<ptr> &&i, location l):
 		id(o), items(std::move(i)), tk_loc(l) {
 }
 
 void constructor::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void empty::accept(visitor &v) {
 	v.visit(*this);
 }
 

@@ -7,8 +7,6 @@
 #include "parser.h"
 #include <assert.h>
 
-using namespace ast;
-
 bool parser::rightassoc(precedence x) {
 	switch (x) {
 		case precedence::statement: return true;
@@ -24,7 +22,9 @@ bool parser::rightassoc(precedence x) {
 
 void parser::token_eof(location l) {
 	if (!accept_delim(l, state::delim::file)) return;
-	out.ast_process(std::move(context.exp));
+	if (context.exp) out.ast_item(cur());
+	if (context.exp) context.items.push_back(cur());
+	out.ast_group(std::move(context.items));
 }
 
 void parser::token_number(location l, std::string text) {
@@ -53,7 +53,7 @@ void parser::token_l_paren(location l) {
 
 void parser::token_r_paren(location r) {
 	if (!accept_delim(r, state::delim::paren)) return;
-	close(constructor::tuple, empty::tuple, r);
+	close(ast::constructor::tuple, r);
 }
 
 void parser::token_l_bracket(location l) {
@@ -62,7 +62,7 @@ void parser::token_l_bracket(location l) {
 
 void parser::token_r_bracket(location r) {
 	if (!accept_delim(r, state::delim::bracket)) return;
-	close(constructor::list, empty::list, r);
+	close(ast::constructor::list, r);
 }
 
 void parser::token_l_brace(location l) {
@@ -71,13 +71,17 @@ void parser::token_l_brace(location l) {
 
 void parser::token_r_brace(location r) {
 	if (!accept_delim(r, state::delim::brace)) return;
-	close(constructor::object, empty::object, r);
+	close(ast::constructor::object, r);
 }
 
 void parser::token_comma(location l) {
-	infix({precedence::structure, l, [this]() {
-		emit(new ast::join(pop(), cur()));
-	}});
+	if (!accept_infix(l)) return;
+	if (context.grouping == state::delim::file ||
+			context.grouping == state::delim::brace) {
+		err.parser_mismatched_separator(l);
+	}
+	commit_all(l);
+	context.items.push_back(std::move(context.exp));
 }
 
 void parser::token_colon(location l) {
@@ -87,9 +91,17 @@ void parser::token_colon(location l) {
 }
 
 void parser::token_semicolon(location l) {
-	infix({precedence::statement, l, [this]() {
-		emit(new ast::sequence(pop(), cur()));
-	}});
+	if (!accept_infix(l)) return;
+	commit_all(l);
+	switch (context.grouping) {
+		case state::delim::file:
+			out.ast_item(cur());
+			if (!context.exp) break;
+		case state::delim::brace:
+			context.items.push_back(cur());
+			break;
+		default: err.parser_mismatched_separator(l);
+	}
 }
 
 void parser::token_dot(location l) {
@@ -233,20 +245,31 @@ void parser::infix(oprec op) {
 	if (!accept_infix(op.loc)) return;
 	if (rightassoc(op.prec)) {
 		while (!context.ops.empty() && op.prec < context.ops.top().prec) {
-			commit();
+			commit_next();
 		}
 	} else {
 		while (!context.ops.empty() && op.prec <= context.ops.top().prec) {
-			commit();
+			commit_next();
 		}
 	}
 	context.vals.push(std::move(context.exp));
 	context.ops.push(op);
 }
 
-void parser::commit() {
+void parser::commit_next() {
 	context.ops.top().commit();
 	context.ops.pop();
+}
+
+void parser::commit_all(location l) {
+	if (expecting_term() && !context.ops.empty()) {
+		err.parser_missing_right_operand(l);
+		emit(new ast::placeholder(l));
+	}
+	while (!context.ops.empty()) {
+		commit_next();
+	}
+	assert(context.vals.empty());
 }
 
 void parser::open(location l, state::delim g) {
@@ -260,17 +283,16 @@ void parser::open(location l, state::delim g) {
 	context.grouping = g;
 }
 
-void parser::close(constructor::opcode c, empty::opcode e, location r) {
-	ast::ptr result = std::move(context.exp);
+void parser::close(ast::constructor::opcode c, location r) {
+	if (context.exp) {
+		context.items.push_back(std::move(context.exp));
+	}
+	std::list<ast::ptr> result = std::move(context.items);
 	location l = context.startloc + r;
 	context = std::move(outer.top());
 	outer.pop();
 	assert(!context.exp);
-	if (result) {
-		emit(new ast::constructor(c, std::move(result), l));
-	} else {
-		emit(new ast::empty(e, l));
-	}
+	emit(new ast::constructor(c, std::move(result), l));
 }
 
 bool parser::accept_delim(location l, state::delim g) {
@@ -278,14 +300,7 @@ bool parser::accept_delim(location l, state::delim g) {
 		err.parser_mismatched_group(l);
 		return false;
 	}
-	if (expecting_term() && !context.ops.empty()) {
-		err.parser_missing_right_operand(l);
-		emit(new ast::placeholder(l));
-	}
-	while (!context.ops.empty()) {
-		commit();
-	}
-	assert(context.vals.empty());
+	commit_all(l);
 	return true;
 }
 

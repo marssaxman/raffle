@@ -9,7 +9,9 @@
 using namespace ast;
 
 void printast::visit(ast::literal& n) {
+	if (n.id == ast::literal::string) out << "\"";
 	out << n.text;
+	if (n.id == ast::literal::string) out << "\"";
 }
 
 void printast::visit(ast::symbol& n) {
@@ -76,14 +78,6 @@ void printast::visit(ast::range& n) {
 	infix(n, "..");
 }
 
-void printast::visit(ast::join& n) {
-	seq(*n.exp, ", ", *n.next);
-}
-
-void printast::visit(ast::sequence& n) {
-	seq(*n.exp, "; ", *n.next);
-}
-
 void printast::visit(invert& n) {
 	switch (n.id) {
 		case invert::negate: out << "-"; break;
@@ -95,26 +89,24 @@ void printast::visit(invert& n) {
 void printast::visit(ast::constructor& n) {
 	unsigned saved = level;
 	level = 0;
+	std::string sep;
+	std::string close;
 	switch (n.id) {
-		case ast::constructor::tuple: out << "("; break;
-		case ast::constructor::list: out << "["; break;
-		case ast::constructor::object: out << "{"; break;
+		case ast::constructor::tuple:
+			out << "("; sep = ", "; close = ")"; break;
+		case ast::constructor::list:
+			out << "["; sep = ", "; close = "]"; break;
+		case ast::constructor::object:
+			out << "{"; sep = "; "; close = "}"; break;
 	}
-	n.items->accept(*this);
-	switch (n.id) {
-		case ast::constructor::tuple: out << ")"; break;
-		case ast::constructor::list: out << "]"; break;
-		case ast::constructor::object: out << "}"; break;
+	bool pre = false;
+	for (auto &i: n.items) {
+		if (pre) out << sep;
+		i->accept(*this);
+		pre = true;
 	}
+	out << close;
 	level = saved;
-}
-
-void printast::visit(ast::empty &n) {
-	switch (n.id) {
-		case empty::tuple: out << "()"; break;
-		case empty::list: out << "[]"; break;
-		case empty::object: out << "{}"; break;
-	}
 }
 
 void printast::infix(binary &n, std::string t) {

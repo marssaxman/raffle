@@ -10,6 +10,7 @@
 #include "location.h"
 #include <string>
 #include <memory>
+#include <list>
 
 namespace ast {
 
@@ -17,7 +18,8 @@ struct visitor;
 struct node;
 typedef std::unique_ptr<node> ptr;
 struct delegate {
-	virtual void ast_process(ptr&&) = 0;
+	virtual void ast_item(ptr &&) {}
+	virtual void ast_group(std::list<ptr>&&) {}
 };
 
 struct node {
@@ -119,22 +121,6 @@ struct range: public binary {
 	virtual void accept(visitor &v) override;
 };
 
-struct join: public node {
-	ptr exp;
-	ptr next;
-	join(ptr &&e, ptr &&n): exp(std::move(e)), next(std::move(n)) {}
-	virtual location loc() override { return exp->loc() + next->loc(); }
-	virtual void accept(visitor &v) override;
-};
-
-struct sequence: public node {
-	ptr exp;
-	ptr next;
-	sequence(ptr &&e, ptr &&n): exp(std::move(e)), next(std::move(n)) {}
-	virtual location loc() override { return exp->loc() + next->loc(); }
-	virtual void accept(visitor &v) override;
-};
-
 struct invert: public node {
 	typedef enum {
 		negate, complement,
@@ -153,22 +139,10 @@ struct constructor: public node {
 		tuple, list, object
 	} opcode;
 	opcode id;
-	ptr items;
-	constructor(opcode o, ptr &&i, location l);
+	std::list<ptr> items;
+	constructor(opcode o, std::list<ptr> &&i, location l);
 	virtual location loc() override { return tk_loc; }
 	virtual void accept(visitor &v) override;
-private:
-	location tk_loc;
-};
-
-struct empty: public node {
-	typedef enum {
-		tuple, list, object
-	} opcode;
-	opcode id;
-	empty(opcode o, location l): id(o), tk_loc(l) {}
-	virtual void accept(visitor&) override;
-	virtual location loc() override { return tk_loc; }
 private:
 	location tk_loc;
 };
@@ -183,29 +157,8 @@ struct visitor {
 	virtual void visit(logic&) = 0;
 	virtual void visit(relation&) = 0;
 	virtual void visit(range&) = 0;
-	virtual void visit(join&) = 0;
-	virtual void visit(sequence&) = 0;
 	virtual void visit(invert&) = 0;
 	virtual void visit(constructor&) = 0;
-	virtual void visit(empty&) = 0;
-};
-
-struct basicvisit: public visitor {
-	virtual void visit_other(node&) = 0;
-	virtual void visit(literal &n) override { visit_other(n); }
-	virtual void visit(symbol &n) override { visit_other(n); }
-	virtual void visit(placeholder &n) override { visit_other(n); }
-	virtual void visit(invocation &n) override { visit_other(n); }
-	virtual void visit(definition &n) override { visit_other(n); }
-	virtual void visit(arithmetic &n) override { visit_other(n); }
-	virtual void visit(logic &n) override { visit_other(n); }
-	virtual void visit(relation &n) override { visit_other(n); }
-	virtual void visit(range &n) override { visit_other(n); }
-	virtual void visit(join &n) override { visit_other(n); }
-	virtual void visit(sequence &n) override { visit_other(n); }
-	virtual void visit(invert &n) override { visit_other(n); }
-	virtual void visit(constructor &n) override { visit_other(n); }
-	virtual void visit(empty &n) override { visit_other(n); }
 };
 
 } // namespace ast

@@ -17,6 +17,7 @@ struct errors: public lexer::error, public parser::error {
 	virtual void parser_missing_left_operand(location) override;
 	virtual void parser_missing_right_operand(location) override;
 	virtual void parser_mismatched_group(location) override;
+	virtual void parser_mismatched_separator(location) override;
 private:
 	void report(location, std::string message);
 };

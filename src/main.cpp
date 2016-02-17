@@ -11,9 +11,10 @@
 #include "printast.h"
 
 struct receiver: public ast::delegate {
-	virtual void ast_process(ast::ptr &&n) override {
+	virtual void ast_item(ast::ptr &&n) override {
 		printast printer(std::cout);
 		n->accept(printer);
+		std::cout << "; ";
 	}
 };
 
