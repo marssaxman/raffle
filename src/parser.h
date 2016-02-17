@@ -9,7 +9,6 @@
 #include "token.h"
 #include "ast.h"
 #include <stack>
-#include <queue>
 #include <functional>
 
 struct parser: public token::delegate {
@@ -74,14 +73,16 @@ private:
 		std::function<void(void)> commit;
 	};
 	std::stack<oprec> ops;
-	std::queue<ast::ptr> vals;
+	ast::ptr exp;
+	std::stack<ast::ptr> vals;
 	// availability of operators depends on context
-	bool expecting_term = true;
+	bool expecting_term();;
 	bool accept_term(location);
 	bool accept_prefix(location);
 	bool accept_infix(location);
-	void push(ast::node*);
+	void emit(ast::node*);
 	ast::ptr pop();
+	ast::ptr cur();
 	void term(location);
 	void prefix(oprec);
 	void infix(oprec);
