@@ -31,6 +31,3 @@ void errors::parser_mismatched_group(location l) {
 	report(l, "unmatched grouping delimiter");
 }
 
-void errors::parser_unimplemented(location l) {
-	report(l, "operator commit implementation missing");
-}
