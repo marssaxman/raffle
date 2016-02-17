@@ -40,24 +40,52 @@ void placeholder::accept(visitor &v) {
 	v.visit(*this);
 }
 
+invocation::invocation(opcode o, ptr &&t, ptr &&a):
+		target(std::move(t)), argument(std::move(a)) {
+}
+
 void invocation::accept(visitor &v) {
 	v.visit(*this);
+}
+
+location invocation::loc() {
+	return target->loc() + argument->loc();
+}
+
+definition::definition(opcode o, ptr &&s, ptr &&e):
+		sym(std::move(s)), exp(std::move(e)) {
 }
 
 void definition::accept(visitor &v) {
 	v.visit(*this);
 }
 
+arithmetic::arithmetic(opcode o, ptr &&l, ptr &&r):
+		binary(std::move(l), std::move(r)), id(o) {
+}
+
 void arithmetic::accept(visitor &v) {
 	v.visit(*this);
+}
+
+logic::logic(opcode o, ptr &&l, ptr &&r):
+		binary(std::move(l), std::move(r)), id(o) {
 }
 
 void logic::accept(visitor &v) {
 	v.visit(*this);
 }
 
+relation::relation(opcode o, ptr &&l, ptr &&r):
+		binary(std::move(l), std::move(r)), id(o) {
+}
+
 void relation::accept(visitor &v) {
 	v.visit(*this);
+}
+
+range::range(ptr &&l, ptr &&r):
+		binary(std::move(l), std::move(r)) {
 }
 
 void range::accept(visitor &v) {
@@ -72,17 +100,21 @@ void sequence::accept(visitor &v) {
 	v.visit(*this);
 }
 
+invert::invert(opcode o, ptr &&s, location l):
+		id(o), source(std::move(s)), tk_loc(l) {
+}
+
 void invert::accept(visitor &v) {
 	v.visit(*this);
 }
 
-constructor::constructor(opcode o, node &i, location l):
-		id(o), items(i), tk_loc(l) {
+constructor::constructor(opcode o, ptr &&i, location l):
+		id(o), items(std::move(i)), tk_loc(l) {
 }
 
 location constructor::loc() {
 	// would be nice to capture the opening delimiter, too
-	return items.loc() + tk_loc;
+	return items->loc() + tk_loc;
 }
 
 void constructor::accept(visitor &v) {

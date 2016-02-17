@@ -11,8 +11,6 @@
 #include <stack>
 #include <queue>
 #include <functional>
-#include <vector>
-#include <memory>
 
 class parser: public token::delegate {
 	// the classic shunting-yard algorithm
@@ -33,8 +31,7 @@ class parser: public token::delegate {
 		std::function<void(void)> commit;
 	};
 	std::stack<oprec> ops;
-	std::queue<ast::node*> vals;
-	std::vector<std::unique_ptr<ast::node>> output;
+	std::queue<ast::ptr> vals;
 	// availability of operators depends on context
 	enum class state {
 		empty,	// initial state, no value yet
@@ -87,7 +84,7 @@ public:
 	void flush();
 private:
 	void push(ast::node*);
-	ast::node &pop();
+	ast::ptr &&pop();
 	void prefix(oprec);
 	void infix(oprec);
 	void commit();

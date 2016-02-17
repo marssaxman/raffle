@@ -255,14 +255,14 @@ void parser::push(ast::node *n) {
 	if (context == state::value) {
 		err.parser_unexpected(n->loc());
 	}
-	output.emplace_back(n);
-	vals.push(n);
+	std::unique_ptr<ast::node> ptr(n);
+	vals.push(std::move(ptr));
 	context = state::value;
 }
 
-ast::node &parser::pop() {
-	ast::node &out = *vals.front();
+ast::ptr &&parser::pop() {
+	ast::ptr &&out = std::move(vals.front());
 	vals.pop();
-	return out;
+	return std::move(out);
 }
 

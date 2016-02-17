@@ -9,6 +9,7 @@
 
 #include "location.h"
 #include <string>
+#include <memory>
 
 namespace ast {
 
@@ -19,6 +20,8 @@ struct node {
 	virtual void accept(visitor&) = 0;
 	virtual location loc() = 0;
 };
+
+typedef std::unique_ptr<node> ptr;
 
 struct empty: public node {
 	virtual void accept(visitor&) override;
@@ -60,11 +63,11 @@ struct invocation: public node {
 		subscript, lookup, caption
 	} opcode;
 	opcode id;
-	node &target;
-	node &argument;
-	invocation(opcode o, node &t, node &a): target(t), argument(a) {}
+	ptr target;
+	ptr argument;
+	invocation(opcode o, ptr &&t, ptr &&a);
 	virtual void accept(visitor &v) override;
-	virtual location loc() override { return target.loc() + argument.loc(); }
+	virtual location loc() override;
 };
 
 struct definition: public node {
@@ -72,18 +75,18 @@ struct definition: public node {
 		evaluate, capture
 	} opcode;
 	opcode id;
-	node &sym;
-	node &exp;
-	definition(opcode o, node &s, node &e): sym(s), exp(e) {}
+	ptr sym;
+	ptr exp;
+	definition(opcode o, ptr &&s, ptr &&e);
 	virtual void accept(visitor &v) override;
-	virtual location loc() override { return sym.loc() + exp.loc(); }
+	virtual location loc() override { return sym->loc() + exp->loc(); }
 };
 
 struct binary: public node {
-	node &left;
-	node &right;
-	binary(node &l, node &r): left(l), right(r) {}
-	virtual location loc() override { return left.loc() + right.loc(); }
+	ptr left;
+	ptr right;
+	binary(ptr &&l, ptr &&r): left(std::move(l)), right(std::move(r)) {}
+	virtual location loc() override { return left->loc() + right->loc(); }
 };
 
 struct arithmetic: public binary {
@@ -91,7 +94,7 @@ struct arithmetic: public binary {
 		add, subtract, multiply, divide, modulo, shift_left, shift_right,
 	} opcode;
 	opcode id;
-	arithmetic(opcode o, node &l, node &r): binary(l, r), id(o) {}
+	arithmetic(opcode o, ptr &&l, ptr &&r);
 	virtual void accept(visitor &v) override;
 };
 
@@ -100,7 +103,7 @@ struct logic: public binary {
 		conjoin, disjoin, exclude,
 	} opcode;
 	opcode id;
-	logic(opcode o, node &l, node &r): binary(l, r), id(o) {}
+	logic(opcode o, ptr &&l, ptr &&r);
 	virtual void accept(visitor &v) override;
 };
 
@@ -109,28 +112,28 @@ struct relation: public binary {
 		equal, greater, lesser, not_equal, not_greater, not_lesser,
 	} opcode;
 	opcode id;
-	relation(opcode o, node &l, node &r): binary(l, r), id(o) {}
+	relation(opcode o, ptr &&l, ptr &&r);
 	virtual void accept(visitor &v) override;
 };
 
 struct range: public binary {
-	range(node &l, node &r): binary(l, r) {}
+	range(ptr &&l, ptr &&r);
 	virtual void accept(visitor &v) override;
 };
 
 struct join: public node {
-	node &exp;
-	node &next;
-	join(node &e, node &n): exp(e), next(n) {}
-	virtual location loc() override { return exp.loc() + next.loc(); }
+	ptr exp;
+	ptr next;
+	join(ptr &&e, ptr &&n): exp(std::move(e)), next(std::move(n)) {}
+	virtual location loc() override { return exp->loc() + next->loc(); }
 	virtual void accept(visitor &v) override;
 };
 
 struct sequence: public node {
-	node &exp;
-	node &next;
-	sequence(node &e, node &n): exp(e), next(n) {}
-	virtual location loc() override { return exp.loc() + next.loc(); }
+	ptr exp;
+	ptr next;
+	sequence(ptr &&e, ptr &&n): exp(std::move(e)), next(std::move(n)) {}
+	virtual location loc() override { return exp->loc() + next->loc(); }
 	virtual void accept(visitor &v) override;
 };
 
@@ -139,9 +142,9 @@ struct invert: public node {
 		negate, complement,
 	} opcode;
 	opcode id;
-	node &source;
-	invert(opcode o, node &s, location l): id(o), source(s), tk_loc(l) {}
-	virtual location loc() override { return tk_loc + source.loc(); }
+	ptr source;
+	invert(opcode o, ptr &&s, location l);
+	virtual location loc() override { return tk_loc + source->loc(); }
 	virtual void accept(visitor &v) override;
 private:
 	location tk_loc;
@@ -152,8 +155,8 @@ struct constructor: public node {
 		tuple, list, object
 	} opcode;
 	opcode id;
-	node &items;
-	constructor(opcode o, node &i, location l);
+	ptr items;
+	constructor(opcode o, ptr &&i, location l);
 	virtual location loc() override;
 	virtual void accept(visitor &v) override;
 private:
