@@ -21,11 +21,9 @@ struct printast: public ast::visitor {
 	virtual void visit(ast::assign &n) override { infix(n, "<-"); }
 	virtual void visit(ast::capture &n) override { infix(n, "->"); }
 	virtual void visit(ast::define &n) override { infix(n, ":"); }
-	virtual void visit(ast::arithmetic&) override;
-	virtual void visit(ast::logic&) override;
-	virtual void visit(ast::relation&) override;
+	virtual void visit(ast::operate&) override;
 	virtual void visit(ast::range &n) override { infix(n, ".."); }
-	virtual void visit(ast::invert&) override;
+	virtual void visit(ast::negate&) override;
 	virtual void visit(ast::tuple &n) override;
 	virtual void visit(ast::group&) override;
 private:

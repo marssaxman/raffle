@@ -24,41 +24,31 @@ void printast::visit(ast::wildcard& n) {
 	out << "_";
 }
 
-void printast::visit(ast::arithmetic& n) {
+void printast::visit(ast::operate& n) {
 	switch (n.id) {
-		case arithmetic::add: infix(n, "+"); break;
-		case arithmetic::subtract: infix(n, "-"); break;
-		case arithmetic::multiply: infix(n, "*"); break;
-		case arithmetic::divide: infix(n, "/"); break;
-		case arithmetic::modulo: infix(n, "%"); break;
-		case arithmetic::shift_left: infix(n, "<<"); break;
-		case arithmetic::shift_right: infix(n, ">>"); break;
+		case operate::add: infix(n, "+"); break;
+		case operate::sub: infix(n, "-"); break;
+		case operate::mul: infix(n, "*"); break;
+		case operate::div: infix(n, "/"); break;
+		case operate::rem: infix(n, "%"); break;
+		case operate::shl: infix(n, "<<"); break;
+		case operate::shr: infix(n, ">>"); break;
+		case operate::conjoin: infix(n, "&"); break;
+		case operate::disjoin: infix(n, "|"); break;
+		case operate::exclude: infix(n, "^"); break;
+		case operate::eq: infix(n, "="); break;
+		case operate::lt: infix(n, "<"); break;
+		case operate::gt: infix(n, ">"); break;
+		case operate::neq: infix(n, "!="); break;
+		case operate::nlt: infix(n, "!<"); break;
+		case operate::ngt: infix(n, "!>"); break;
 	}
 }
 
-void printast::visit(ast::logic& n) {
+void printast::visit(negate& n) {
 	switch (n.id) {
-		case logic::conjoin: infix(n, "&"); break;
-		case logic::disjoin: infix(n, "|"); break;
-		case logic::exclude: infix(n, "^"); break;
-	}
-}
-
-void printast::visit(ast::relation& n) {
-	switch (n.id) {
-		case relation::equal: infix(n, "="); break;
-		case relation::lesser: infix(n, "<"); break;
-		case relation::greater: infix(n, ">"); break;
-		case relation::not_equal: infix(n, "!="); break;
-		case relation::not_lesser: infix(n, "!<"); break;
-		case relation::not_greater: infix(n, "!>"); break;
-	}
-}
-
-void printast::visit(invert& n) {
-	switch (n.id) {
-		case invert::negate: out << "-"; break;
-		case invert::complement: out << "!"; break;
+		case negate::numeric: out << "-"; break;
+		case negate::logical: out << "!"; break;
 	}
 	n.source->accept(*this);
 }

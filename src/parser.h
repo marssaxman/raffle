@@ -63,7 +63,7 @@ private:
 		relation, //L
 		additive, //L
 		multiplicative, //L
-		unary, //R
+		negation, //R
 		primary //L
 	};
 	static bool rightassoc(precedence);

@@ -79,27 +79,11 @@ binary::binary(ptr &&l, ptr &&r):
 	assert(right);
 }
 
-arithmetic::arithmetic(opcode o, ptr &&l, ptr &&r):
+operate::operate(opcode o, ptr &&l, ptr &&r):
 		binary(std::move(l), std::move(r)), id(o) {
 }
 
-void arithmetic::accept(visitor &v) {
-	v.visit(*this);
-}
-
-logic::logic(opcode o, ptr &&l, ptr &&r):
-		binary(std::move(l), std::move(r)), id(o) {
-}
-
-void logic::accept(visitor &v) {
-	v.visit(*this);
-}
-
-relation::relation(opcode o, ptr &&l, ptr &&r):
-		binary(std::move(l), std::move(r)), id(o) {
-}
-
-void relation::accept(visitor &v) {
+void operate::accept(visitor &v) {
 	v.visit(*this);
 }
 
@@ -111,11 +95,11 @@ void range::accept(visitor &v) {
 	v.visit(*this);
 }
 
-invert::invert(opcode o, ptr &&s, location l):
+negate::negate(opcode o, ptr &&s, location l):
 		id(o), source(std::move(s)), tk_loc(l) {
 }
 
-void invert::accept(visitor &v) {
+void negate::accept(visitor &v) {
 	v.visit(*this);
 }
 

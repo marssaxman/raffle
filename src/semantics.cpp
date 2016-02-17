@@ -42,19 +42,13 @@ void semantics::visit(capture &n) {
 void semantics::visit(define &n) {
 }
 
-void semantics::visit(arithmetic &n) {
-}
-
-void semantics::visit(logic &n) {
-}
-
-void semantics::visit(relation &n) {
+void semantics::visit(operate &n) {
 }
 
 void semantics::visit(range &n) {
 }
 
-void semantics::visit(invert &n) {
+void semantics::visit(negate &n) {
 }
 
 void semantics::visit(group &n) {
