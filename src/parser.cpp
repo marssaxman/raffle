@@ -22,9 +22,11 @@ bool parser::rightassoc(precedence x) {
 
 void parser::token_eof(location l) {
 	if (!accept_delim(l, state::delim::file)) return;
-	if (context.exp) out.ast_item(cur());
-	if (context.exp) context.items.push_back(cur());
-	out.ast_group(std::move(context.items));
+	if (context.exp) {
+		out.ast_process(cur());
+		context.exp.reset();
+	}
+	out.ast_done();
 }
 
 void parser::token_number(location l, std::string text) {
@@ -95,8 +97,9 @@ void parser::token_semicolon(location l) {
 	commit_all(l);
 	switch (context.grouping) {
 		case state::delim::file:
-			out.ast_item(cur());
-			if (!context.exp) break;
+			out.ast_process(cur());
+			context.exp.reset();
+			break;
 		case state::delim::brace:
 			context.items.push_back(cur());
 			break;

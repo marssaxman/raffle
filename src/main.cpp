@@ -11,10 +11,13 @@
 #include "printast.h"
 
 struct receiver: public ast::delegate {
-	virtual void ast_item(ast::ptr &&n) override {
+	virtual void ast_process(ast::ptr &&n) override {
 		printast printer(std::cout);
 		n->accept(printer);
-		std::cout << "; ";
+		std::cout << ";" << std::endl;
+	}
+	virtual void ast_done() override {
+		std::cout << "$> ";
 	}
 };
 
@@ -26,7 +29,6 @@ int main(int argc, const char *argv[]) {
 		parser p(o, e);
 		lexer l(p, e);
 		l.read_line(line);
-		std::cout << std::endl << "$> ";
 	}
 	return EXIT_SUCCESS;
 }

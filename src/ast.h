@@ -18,8 +18,8 @@ struct visitor;
 struct node;
 typedef std::unique_ptr<node> ptr;
 struct delegate {
-	virtual void ast_item(ptr &&) {}
-	virtual void ast_group(std::list<ptr>&&) {}
+	virtual void ast_process(ptr &&) = 0;
+	virtual void ast_done() = 0;
 };
 
 struct node {
