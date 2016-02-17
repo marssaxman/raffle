@@ -242,6 +242,7 @@ void parser::infix(oprec op) {
 			commit();
 		}
 	}
+	vals.push(std::move(exp));
 	ops.push(op);
 }
 
@@ -277,7 +278,6 @@ bool parser::accept_infix(location l) {
 		err.parser_missing_operand(l);
 		return false;
 	} else {
-		vals.push(std::move(exp));
 		return true;
 	}
 }
