@@ -4,14 +4,14 @@
 // this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
-#ifndef PRINTAST_H
-#define PRINTAST_H
+#ifndef PRINTER_H
+#define PRINTER_H
 
 #include "ast.h"
 #include <iostream>
 
-struct printast: public ast::visitor {
-	printast(std::ostream &o): out(o) {}
+struct printer: public ast::visitor {
+	printer(std::ostream &o): out(o) {}
 	virtual void visit(ast::number&) override;
 	virtual void visit(ast::string&) override;
 	virtual void visit(ast::symbol&) override;
@@ -33,6 +33,5 @@ private:
 	std::ostream &out;
 };
 
-
-#endif //PRINTAST_H
+#endif //PRINTER_H
 

@@ -4,27 +4,27 @@
 // this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
-#include "printast.h"
+#include "printer.h"
 
 using namespace ast;
 
-void printast::visit(ast::number& n) {
+void printer::visit(ast::number& n) {
 	out << n.text;
 }
 
-void printast::visit(ast::string& n) {
+void printer::visit(ast::string& n) {
 	out << "\"" << n.text << "\"";
 }
 
-void printast::visit(ast::symbol& n) {
+void printer::visit(ast::symbol& n) {
 	out << n.text;
 }
 
-void printast::visit(ast::wildcard& n) {
+void printer::visit(ast::wildcard& n) {
 	out << "_";
 }
 
-void printast::visit(ast::operate& n) {
+void printer::visit(ast::operate& n) {
 	switch (n.id) {
 		case operate::add: infix(n, "+"); break;
 		case operate::sub: infix(n, "-"); break;
@@ -45,7 +45,7 @@ void printast::visit(ast::operate& n) {
 	}
 }
 
-void printast::visit(negate& n) {
+void printer::visit(negate& n) {
 	switch (n.id) {
 		case negate::numeric: out << "-"; break;
 		case negate::logical: out << "!"; break;
@@ -53,11 +53,11 @@ void printast::visit(negate& n) {
 	n.source->accept(*this);
 }
 
-void printast::visit(ast::tuple &n) {
+void printer::visit(ast::tuple &n) {
 	infix(*n.left, ",", *n.right);
 }
 
-void printast::visit(ast::group& n) {
+void printer::visit(ast::group& n) {
 	unsigned saved = level;
 	level = 0;
 	switch (n.id) {
@@ -79,11 +79,11 @@ void printast::visit(ast::group& n) {
 	level = saved;
 }
 
-void printast::infix(binary &n, std::string t) {
+void printer::infix(binary &n, std::string t) {
 	infix(*n.left, t, *n.right);
 }
 
-void printast::infix(node &l, std::string t, node &r) {
+void printer::infix(node &l, std::string t, node &r) {
 	if (level++) out << "\xC2\xAB";
 	l.accept(*this);
 	if (!t.empty()) out << " " << t;
