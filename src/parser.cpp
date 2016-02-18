@@ -281,6 +281,7 @@ void parser::open(location l, ast::group::opcode g) {
 	if (!accept_term(l)) return;
 	outer.push(std::move(context));
 	context.group.reset(new ast::group(g, l));
+	out.ast_open(*context.group);
 }
 
 void parser::close(ast::group::opcode c, location r) {
@@ -345,10 +346,10 @@ void parser::emit(ast::node *n) {
 
 void parser::commit_statement(location l) {
 	commit_all(l);
-	if (!context.exp) return;
-	out.ast_process(cur());
-	if (!context.exp) return;
-	context.group->items.push_back(cur());
+	if (context.exp) {
+		out.ast_process(*context.exp);
+		context.group->items.push_back(cur());
+	}
 }
 
 ast::ptr parser::pop() {

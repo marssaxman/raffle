@@ -10,8 +10,8 @@ void resolver::ast_open(ast::group &n) {
 	out.ast_open(n);
 }
 
-void resolver::ast_process(ast::ptr &&n) {
-	out.ast_process(std::move(n));
+void resolver::ast_process(ast::node &n) {
+	out.ast_process(n);
 }
 
 void resolver::ast_close(ast::group &n) {

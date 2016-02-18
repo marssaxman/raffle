@@ -159,9 +159,9 @@ struct visitor {
 };
 
 struct traversal {
-	virtual void ast_open(group&) {}
-	virtual void ast_process(ptr &&) {}
-	virtual void ast_close(group&) {};
+	virtual void ast_open(group&) = 0;
+	virtual void ast_process(node&) = 0;
+	virtual void ast_close(group&) = 0;
 };
 
 } // namespace ast
