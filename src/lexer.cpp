@@ -57,6 +57,7 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 		case '&': out.token_ampersand(loc); break;
 		case '|': out.token_pipe(loc); break;
 		case '^': out.token_caret(loc); break;
+		case '~': out.token_tilde(loc); break;
 
 		case ':': switch (i != end? *i: 0) {
 			case ':': adv(i); switch(i != end? *i: 0) {
@@ -70,6 +71,7 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 			case '=': adv(i); out.token_bang_equal(loc); break;
 			case '<': adv(i); out.token_l_bangle(loc); break;
 			case '>': adv(i); out.token_r_bangle(loc); break;
+			case '~': adv(i); out.token_bang_tilde(loc); break;
 			default: out.token_bang(loc);
 		} break;
 

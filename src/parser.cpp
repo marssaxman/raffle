@@ -178,6 +178,10 @@ void parser::token_equal(location l) {
 	}});
 }
 
+void parser::token_tilde(location l) {
+	err.parser_unexpected(l);
+}
+
 void parser::token_l_angle(location l) {
 	infix({precedence::relation, l, [this]() {
 		emit(new ast::operate(ast::operate::lt, pop(), cur()));
@@ -200,6 +204,10 @@ void parser::token_bang_equal(location l) {
 	infix({precedence::relation, l, [this]() {
 		emit(new ast::operate(ast::operate::neq, pop(), cur()));
 	}});
+}
+
+void parser::token_bang_tilde(location l) {
+	err.parser_unexpected(l);
 }
 
 void parser::token_l_bangle(location l) {

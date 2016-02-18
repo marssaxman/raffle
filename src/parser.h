@@ -46,10 +46,12 @@ struct parser: public token::delegate {
 	virtual void token_equal(location) override;
 	virtual void token_l_angle(location) override;
 	virtual void token_r_angle(location) override;
+	virtual void token_tilde(location) override;
 	virtual void token_bang(location) override;
 	virtual void token_bang_equal(location) override;
 	virtual void token_l_bangle(location) override;
 	virtual void token_r_bangle(location) override;
+	virtual void token_bang_tilde(location) override;
 	virtual void token_ampersand(location) override;
 	virtual void token_pipe(location) override;
 	virtual void token_caret(location) override;

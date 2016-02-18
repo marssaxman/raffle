@@ -42,6 +42,8 @@ struct delegate {
 	virtual void token_bang(location) = 0;
 	virtual void token_equal(location) = 0;
 	virtual void token_bang_equal(location) = 0;
+	virtual void token_tilde(location) = 0;
+	virtual void token_bang_tilde(location) = 0;
 	virtual void token_l_angle(location) = 0;
 	virtual void token_r_angle(location) = 0;
 	virtual void token_l_bangle(location) = 0;
