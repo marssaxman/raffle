@@ -33,8 +33,7 @@ void lexer::read_file(std::istream &in) {
 void lexer::next(string::const_iterator &i, string::const_iterator end) {
 	loc.begin = pos;
 	auto tokenstart = i;
-	adv(i);
-	switch (*tokenstart) {
+	switch (adv(i, end)) {
 		case '#':
 			// Comment extends to end of line
 			i = end;
@@ -46,6 +45,15 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 		case ']': out.token_r_bracket(loc); break;
 		case '{': out.token_l_brace(loc); break;
 		case '}': out.token_r_brace(loc); break;
+
+		case ':': switch (adv(i, end)) {
+			case '=': out.token_colon_equal(loc); break;
+			case ':': switch (adv(i, end)) {
+				case '=':out.token_double_colon_equal(loc); break;
+				default: ret(i, end);
+			} break;
+			default: ret(i, end); out.token_colon(loc);
+		} break;
 
 		case ',': out.token_comma(loc); break;
 		case ';': out.token_semicolon(loc); break;
@@ -59,49 +67,41 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 		case '^': out.token_caret(loc); break;
 		case '~': out.token_tilde(loc); break;
 
-		case ':': switch (i != end? *i: 0) {
-			case ':': adv(i); switch(i != end? *i: 0) {
-				case '=': adv(i); out.token_double_colon_equal(loc); break;
-				default: out.token_double_colon(loc); break;
-			} break;
-			default: out.token_colon(loc);
+		case '!': switch (adv(i, end)) {
+			case '=': out.token_bang_equal(loc); break;
+			case '<': out.token_l_bangle(loc); break;
+			case '>': out.token_r_bangle(loc); break;
+			case '~': out.token_bang_tilde(loc); break;
+			default: ret(i, end); out.token_bang(loc);
 		} break;
 
-		case '!': switch (i != end? *i: 0) {
-			case '=': adv(i); out.token_bang_equal(loc); break;
-			case '<': adv(i); out.token_l_bangle(loc); break;
-			case '>': adv(i); out.token_r_bangle(loc); break;
-			case '~': adv(i); out.token_bang_tilde(loc); break;
-			default: out.token_bang(loc);
+		case '.': switch (adv(i, end)) {
+			case '.': out.token_dot_dot(loc); break;
+			default: ret(i, end); out.token_dot(loc);
 		} break;
 
-		case '.': switch (i != end? *i: 0) {
-			case '.': adv(i); out.token_dot_dot(loc); break;
-			default: out.token_dot(loc);
+		case '<': switch (adv(i, end)) {
+			case '-': out.token_l_arrow(loc); break;
+			case '<': out.token_l_guillemet(loc); break;
+			default: ret(i, end); out.token_l_angle(loc);
 		} break;
 
-		case '<': switch (i != end? *i: 0) {
-			case '-': adv(i); out.token_l_arrow(loc); break;
-			case '<': adv(i); out.token_l_guillemet(loc); break;
-			default: out.token_l_angle(loc);
+		case '>': switch (adv(i, end)) {
+			case '>': out.token_r_guillemet(loc); break;
+			default: ret(i, end); out.token_r_angle(loc);
 		} break;
 
-		case '>': switch (i != end? *i: 0) {
-			case '>': adv(i); out.token_r_guillemet(loc); break;
-			default: out.token_r_angle(loc);
-		} break;
-
-		case '-': switch (i != end? *i: 0) {
-			case '>': adv(i); out.token_r_arrow(loc); break;
-			default: out.token_hyphen(loc);
+		case '-': switch (adv(i, end)) {
+			case '>': out.token_r_arrow(loc); break;
+			default: ret(i, end); out.token_hyphen(loc);
 		} break;
 
 		case '\"':
 		case '\'':
-			for (char delim = *tokenstart++; i != end; adv(i)) {
+			for (char delim = *tokenstart++; i != end; adv(i, end)) {
 				if (*i == delim) {
 					string text(tokenstart, i);
-					adv(i);
+					adv(i, end);
 					out.token_string(loc, text);
 					break;
 				}
@@ -127,9 +127,7 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 		case '7':
 		case '8':
 		case '9':
-			while (i != end && isdigit(*i)) {
-				adv(i);
-			}
+			while (isdigit(adv(i, end))) {}
 			out.token_number(loc, string(tokenstart, i));
 			break;
 
@@ -164,7 +162,7 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 		case 'Y': case 'y':
 		case 'Z': case 'z':
 			while (i != end && isalnum(*i) || '_' == *i) {
-				adv(i);
+				adv(i, end);
 			}
 			out.token_symbol(loc, string(tokenstart, i));
 			break;
@@ -176,8 +174,19 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 	}
 }
 
-std::string::const_iterator &lexer::adv(std::string::const_iterator &i) {
-	++pos.col;
+char lexer::adv(string::const_iterator &i, string::const_iterator end) {
+	char c = 0;
+	if (i != end) {
+		c = *i;
+		++pos.col;
+		loc.end = pos;
+		++i;
+	}
+	return c;
+}
+
+void lexer::ret(string::const_iterator &i, string::const_iterator end) {
+	--pos.col;
 	loc.end = pos;
-	return ++i;
+	--i;
 }

@@ -91,11 +91,13 @@ void parser::token_colon(location l) {
 	}});
 }
 
-void parser::token_double_colon(location l) {
+void parser::token_colon_equal(location l) {
+	// this will stand for constant definition
 	err.parser_unexpected(l);
 }
 
 void parser::token_double_colon_equal(location l) {
+	// this will stand for type definition
 	err.parser_unexpected(l);
 }
 

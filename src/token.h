@@ -27,7 +27,7 @@ struct delegate {
 	virtual void token_comma(location) = 0;
 	virtual void token_semicolon(location) = 0;
 	virtual void token_colon(location) = 0;
-	virtual void token_double_colon(location) = 0;
+	virtual void token_colon_equal(location) = 0;
 	virtual void token_double_colon_equal(location) = 0;
 	virtual void token_dot(location) = 0;
 	virtual void token_dot_dot(location) = 0;

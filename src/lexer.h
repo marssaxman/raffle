@@ -28,7 +28,7 @@
 //  logic/set: '|' | '&' | '^' | '!'
 //	relation: '=' | '<' | '>' '!=' | '!<' | '!>'
 //	structure: ',' | ';' | '<-' | '->' | '.' | '..'
-//  definition: ':' | '::' | '::='
+//  definition: ':' | ':=' '::='
 
 class lexer {
 public:
@@ -42,7 +42,8 @@ public:
 private:
 	void read(const std::string&);
 	void next(std::string::const_iterator &i, std::string::const_iterator end);
-	std::string::const_iterator &adv(std::string::const_iterator &i);
+	char adv(std::string::const_iterator &i, std::string::const_iterator end);
+	void ret(std::string::const_iterator &i, std::string::const_iterator end);
 	position pos;
 	location loc;
 	token::delegate &out;

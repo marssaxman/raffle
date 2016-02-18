@@ -33,7 +33,7 @@ struct parser: public token::delegate {
 	virtual void token_r_brace(location) override;
 	virtual void token_comma(location) override;
 	virtual void token_colon(location) override;
-	virtual void token_double_colon(location) override;
+	virtual void token_colon_equal(location) override;
 	virtual void token_double_colon_equal(location) override;
 	virtual void token_semicolon(location) override;
 	virtual void token_dot(location) override;
