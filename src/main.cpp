@@ -9,14 +9,14 @@
 #include "lexer.h"
 #include "parser.h"
 #include "errors.h"
-#include "printast.h"
+#include "printer.h"
 
 #include <unistd.h>
 
 struct receiver: public ast::delegate {
 	virtual void ast_process(ast::ptr &&n) override {
-		printast printer(std::cout);
-		n->accept(printer);
+		printer p(std::cout);
+		n->accept(p);
 		std::cout << ";" << std::endl;
 	}
 	virtual void ast_done() override {

@@ -63,30 +63,6 @@ private:
 	location tk_loc;
 };
 
-struct invocation: public node {
-	typedef enum {
-		subscript, lookup, caption
-	} opcode;
-	opcode id;
-	ptr target;
-	ptr argument;
-	invocation(opcode o, ptr &&t, ptr &&a);
-	virtual void accept(visitor &v) override;
-	virtual location loc() override;
-};
-
-struct definition: public node {
-	typedef enum {
-		evaluate, capture
-	} opcode;
-	opcode id;
-	ptr sym;
-	ptr exp;
-	definition(opcode o, ptr &&s, ptr &&e);
-	virtual void accept(visitor &v) override;
-	virtual location loc() override { return sym->loc() + exp->loc(); }
-};
-
 struct binary: public node {
 	ptr left;
 	ptr right;
@@ -94,30 +70,39 @@ struct binary: public node {
 	virtual location loc() override { return left->loc() + right->loc(); }
 };
 
-struct arithmetic: public binary {
-	typedef enum {
-		add, subtract, multiply, divide, modulo, shift_left, shift_right,
-	} opcode;
-	opcode id;
-	arithmetic(opcode o, ptr &&l, ptr &&r);
+struct apply: public binary {
+	apply(ptr &&t, ptr &&a);
 	virtual void accept(visitor &v) override;
 };
 
-struct logic: public binary {
+struct compose: public binary {
+	compose(ptr &&a, ptr &&t);
+	virtual void accept(visitor &v) override;
+};
+
+struct assign: public binary {
+	assign(ptr &&t, ptr &&a);
+	virtual void accept(visitor &v) override;
+};
+
+struct capture: public binary {
+	capture(ptr &&t, ptr &&a);
+	virtual void accept(visitor &v) override;
+};
+
+struct define: public binary {
+	define(ptr &&t, ptr &&a);
+	virtual void accept(visitor &v) override;
+};
+
+struct operate: public binary {
 	typedef enum {
+		add, sub, mul, div, rem, shl, shr,
 		conjoin, disjoin, exclude,
+		eq, gt, lt, neq, ngt, nlt,
 	} opcode;
 	opcode id;
-	logic(opcode o, ptr &&l, ptr &&r);
-	virtual void accept(visitor &v) override;
-};
-
-struct relation: public binary {
-	typedef enum {
-		equal, greater, lesser, not_equal, not_greater, not_lesser,
-	} opcode;
-	opcode id;
-	relation(opcode o, ptr &&l, ptr &&r);
+	operate(opcode o, ptr &&l, ptr &&r);
 	virtual void accept(visitor &v) override;
 };
 
@@ -126,26 +111,31 @@ struct range: public binary {
 	virtual void accept(visitor &v) override;
 };
 
-struct invert: public node {
+struct negate: public node {
 	typedef enum {
-		negate, complement,
+		numeric, logical,
 	} opcode;
 	opcode id;
 	ptr source;
-	invert(opcode o, ptr &&s, location l);
+	negate(opcode o, ptr &&s, location l);
 	virtual location loc() override { return tk_loc + source->loc(); }
 	virtual void accept(visitor &v) override;
 private:
 	location tk_loc;
 };
 
-struct constructor: public node {
+struct tuple: public binary {
+	tuple(ptr &&l, ptr &&r);
+	virtual void accept(visitor &v) override;
+};
+
+struct group: public node {
 	typedef enum {
-		tuple, list, object
+		value, construct, scope
 	} opcode;
 	opcode id;
 	std::list<ptr> items;
-	constructor(opcode o, std::list<ptr> &&i, location l);
+	group(opcode o, std::list<ptr> &&i, location l);
 	virtual location loc() override { return tk_loc; }
 	virtual void accept(visitor &v) override;
 private:
@@ -157,14 +147,16 @@ struct visitor {
 	virtual void visit(string&) = 0;
 	virtual void visit(symbol&) = 0;
 	virtual void visit(wildcard&) = 0;
-	virtual void visit(invocation&) = 0;
-	virtual void visit(definition&) = 0;
-	virtual void visit(arithmetic&) = 0;
-	virtual void visit(logic&) = 0;
-	virtual void visit(relation&) = 0;
+	virtual void visit(apply&) = 0;
+	virtual void visit(compose&) = 0;
+	virtual void visit(assign&) = 0;
+	virtual void visit(capture&) = 0;
+	virtual void visit(define&) = 0;
+	virtual void visit(operate&) = 0;
 	virtual void visit(range&) = 0;
-	virtual void visit(invert&) = 0;
-	virtual void visit(constructor&) = 0;
+	virtual void visit(negate&) = 0;
+	virtual void visit(tuple&) = 0;
+	virtual void visit(group&) = 0;
 };
 
 } // namespace ast

@@ -33,23 +33,43 @@ void wildcard::accept(visitor &v) {
 	v.visit(*this);
 }
 
-invocation::invocation(opcode o, ptr &&t, ptr &&a):
-		id(o), target(std::move(t)), argument(std::move(a)) {
+apply::apply(ptr &&t, ptr &&a):
+		binary(std::move(t), std::move(a)) {
 }
 
-void invocation::accept(visitor &v) {
+void apply::accept(visitor &v) {
 	v.visit(*this);
 }
 
-location invocation::loc() {
-	return target->loc() + argument->loc();
+compose::compose(ptr &&a, ptr &&t):
+		binary(std::move(a), std::move(t)) {
 }
 
-definition::definition(opcode o, ptr &&s, ptr &&e):
-		id(o), sym(std::move(s)), exp(std::move(e)) {
+void compose::accept(visitor &v) {
+	v.visit(*this);
 }
 
-void definition::accept(visitor &v) {
+assign::assign(ptr &&s, ptr &&e):
+		binary(std::move(s), std::move(e)) {
+}
+
+void assign::accept(visitor &v) {
+	v.visit(*this);
+}
+
+capture::capture(ptr &&s, ptr &&e):
+		binary(std::move(s), std::move(e)) {
+}
+
+void capture::accept(visitor &v) {
+	v.visit(*this);
+}
+
+define::define(ptr &&s, ptr &&e):
+		binary(std::move(s), std::move(e)) {
+}
+
+void define::accept(visitor &v) {
 	v.visit(*this);
 }
 
@@ -59,27 +79,11 @@ binary::binary(ptr &&l, ptr &&r):
 	assert(right);
 }
 
-arithmetic::arithmetic(opcode o, ptr &&l, ptr &&r):
+operate::operate(opcode o, ptr &&l, ptr &&r):
 		binary(std::move(l), std::move(r)), id(o) {
 }
 
-void arithmetic::accept(visitor &v) {
-	v.visit(*this);
-}
-
-logic::logic(opcode o, ptr &&l, ptr &&r):
-		binary(std::move(l), std::move(r)), id(o) {
-}
-
-void logic::accept(visitor &v) {
-	v.visit(*this);
-}
-
-relation::relation(opcode o, ptr &&l, ptr &&r):
-		binary(std::move(l), std::move(r)), id(o) {
-}
-
-void relation::accept(visitor &v) {
+void operate::accept(visitor &v) {
 	v.visit(*this);
 }
 
@@ -91,19 +95,27 @@ void range::accept(visitor &v) {
 	v.visit(*this);
 }
 
-invert::invert(opcode o, ptr &&s, location l):
+negate::negate(opcode o, ptr &&s, location l):
 		id(o), source(std::move(s)), tk_loc(l) {
 }
 
-void invert::accept(visitor &v) {
+void negate::accept(visitor &v) {
 	v.visit(*this);
 }
 
-constructor::constructor(opcode o, std::list<ptr> &&i, location l):
+tuple::tuple(ptr &&l, ptr &&r):
+		binary(std::move(l), std::move(r)) {
+}
+
+void tuple::accept(visitor &v) {
+	v.visit(*this);
+}
+
+group::group(opcode o, std::list<ptr> &&i, location l):
 		id(o), items(std::move(i)), tk_loc(l) {
 }
 
-void constructor::accept(visitor &v) {
+void group::accept(visitor &v) {
 	v.visit(*this);
 }
 

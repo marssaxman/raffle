@@ -9,13 +9,12 @@
 
 bool parser::rightassoc(precedence x) {
 	switch (x) {
+		case precedence::tuple: return true;
 		case precedence::statement: return true;
-		case precedence::definition: return true;
-		case precedence::structure: return true;
 		case precedence::relation: return false;
 		case precedence::additive: return false;
 		case precedence::multiplicative: return false;
-		case precedence::unary: return true;
+		case precedence::negation: return true;
 		case precedence::primary: return false;
 	}
 }
@@ -50,66 +49,63 @@ void parser::token_underscore(location l) {
 }
 
 void parser::token_l_paren(location l) {
+	if (!accept_term(l)) return;
 	open(l, state::delim::paren);
 }
 
 void parser::token_r_paren(location r) {
 	if (!accept_delim(r, state::delim::paren)) return;
-	close(ast::constructor::tuple, r);
+	close(ast::group::value, r);
 }
 
 void parser::token_l_bracket(location l) {
+	if (!accept_term(l)) return;
 	open(l, state::delim::bracket);
 }
 
 void parser::token_r_bracket(location r) {
 	if (!accept_delim(r, state::delim::bracket)) return;
-	close(ast::constructor::list, r);
+	close(ast::group::construct, r);
 }
 
 void parser::token_l_brace(location l) {
+	if (!accept_term(l)) return;
 	open(l, state::delim::brace);
 }
 
 void parser::token_r_brace(location r) {
 	if (!accept_delim(r, state::delim::brace)) return;
-	close(ast::constructor::object, r);
+	close(ast::group::scope, r);
 }
 
 void parser::token_comma(location l) {
-	if (!accept_infix(l)) return;
-	if (context.grouping == state::delim::file ||
-			context.grouping == state::delim::brace) {
-		err.parser_mismatched_separator(l);
-	}
-	commit_all(l);
-	context.items.push_back(std::move(context.exp));
+	infix({precedence::tuple, l, [this]() {
+		emit(new ast::tuple(pop(), cur()));
+	}});
 }
 
 void parser::token_colon(location l) {
-	infix({precedence::structure, l, [this]() {
-		emit(new ast::invocation(ast::invocation::caption, pop(), cur()));
+	infix({precedence::primary, l, [this]() {
+		emit(new ast::define(pop(), cur()));
 	}});
 }
 
 void parser::token_semicolon(location l) {
 	if (!accept_infix(l)) return;
 	commit_all(l);
-	switch (context.grouping) {
-		case state::delim::file:
-			out.ast_process(cur());
-			context.exp.reset();
-			break;
-		case state::delim::brace:
-			context.items.push_back(cur());
-			break;
-		default: err.parser_mismatched_separator(l);
+	if (context.grouping == state::delim::file) {
+		// Top-level statements should be reported to the delegate.
+		out.ast_process(cur());
+		context.exp.reset();
+	} else {
+		// Statements in nested scopes are queued for later use.
+		context.items.push_back(cur());
 	}
 }
 
 void parser::token_dot(location l) {
 	infix({precedence::primary, l, [this]() {
-		emit(new ast::invocation(ast::invocation::lookup, pop(), cur()));
+		emit(new ast::compose(pop(), cur()));
 	}});
 }
 
@@ -120,122 +116,122 @@ void parser::token_dot_dot(location l) {
 }
 
 void parser::token_l_arrow(location l) {
-	infix({precedence::definition, l, [this]() {
-		emit(new ast::definition(ast::definition::evaluate, pop(), cur()));
+	infix({precedence::statement, l, [this]() {
+		emit(new ast::assign(pop(), cur()));
 	}});
 }
 
 void parser::token_r_arrow(location l) {
-	infix({precedence::definition, l, [this]() {
-		emit(new ast::definition(ast::definition::capture, pop(), cur()));
+	infix({precedence::statement, l, [this]() {
+		emit(new ast::capture(pop(), cur()));
 	}});
 }
 
 void parser::token_plus(location l) {
 	infix({precedence::additive, l, [this]() {
-		emit(new ast::arithmetic(ast::arithmetic::add, pop(), cur()));
+		emit(new ast::operate(ast::operate::add, pop(), cur()));
 	}});
 }
 
 void parser::token_hyphen(location l) {
 	if (expecting_term()) {
-		prefix({precedence::unary, l, [this, l]() {
-			emit(new ast::invert(ast::invert::negate, cur(), l));
+		prefix({precedence::negation, l, [this, l]() {
+			emit(new ast::negate(ast::negate::numeric, cur(), l));
 		}});
 	} else {
 		infix({precedence::additive, l, [this]() {
-			emit(new ast::arithmetic(ast::arithmetic::subtract, pop(), cur()));
+			emit(new ast::operate(ast::operate::sub, pop(), cur()));
 		}});
 	}
 }
 
 void parser::token_star(location l) {
 	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::arithmetic(ast::arithmetic::multiply, pop(), cur()));
+		emit(new ast::operate(ast::operate::mul, pop(), cur()));
 	}});
 }
 
 void parser::token_slash(location l) {
 	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::arithmetic(ast::arithmetic::divide, pop(), cur()));
+		emit(new ast::operate(ast::operate::div, pop(), cur()));
 	}});
 }
 
 void parser::token_percent(location l) {
 	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::arithmetic(ast::arithmetic::modulo, pop(), cur()));
+		emit(new ast::operate(ast::operate::rem, pop(), cur()));
 	}});
 }
 
 void parser::token_equal(location l) {
 	infix({precedence::relation, l, [this]() {
-		emit(new ast::relation(ast::relation::equal, pop(), cur()));
+		emit(new ast::operate(ast::operate::eq, pop(), cur()));
 	}});
 }
 
 void parser::token_l_angle(location l) {
 	infix({precedence::relation, l, [this]() {
-		emit(new ast::relation(ast::relation::lesser, pop(), cur()));
+		emit(new ast::operate(ast::operate::lt, pop(), cur()));
 	}});
 }
 
 void parser::token_r_angle(location l) {
 	infix({precedence::relation, l, [this]() {
-		emit(new ast::relation(ast::relation::greater, pop(), cur()));
+		emit(new ast::operate(ast::operate::gt, pop(), cur()));
 	}});
 }
 
 void parser::token_bang(location l) {
-	prefix({precedence::unary, l, [this, l]() {
-		emit(new ast::invert(ast::invert::complement, cur(), l));
+	prefix({precedence::negation, l, [this, l]() {
+		emit(new ast::negate(ast::negate::logical, cur(), l));
 	}});
 }
 
 void parser::token_bang_equal(location l) {
 	infix({precedence::relation, l, [this]() {
-		emit(new ast::relation(ast::relation::not_equal, pop(), cur()));
+		emit(new ast::operate(ast::operate::neq, pop(), cur()));
 	}});
 }
 
 void parser::token_l_bangle(location l) {
 	infix({precedence::relation, l, [this]() {
-		emit(new ast::relation(ast::relation::not_lesser, pop(), cur()));
+		emit(new ast::operate(ast::operate::nlt, pop(), cur()));
 	}});
 }
 
 void parser::token_r_bangle(location l) {
 	infix({precedence::relation, l, [this]() {
-		emit(new ast::relation(ast::relation::not_greater, pop(), cur()));
+		emit(new ast::operate(ast::operate::ngt, pop(), cur()));
 	}});
 }
 
 void parser::token_ampersand(location l) {
 	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::logic(ast::logic::conjoin, pop(), cur()));
+		emit(new ast::operate(ast::operate::conjoin, pop(), cur()));
 	}});
 }
 
 void parser::token_pipe(location l) {
 	infix({precedence::additive, l, [this]() {
-		emit(new ast::logic(ast::logic::disjoin, pop(), cur()));
+		emit(new ast::operate(ast::operate::disjoin, pop(), cur()));
 	}});
 }
 
 void parser::token_caret(location l) {
 	infix({precedence::additive, l, [this]() {
-		emit(new ast::logic(ast::logic::exclude, pop(), cur()));
+		emit(new ast::operate(ast::operate::exclude, pop(), cur()));
 	}});
 }
 
 void parser::token_l_guillemet(location l) {
 	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::arithmetic(ast::arithmetic::shift_left, pop(), cur()));
+		emit(new ast::operate(ast::operate::shl, pop(), cur()));
 	}});
 }
 
 void parser::token_r_guillemet(location l) {
 	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::arithmetic(ast::arithmetic::shift_right, pop(), cur()));
+		emit(new ast::operate(ast::operate::shr, pop(), cur()));
 	}});
 }
 
@@ -276,17 +272,12 @@ void parser::commit_all(location l) {
 }
 
 void parser::open(location l, state::delim g) {
-	if (!expecting_term()) {
-		infix({precedence::primary, l, [this](){
-			emit(new ast::invocation(ast::invocation::subscript, pop(), cur()));
-		}});
-	}
 	outer.push(std::move(context));
 	context.startloc = l;
 	context.grouping = g;
 }
 
-void parser::close(ast::constructor::opcode c, location r) {
+void parser::close(ast::group::opcode c, location r) {
 	if (context.exp) {
 		context.items.push_back(std::move(context.exp));
 	}
@@ -295,7 +286,7 @@ void parser::close(ast::constructor::opcode c, location r) {
 	context = std::move(outer.top());
 	outer.pop();
 	assert(!context.exp);
-	emit(new ast::constructor(c, std::move(result), l));
+	emit(new ast::group(c, std::move(result), l));
 }
 
 bool parser::accept_delim(location l, state::delim g) {
@@ -312,12 +303,12 @@ bool parser::expecting_term() {
 }
 
 bool parser::accept_term(location l) {
-	if (expecting_term()) {
-		return true;
-	} else {
-		err.parser_unexpected(l);
-		return false;
+	if (!expecting_term()) {
+		infix({precedence::primary, l, [this](){
+			emit(new ast::apply(pop(), cur()));
+		}});
 	}
+	return true;
 }
 
 bool parser::accept_prefix(location l) {
