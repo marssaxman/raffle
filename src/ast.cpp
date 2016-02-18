@@ -111,8 +111,8 @@ void tuple::accept(visitor &v) {
 	v.visit(*this);
 }
 
-group::group(opcode o, std::list<ptr> &&i, location l):
-		id(o), items(std::move(i)), tk_loc(l) {
+group::group(opcode o, std::list<ptr> &&i, location l, location r):
+		id(o), items(std::move(i)), open_loc(l), close_loc(r) {
 }
 
 void group::accept(visitor &v) {

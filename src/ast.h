@@ -132,13 +132,13 @@ struct group: public node {
 		root, value, spec, scope
 	} opcode;
 	opcode id;
+	location open_loc;
 	std::list<ptr> items;
-	group(opcode o, std::list<ptr> &&i, location l);
-	group(opcode o, location l): id(o), tk_loc(l) {}
-	virtual location loc() override { return tk_loc; }
+	location close_loc;
+	group(opcode o, std::list<ptr> &&i, location l, location r);
+	group(opcode o, location l): id(o), open_loc(l), close_loc(l) {}
+	virtual location loc() override { return open_loc + close_loc; }
 	virtual void accept(visitor &v) override;
-private:
-	location tk_loc;
 };
 
 struct visitor {

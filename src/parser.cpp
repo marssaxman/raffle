@@ -296,6 +296,7 @@ void parser::close(ast::group::opcode c, location r) {
 		return;
 	}
 	commit_statement(r);
+	context.group->close_loc = r;
 	out.ast_close(*context.group);
 	if (!outer.empty()) {
 		ast::group *result = context.group.release();
