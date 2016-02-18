@@ -127,7 +127,9 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 		case '7':
 		case '8':
 		case '9':
-			while (isdigit(adv(i, end))) {}
+			while (i != end && isdigit(*i)) {
+				adv(i, end);
+			}
 			out.token_number(loc, string(tokenstart, i));
 			break;
 

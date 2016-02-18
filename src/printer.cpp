@@ -61,8 +61,9 @@ void printer::visit(ast::group& n) {
 	unsigned saved = level;
 	level = 0;
 	switch (n.id) {
+		case ast::group::root: break;
 		case ast::group::value: out << "("; break;
-		case ast::group::construct: out << "["; break;
+		case ast::group::spec: out << "["; break;
 		case ast::group::scope: out << "{"; break;
 	}
 	bool pre = false;
@@ -72,8 +73,9 @@ void printer::visit(ast::group& n) {
 		pre = true;
 	}
 	switch (n.id) {
+		case ast::group::root: break;
 		case ast::group::value: out << ")"; break;
-		case ast::group::construct: out << "]"; break;
+		case ast::group::spec: out << "]"; break;
 		case ast::group::scope: out << "}"; break;
 	}
 	level = saved;

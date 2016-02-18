@@ -14,18 +14,17 @@
 
 #include <unistd.h>
 
-struct receiver: public ast::delegate {
+struct output: public ast::traversal {
 	virtual void ast_process(ast::ptr &&n) override {
 		printer p(std::cout);
 		n->accept(p);
 		std::cout << ";" << std::endl;
 	}
-	virtual void ast_done() override {}
 };
 
 static int run(std::istream &i) {
 	errors e;
-	receiver o;
+	output o;
 	resolver r(o, e);
 	parser p(r, e);
 	lexer l(p, e);
@@ -37,7 +36,7 @@ int main(int argc, const char *argv[]) {
 		std::cout << "$> ";
 		for (std::string line; std::getline(std::cin, line);) {
 			errors e;
-			receiver o;
+			output o;
 			parser p(o, e);
 			lexer l(p, e);
 			l.read_line(line);

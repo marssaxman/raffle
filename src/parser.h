@@ -16,10 +16,9 @@ struct parser: public token::delegate {
 		virtual void parser_unexpected(location) = 0;
 		virtual void parser_missing_left_operand(location) = 0;
 		virtual void parser_missing_right_operand(location) = 0;
-		virtual void parser_mismatched_group(location) = 0;
-		virtual void parser_mismatched_separator(location) = 0;
+		virtual void parser_expected(location, std::string, location) = 0;
 	};
-	parser(ast::delegate &o, error &e): out(o), err(e) {}
+	parser(ast::traversal &o, error &e): out(o), err(e) {}
 	virtual void token_eof(location) override;
 	virtual void token_number(location, std::string) override;
 	virtual void token_symbol(location, std::string) override;
@@ -80,12 +79,7 @@ private:
 	// Current state being evaluated
 	struct state {
 		location startloc;
-		enum class delim {
-			file,
-			paren,
-			bracket,
-			brace,
-		} grouping = delim::file;
+		ast::group::opcode grouping = ast::group::root;
 		// infix operators in flight
 		std::stack<oprec> ops;
 		// most recent term or operator value
@@ -97,9 +91,9 @@ private:
 	} context;
 	// Previous states, from outer expressions
 	std::stack<state> outer;
-	void open(location, state::delim);
+	void open(location, ast::group::opcode);
 	void close(ast::group::opcode, location r);
-	bool accept_delim(location, state::delim);
+	bool accept_delim(location, ast::group::opcode);
 	bool expecting_term();
 	bool accept_term(location);
 	bool accept_prefix(location);
@@ -112,7 +106,7 @@ private:
 	void infix(oprec);
 	void commit_next();
 	void commit_all(location);
-	ast::delegate &out;
+	ast::traversal &out;
 	error &err;
 };
 

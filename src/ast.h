@@ -17,9 +17,10 @@ namespace ast {
 struct visitor;
 struct node;
 typedef std::unique_ptr<node> ptr;
-struct delegate {
+struct traversal {
+	virtual void ast_open() {}
 	virtual void ast_process(ptr &&) = 0;
-	virtual void ast_done() = 0;
+	virtual void ast_close() {};
 };
 
 struct node {
@@ -131,7 +132,7 @@ struct tuple: public binary {
 
 struct group: public node {
 	typedef enum {
-		value, construct, scope
+		root, value, spec, scope
 	} opcode;
 	opcode id;
 	std::list<ptr> items;

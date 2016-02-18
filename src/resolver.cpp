@@ -6,11 +6,15 @@
 
 #include "resolver.h"
 
+void resolver::ast_open() {
+	out.ast_open();
+}
+
 void resolver::ast_process(ast::ptr &&n) {
 	out.ast_process(std::move(n));
 }
 
-void resolver::ast_done() {
-	out.ast_done();
+void resolver::ast_close() {
+	out.ast_close();
 }
 

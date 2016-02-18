@@ -20,13 +20,13 @@ struct errors:
 	virtual void parser_unexpected(location) override;
 	virtual void parser_missing_left_operand(location) override;
 	virtual void parser_missing_right_operand(location) override;
-	virtual void parser_mismatched_group(location) override;
-	virtual void parser_mismatched_separator(location) override;
+	virtual void parser_expected(location, std::string, location) override;
 	virtual void resolver_undefined(location) override;
 	virtual void resolver_redefined(location, location) override;
 private:
 	void print_loc(location);
 	void report(location, std::string message);
+	void report(location, std::string message, location);
 };
 
 #endif //ERRORS_H

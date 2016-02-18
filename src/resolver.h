@@ -10,16 +10,17 @@
 #include "ast.h"
 #include "dfg.h"
 
-struct resolver: public ast::delegate {
+struct resolver: public ast::traversal {
 	struct error {
 		virtual void resolver_undefined(location) = 0;
 		virtual void resolver_redefined(location, location) = 0;
 	};
-	resolver(ast::delegate &o, error &e): out(o), err(e) {}
+	resolver(ast::traversal &o, error &e): out(o), err(e) {}
+	virtual void ast_open() override;
 	virtual void ast_process(ast::ptr &&) override;
-	virtual void ast_done() override;
+	virtual void ast_close() override;
 private:
-	ast::delegate &out;
+	ast::traversal &out;
 	error &err;
 };
 

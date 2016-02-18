@@ -21,12 +21,12 @@ bool parser::rightassoc(precedence x) {
 }
 
 void parser::token_eof(location l) {
-	if (!accept_delim(l, state::delim::file)) return;
+	if (!accept_delim(l, ast::group::root)) return;
 	if (context.exp) {
 		out.ast_process(cur());
 		context.exp.reset();
 	}
-	out.ast_done();
+	out.ast_close();
 }
 
 void parser::token_number(location l, std::string text) {
@@ -51,31 +51,31 @@ void parser::token_underscore(location l) {
 
 void parser::token_l_paren(location l) {
 	if (!accept_term(l)) return;
-	open(l, state::delim::paren);
+	open(l, ast::group::value);
 }
 
 void parser::token_r_paren(location r) {
-	if (!accept_delim(r, state::delim::paren)) return;
+	if (!accept_delim(r, ast::group::value)) return;
 	close(ast::group::value, r);
 }
 
 void parser::token_l_bracket(location l) {
 	if (!accept_term(l)) return;
-	open(l, state::delim::bracket);
+	open(l, ast::group::spec);
 }
 
 void parser::token_r_bracket(location r) {
-	if (!accept_delim(r, state::delim::bracket)) return;
-	close(ast::group::construct, r);
+	if (!accept_delim(r, ast::group::spec)) return;
+	close(ast::group::spec, r);
 }
 
 void parser::token_l_brace(location l) {
 	if (!accept_term(l)) return;
-	open(l, state::delim::brace);
+	open(l, ast::group::scope);
 }
 
 void parser::token_r_brace(location r) {
-	if (!accept_delim(r, state::delim::brace)) return;
+	if (!accept_delim(r, ast::group::scope)) return;
 	close(ast::group::scope, r);
 }
 
@@ -104,7 +104,7 @@ void parser::token_double_colon_equal(location l) {
 void parser::token_semicolon(location l) {
 	if (!accept_infix(l)) return;
 	commit_all(l);
-	if (context.grouping == state::delim::file) {
+	if (context.grouping == ast::group::root) {
 		// Top-level statements should be reported to the delegate.
 		out.ast_process(cur());
 		context.exp.reset();
@@ -290,7 +290,7 @@ void parser::commit_all(location l) {
 	assert(context.vals.empty());
 }
 
-void parser::open(location l, state::delim g) {
+void parser::open(location l, ast::group::opcode g) {
 	outer.push(std::move(context));
 	context.startloc = l;
 	context.grouping = g;
@@ -308,9 +308,16 @@ void parser::close(ast::group::opcode c, location r) {
 	emit(new ast::group(c, std::move(result), l));
 }
 
-bool parser::accept_delim(location l, state::delim g) {
+bool parser::accept_delim(location l, ast::group::opcode g) {
 	if (context.grouping != g) {
-		err.parser_mismatched_group(l);
+		std::string expected;
+		switch (context.grouping) {
+			case ast::group::root: err.parser_unexpected(l); return false;
+			case ast::group::value: expected = "')'"; break;
+			case ast::group::spec: expected = "']'";  break;
+			case ast::group::scope: expected = "'}'"; break;
+		}
+		err.parser_expected(l, expected, context.startloc);
 		return false;
 	}
 	commit_all(l);
