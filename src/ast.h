@@ -14,14 +14,11 @@
 
 namespace ast {
 
-struct visitor;
 struct node;
 typedef std::unique_ptr<node> ptr;
-struct traversal {
-	virtual void ast_open() {}
-	virtual void ast_process(ptr &&) = 0;
-	virtual void ast_close() {};
-};
+
+struct visitor;
+struct traversal;
 
 struct node {
 	virtual ~node() {}
@@ -137,6 +134,7 @@ struct group: public node {
 	opcode id;
 	std::list<ptr> items;
 	group(opcode o, std::list<ptr> &&i, location l);
+	group(opcode o, location l): id(o), tk_loc(l) {}
 	virtual location loc() override { return tk_loc; }
 	virtual void accept(visitor &v) override;
 private:
@@ -158,6 +156,12 @@ struct visitor {
 	virtual void visit(negate&) = 0;
 	virtual void visit(tuple&) = 0;
 	virtual void visit(group&) = 0;
+};
+
+struct traversal {
+	virtual void ast_open(group&) {}
+	virtual void ast_process(ptr &&) {}
+	virtual void ast_close(group&) {};
 };
 
 } // namespace ast

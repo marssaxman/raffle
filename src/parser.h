@@ -18,7 +18,7 @@ struct parser: public token::delegate {
 		virtual void parser_missing_right_operand(location) = 0;
 		virtual void parser_expected(location, std::string, location) = 0;
 	};
-	parser(ast::traversal &o, error &e): out(o), err(e) {}
+	parser(ast::traversal &o, error &e);
 	virtual void token_eof(location) override;
 	virtual void token_number(location, std::string) override;
 	virtual void token_symbol(location, std::string) override;
@@ -78,27 +78,24 @@ private:
 	};
 	// Current state being evaluated
 	struct state {
-		location startloc;
-		ast::group::opcode grouping = ast::group::root;
+		std::unique_ptr<ast::group> group;
 		// infix operators in flight
 		std::stack<oprec> ops;
 		// most recent term or operator value
 		ast::ptr exp;
 		// other values awaiting operators
 		std::stack<ast::ptr> vals;
-		// preceding items in the sequence
-		std::list<ast::ptr> items;
 	} context;
 	// Previous states, from outer expressions
 	std::stack<state> outer;
 	void open(location, ast::group::opcode);
-	void close(ast::group::opcode, location r);
-	bool accept_delim(location, ast::group::opcode);
+	void close(ast::group::opcode, location);
 	bool expecting_term();
 	bool accept_term(location);
 	bool accept_prefix(location);
 	bool accept_infix(location);
 	void emit(ast::node*);
+	void commit_statement(location);
 	ast::ptr pop();
 	ast::ptr cur();
 	void term(location);
