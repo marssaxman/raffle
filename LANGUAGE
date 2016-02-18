@@ -1,0 +1,19 @@
+Raffle is RFL, the Radian Foundation Language, a statically-typed functional
+language for expressing concurrent processes over byte streams. Its syntax is
+terse and its type model is minimal, in order to keep its compilation simple
+and streamline the generation of efficient code. Friendlier, more expressive
+language features can be developed using the macro system.
+
+I like the idea of a language like haskell, F#, or OCaml, but I want to code in
+functional style without having to take such an abstract view of the machine.
+I want pattern matching and type inference, I want lazy sequences and flexible
+data structure manipulation - but I want to write lean, tight, performance-
+sensitive code suitable for embedded devices and constrained environments.
+I need semantics that are firmly grounded in the world of bytes, arrays, and
+efficiency, where performance-critical activities like allocating memory and
+cleaning up garbage are explicit and therefore easy to reason about. RFL is an
+attempt at a simple, expressive language, on which a wide variety of complex
+datastructure support can be constructed, which makes few intrinsic commitments
+about the capabilities of its runtime environment.
+
+

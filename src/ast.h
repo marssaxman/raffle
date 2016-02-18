@@ -148,7 +148,7 @@ struct visitor {
 	virtual void visit(symbol&) = 0;
 	virtual void visit(wildcard&) = 0;
 	virtual void visit(apply&) = 0;
-	virtual void visit(compose&) = 0;
+	virtual void visit(pipeline&) = 0;
 	virtual void visit(assign&) = 0;
 	virtual void visit(capture&) = 0;
 	virtual void visit(define&) = 0;

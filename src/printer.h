@@ -17,7 +17,7 @@ struct printer: public ast::visitor {
 	virtual void visit(ast::symbol&) override;
 	virtual void visit(ast::wildcard&) override;
 	virtual void visit(ast::apply &n) override { infix(n, ""); }
-	virtual void visit(ast::compose &n) override { infix(n, "."); }
+	virtual void visit(ast::pipeline &n) override { infix(n, "."); }
 	virtual void visit(ast::assign &n) override { infix(n, "<-"); }
 	virtual void visit(ast::capture &n) override { infix(n, "->"); }
 	virtual void visit(ast::define &n) override { infix(n, ":"); }

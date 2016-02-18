@@ -8,6 +8,7 @@
 #define RESOLVER_H
 
 #include "ast.h"
+#include "dfg.h"
 
 struct resolver: public ast::delegate {
 	struct error {
