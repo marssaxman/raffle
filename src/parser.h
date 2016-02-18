@@ -60,6 +60,7 @@ private:
 	enum class precedence {
 		statement, //R
 		tuple, //R
+		definition, //L
 		relation, //L
 		additive, //L
 		multiplicative, //L

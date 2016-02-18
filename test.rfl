@@ -1,2 +1,25 @@
-404 + 119 * (6 - 2) #that was that
+true(t, f): t;
+false(t, f): f;
+boolean: true | false;
+
+islower(c): (c !< 'a') & (c !> 'z');
+
+isupper(c): (c !< 'A') & (c !> 'Z');
+
+rot(key: int, str:[char]): {
+	upchars <- "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	lowchars <- "abcdefghijklmnopqrstuvwxyz";
+	x <- key % 26;
+	shift_hi <- x - 'A';
+	shift_lo <- x - 'a';
+	str * (c -> {
+		islower(c)(
+			lowchars[(c + shift_lo) % 26],
+			isupper(c)(
+				upchars[(c + shift_hi) % 26],
+				c
+			)
+		)
+	})
+};
 

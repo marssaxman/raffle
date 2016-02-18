@@ -9,8 +9,9 @@
 
 bool parser::rightassoc(precedence x) {
 	switch (x) {
-		case precedence::tuple: return true;
 		case precedence::statement: return true;
+		case precedence::tuple: return true;
+		case precedence::definition: return false;
 		case precedence::relation: return false;
 		case precedence::additive: return false;
 		case precedence::multiplicative: return false;
@@ -85,7 +86,7 @@ void parser::token_comma(location l) {
 }
 
 void parser::token_colon(location l) {
-	infix({precedence::primary, l, [this]() {
+	infix({precedence::definition, l, [this]() {
 		emit(new ast::define(pop(), cur()));
 	}});
 }
