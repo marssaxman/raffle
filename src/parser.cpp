@@ -91,6 +91,14 @@ void parser::token_colon(location l) {
 	}});
 }
 
+void parser::token_double_colon(location l) {
+	err.parser_unexpected(l);
+}
+
+void parser::token_double_colon_equal(location l) {
+	err.parser_unexpected(l);
+}
+
 void parser::token_semicolon(location l) {
 	if (!accept_infix(l)) return;
 	commit_all(l);

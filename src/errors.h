@@ -9,8 +9,12 @@
 
 #include "lexer.h"
 #include "parser.h"
+#include "resolver.h"
 
-struct errors: public lexer::error, public parser::error {
+struct errors:
+		public lexer::error,
+		public parser::error,
+		public resolver::error {
 	virtual void lexer_unknown(location, char) override;
 	virtual void lexer_nonterminated(location) override;
 	virtual void parser_unexpected(location) override;
@@ -18,7 +22,10 @@ struct errors: public lexer::error, public parser::error {
 	virtual void parser_missing_right_operand(location) override;
 	virtual void parser_mismatched_group(location) override;
 	virtual void parser_mismatched_separator(location) override;
+	virtual void resolver_undefined(location) override;
+	virtual void resolver_redefined(location, location) override;
 private:
+	void print_loc(location);
 	void report(location, std::string message);
 };
 

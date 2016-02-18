@@ -39,3 +39,13 @@ void errors::parser_mismatched_separator(location l) {
 	report(l, "unexpected separator");
 }
 
+void errors::resolver_undefined(location l) {
+	report(l, "undefined symbol");
+}
+
+void errors::resolver_redefined(location cur, location prev) {
+	position p = prev.begin;
+	std::string def = std::to_string(p.row) + ":" + std::to_string(p.col);
+	report(cur, "symbol already defined at " + def);
+}
+

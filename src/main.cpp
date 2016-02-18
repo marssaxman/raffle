@@ -8,6 +8,7 @@
 #include <fstream>
 #include "lexer.h"
 #include "parser.h"
+#include "resolver.h"
 #include "errors.h"
 #include "printer.h"
 
@@ -19,15 +20,14 @@ struct receiver: public ast::delegate {
 		n->accept(p);
 		std::cout << ";" << std::endl;
 	}
-	virtual void ast_done() override {
-		std::cout << "$> ";
-	}
+	virtual void ast_done() override {}
 };
 
 static int run(std::istream &i) {
 	errors e;
 	receiver o;
-	parser p(o, e);
+	resolver r(o, e);
+	parser p(r, e);
 	lexer l(p, e);
 	l.read_file(i);
 }
@@ -41,6 +41,7 @@ int main(int argc, const char *argv[]) {
 			parser p(o, e);
 			lexer l(p, e);
 			l.read_line(line);
+			std::cout << std::endl << "$> ";
 		}
 		return EXIT_SUCCESS;
 	}
