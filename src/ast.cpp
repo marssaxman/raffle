@@ -41,11 +41,11 @@ void apply::accept(visitor &v) {
 	v.visit(*this);
 }
 
-compose::compose(ptr &&a, ptr &&t):
+pipeline::pipeline(ptr &&a, ptr &&t):
 		binary(std::move(a), std::move(t)) {
 }
 
-void compose::accept(visitor &v) {
+void pipeline::accept(visitor &v) {
 	v.visit(*this);
 }
 

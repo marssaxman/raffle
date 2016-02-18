@@ -114,7 +114,7 @@ void parser::token_semicolon(location l) {
 
 void parser::token_dot(location l) {
 	infix({precedence::primary, l, [this]() {
-		emit(new ast::compose(pop(), cur()));
+		emit(new ast::pipeline(pop(), cur()));
 	}});
 }
 

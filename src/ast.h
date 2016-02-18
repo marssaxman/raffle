@@ -75,8 +75,8 @@ struct apply: public binary {
 	virtual void accept(visitor &v) override;
 };
 
-struct compose: public binary {
-	compose(ptr &&a, ptr &&t);
+struct pipeline: public binary {
+	pipeline(ptr &&a, ptr &&t);
 	virtual void accept(visitor &v) override;
 };
 
