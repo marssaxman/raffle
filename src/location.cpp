@@ -6,15 +6,32 @@
 
 #include "location.h"
 
-bool position::operator<(const position &other) const
-{
-	if (row < other.row) return true;
-	if (row > other.row) return false;
-	return col < other.col;
+static_assert(4 == sizeof(position),
+		"position must stay small because it is used so frequently");
+static_assert(8 <= sizeof(location),
+		"location must be 8 bytes or less for efficient parameter passing");
+
+position::position(unsigned r, unsigned c) {
+	value = r << 8;
+	if (c <= 0xFF) {
+		value |= c;
+	}
 }
 
-location location::operator+(const location &other) const
-{
+bool position::operator<(const position &other) const {
+	if (row() < other.row()) return true;
+	if (row() > other.row()) return false;
+	return col() < other.col();
+}
+
+location::location(position b, position e): begin(b), end(e) {
+	if (e < b) {
+		begin = e;
+		end = b;
+	}
+}
+
+location location::operator+(const location &other) const {
 	location out = *this;
 	if (other.begin < begin) {
 		out.begin = other.begin;

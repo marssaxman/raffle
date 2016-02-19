@@ -9,22 +9,23 @@
 using std::string;
 
 void lexer::read(const string &input) {
-	unsigned start = pos.col;
+	unsigned row = pos.row();
+	unsigned start = pos.col();
 	for (auto i = input.begin(); i != input.end(); next(i, input.end())) {
-		pos.col = start + i - input.begin();
+		pos = position(row, start + i - input.begin());
 	}
 }
 
 void lexer::read_line(const string &input) {
-	pos.col = 1;
+	pos = position(1, 0);
 	read(input);
 	out.token_eof({pos, pos});
 }
 
 void lexer::read_file(std::istream &in) {
-	pos.row = 1;
-	for (string line; std::getline(in, line); ++pos.row) {
-		pos.col = 1;
+	unsigned row = 1;
+	for (string line; std::getline(in, line); ++row) {
+		pos = position(row, 0);
 		read(line);
 	}
 	out.token_eof({pos, pos});
@@ -180,7 +181,7 @@ char lexer::adv(string::const_iterator &i, string::const_iterator end) {
 	char c = 0;
 	if (i != end) {
 		c = *i;
-		++pos.col;
+		pos = position(pos.row(), pos.col() + 1);
 		loc.end = pos;
 		++i;
 	}
@@ -188,7 +189,9 @@ char lexer::adv(string::const_iterator &i, string::const_iterator end) {
 }
 
 void lexer::ret(string::const_iterator &i, string::const_iterator end) {
-	--pos.col;
-	loc.end = pos;
+	if (pos.col() > 1) {
+		pos = position(pos.row(), pos.col() - 1);
+		loc.end = pos;
+	}
 	--i;
 }

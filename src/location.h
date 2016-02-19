@@ -7,18 +7,24 @@
 #ifndef LOCATION_H
 #define LOCATION_H
 
+#include <stdint.h>
+
 struct position {
-	unsigned row = 0;
-	unsigned col = 0;
+	position() {}
+	position(unsigned r, unsigned c);
+	unsigned row() const { return value >> 8; }
+	unsigned col() const { return value & 0xFF; }
 	bool operator<(const position&) const;
 	bool operator>(const position &other) const { return !(*this < other); }
+private:
+	uint32_t value = 0;
 };
 
 struct location {
 	position begin;
 	position end;
 	location() {}
-	location(position b, position e): begin(b), end(e) {}
+	location(position b, position e);
 	location operator+(const location&) const;
 };
 

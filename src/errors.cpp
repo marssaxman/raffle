@@ -8,7 +8,7 @@
 
 void errors::print_loc(location l) {
 	position p = l.begin;
-	std::cerr << p.row << ":" << p.col;
+	std::cerr << p.row() << ":" << p.col();
 }
 
 void errors::report(location l, std::string message) {
