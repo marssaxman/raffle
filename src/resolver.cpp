@@ -10,8 +10,12 @@ void resolver::ast_open(ast::group &n) {
 	out.ast_open(n);
 }
 
-void resolver::ast_process(ast::node &n) {
-	out.ast_process(n);
+void resolver::ast_expression(ast::node &n) {
+	out.ast_expression(n);
+}
+
+void resolver::ast_statement(ast::node &n) {
+	out.ast_statement(n);
 }
 
 void resolver::ast_close(ast::group &n) {

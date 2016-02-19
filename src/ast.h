@@ -160,7 +160,8 @@ struct visitor {
 
 struct traversal {
 	virtual void ast_open(group&) = 0;
-	virtual void ast_process(node&) = 0;
+	virtual void ast_expression(node&) = 0;
+	virtual void ast_statement(node&) = 0;
 	virtual void ast_close(group&) = 0;
 };
 

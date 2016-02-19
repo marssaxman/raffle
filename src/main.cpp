@@ -17,7 +17,8 @@
 struct output: public ast::traversal {
 	unsigned nesting = 0;
 	virtual void ast_open(ast::group &n) override { ++nesting; }
-	virtual void ast_process(ast::node &n) override {
+	virtual void ast_expression(ast::node &n) override {}
+	virtual void ast_statement(ast::node &n) override {
 		if (nesting > 1) return;
 		printer p(std::cout);
 		n.accept(p);

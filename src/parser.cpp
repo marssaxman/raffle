@@ -340,14 +340,15 @@ bool parser::accept_infix(location l) {
 }
 
 void parser::emit(ast::node *n) {
-	assert(!context.exp);
+	assert(n && !context.exp);
 	context.exp.reset(n);
+	out.ast_expression(*n);
 }
 
 void parser::commit_statement(location l) {
 	commit_all(l);
 	if (context.exp) {
-		out.ast_process(*context.exp);
+		out.ast_statement(*context.exp);
 		context.group->items.push_back(cur());
 	}
 }
