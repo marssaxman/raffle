@@ -65,8 +65,8 @@ void capture::accept(visitor &v) {
 	v.visit(*this);
 }
 
-define::define(ptr &&s, ptr &&e):
-		binary(std::move(s), std::move(e)) {
+define::define(opcode o, ptr &&s, ptr &&e):
+		binary(std::move(s), std::move(e)), id(o) {
 }
 
 void define::accept(visitor &v) {

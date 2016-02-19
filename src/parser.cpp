@@ -82,18 +82,20 @@ void parser::token_comma(location l) {
 
 void parser::token_colon(location l) {
 	infix({precedence::definition, l, [this]() {
-		emit(new ast::define(pop(), cur()));
+		emit(new ast::define(ast::define::target, pop(), cur()));
 	}});
 }
 
 void parser::token_colon_equal(location l) {
-	// this will stand for constant definition
-	err.parser_unexpected(l);
+	infix({precedence::definition, l, [this]() {
+		emit(new ast::define(ast::define::alias, pop(), cur()));
+	}});
 }
 
 void parser::token_double_colon_equal(location l) {
-	// this will stand for type definition
-	err.parser_unexpected(l);
+	infix({precedence::definition, l, [this]() {
+		emit(new ast::define(ast::define::type, pop(), cur()));
+	}});
 }
 
 void parser::token_semicolon(location l) {

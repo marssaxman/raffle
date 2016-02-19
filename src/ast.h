@@ -89,7 +89,11 @@ struct capture: public binary {
 };
 
 struct define: public binary {
-	define(ptr &&t, ptr &&a);
+	typedef enum {
+		target, alias, type
+	} opcode;
+	opcode id;
+	define(opcode o, ptr &&t, ptr &&a);
 	virtual void accept(visitor &v) override;
 };
 
