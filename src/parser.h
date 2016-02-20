@@ -17,6 +17,8 @@ struct parser: public token::delegate {
 		virtual void parser_missing_left_operand(location) = 0;
 		virtual void parser_missing_right_operand(location) = 0;
 		virtual void parser_expected(location, std::string, location) = 0;
+		virtual void parser_semicolon_in_tuple(location) = 0;
+		virtual void parser_comma_outside_tuple(location) = 0;
 	};
 	parser(ast::traversal &o, error &e);
 	virtual void token_eof(location) override;
@@ -61,9 +63,7 @@ struct parser: public token::delegate {
 private:
 	// the classic shunting-yard algorithm
 	enum class precedence {
-		statement, //R
-		tuple, //R
-		definition, //L
+		binding, //R
 		relation, //L
 		additive, //L
 		multiplicative, //L
@@ -95,7 +95,7 @@ private:
 	bool accept_prefix(location);
 	bool accept_infix(location);
 	void emit(ast::node*);
-	void commit_statement(location);
+	void commit_expression(location);
 	ast::ptr pop();
 	ast::ptr cur();
 	void term(location);

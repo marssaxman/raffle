@@ -53,22 +53,19 @@ void printer::visit(negate& n) {
 	n.source->accept(*this);
 }
 
-void printer::visit(ast::tuple &n) {
-	infix(*n.left, ",", *n.right);
-}
-
 void printer::visit(ast::group& n) {
 	unsigned saved = level;
 	level = 0;
+	std::string sep = "; ";
 	switch (n.id) {
 		case ast::group::root: break;
-		case ast::group::value: out << "("; break;
+		case ast::group::value: out << "("; sep = ", "; break;
 		case ast::group::spec: out << "["; break;
 		case ast::group::scope: out << "{"; break;
 	}
 	bool pre = false;
 	for (auto &i: n.items) {
-		if (pre) out << "; ";
+		if (pre) out << sep;
 		i->accept(*this);
 		pre = true;
 	}

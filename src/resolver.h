@@ -14,11 +14,14 @@ struct resolver: public ast::traversal {
 	struct error {
 		virtual void resolver_undefined(location) = 0;
 		virtual void resolver_redefined(location, location) = 0;
+		virtual void resolver_unexpected_definition(location) = 0;
+		virtual void resolver_unexpected_target(location) = 0;
+		virtual void resolver_unexpected_constraint(location) = 0;
+		virtual void resolver_unexpected_wildcard(location) = 0;
 	};
 	resolver(ast::traversal &o, error &e): out(o), err(e) {}
 	virtual void ast_open(ast::group&) override;
-	virtual void ast_expression(ast::node&) override;
-	virtual void ast_statement(ast::node&) override;
+	virtual void ast_process(ast::node&) override;
 	virtual void ast_close(ast::group&) override;
 private:
 	ast::traversal &out;

@@ -23,7 +23,6 @@ void errors::report(location l, std::string message, location prev) {
 	std::cerr << ")" << std::endl;
 }
 
-
 void errors::lexer_unknown(location l, char c) {
 	report(l, "unknown character '" + std::string(1, c) + "'");
 }
@@ -48,6 +47,14 @@ void errors::parser_expected(location l, std::string what, location prev) {
 	report(l, "expected " + what, prev);
 }
 
+void errors::parser_semicolon_in_tuple(location l) {
+	report(l, "unexpected sequence delimiter in structure context");
+}
+
+void errors::parser_comma_outside_tuple(location l) {
+	report(l, "unexpected structure delimiter in sequence context");
+}
+
 void errors::resolver_undefined(location l) {
 	report(l, "undefined symbol");
 }
@@ -56,3 +63,18 @@ void errors::resolver_redefined(location cur, location prev) {
 	report(cur, "symbol already defined", prev);
 }
 
+void errors::resolver_unexpected_definition(location l) {
+	report(l, "unexpected definition expression");
+}
+
+void errors::resolver_unexpected_target(location l) {
+	report(l, "unexpected binding target expression");
+}
+
+void errors::resolver_unexpected_constraint(location l) {
+	report(l, "unexpected type constraint expression");
+}
+
+void errors::resolver_unexpected_wildcard(location l) {
+	report(l, "unexpected wildcard outside pattern expression");
+}

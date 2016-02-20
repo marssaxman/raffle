@@ -33,43 +33,31 @@ void wildcard::accept(visitor &v) {
 	v.visit(*this);
 }
 
-apply::apply(ptr &&t, ptr &&a):
-		binary(std::move(t), std::move(a)) {
-}
-
 void apply::accept(visitor &v) {
 	v.visit(*this);
-}
-
-pipeline::pipeline(ptr &&a, ptr &&t):
-		binary(std::move(a), std::move(t)) {
 }
 
 void pipeline::accept(visitor &v) {
 	v.visit(*this);
 }
 
-assign::assign(ptr &&s, ptr &&e):
-		binary(std::move(s), std::move(e)) {
-}
-
 void assign::accept(visitor &v) {
 	v.visit(*this);
-}
-
-capture::capture(ptr &&s, ptr &&e):
-		binary(std::move(s), std::move(e)) {
 }
 
 void capture::accept(visitor &v) {
 	v.visit(*this);
 }
 
-define::define(opcode o, ptr &&s, ptr &&e):
-		binary(std::move(s), std::move(e)), id(o) {
+void declare::accept(visitor &v) {
+	v.visit(*this);
 }
 
 void define::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void typealias::accept(visitor &v) {
 	v.visit(*this);
 }
 
@@ -87,10 +75,6 @@ void operate::accept(visitor &v) {
 	v.visit(*this);
 }
 
-range::range(ptr &&l, ptr &&r):
-		binary(std::move(l), std::move(r)) {
-}
-
 void range::accept(visitor &v) {
 	v.visit(*this);
 }
@@ -100,14 +84,6 @@ negate::negate(opcode o, ptr &&s, location l):
 }
 
 void negate::accept(visitor &v) {
-	v.visit(*this);
-}
-
-tuple::tuple(ptr &&l, ptr &&r):
-		binary(std::move(l), std::move(r)) {
-}
-
-void tuple::accept(visitor &v) {
 	v.visit(*this);
 }
 
