@@ -8,7 +8,7 @@
 #define RESOLVER_H
 
 #include "ast.h"
-#include "dfg.h"
+#include "hoas.h"
 
 struct resolver: public ast::traversal {
 	struct error {
