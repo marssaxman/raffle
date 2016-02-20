@@ -5,12 +5,16 @@
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
 #include "resolver.h"
-#include <map>
 
 using namespace ast;
 namespace {
 
-typedef std::map<std::string, std::reference_wrapper<node>> index;
+struct index {
+	void declare(symbol &name, node &type) {}
+	void define(symbol &name, node &value) {}
+	void typealias(symbol &name, node &type) {}
+	bool lookup(symbol &name) {}
+};
 
 struct context: public visitor {
 	typedef resolver::error error;
