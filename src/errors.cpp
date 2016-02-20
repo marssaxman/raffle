@@ -47,14 +47,6 @@ void errors::parser_expected(location l, std::string what, location prev) {
 	report(l, "expected " + what, prev);
 }
 
-void errors::parser_semicolon_in_tuple(location l) {
-	report(l, "unexpected sequence delimiter in structure context");
-}
-
-void errors::parser_comma_outside_tuple(location l) {
-	report(l, "unexpected structure delimiter in sequence context");
-}
-
 void errors::resolver_undefined(location l) {
 	report(l, "undefined symbol");
 }

@@ -7,24 +7,10 @@
 #include "parser.h"
 #include <assert.h>
 
-parser::parser(ast::traversal &o, error &e): out(o), err(e) {
-	context.group.reset(new ast::group(ast::group::root, location()));
-	out.ast_open(*context.group);
-}
-
-bool parser::rightassoc(precedence x) {
-	switch (x) {
-		case precedence::binding: return true;
-		case precedence::relation: return false;
-		case precedence::additive: return false;
-		case precedence::multiplicative: return false;
-		case precedence::negation: return true;
-		case precedence::primary: return false;
-	}
-}
-
 void parser::token_eof(location l) {
-	close(ast::group::root, l);
+	if (commit_all(l)) {
+		out.ast_process(cur());
+	}
 }
 
 void parser::token_number(location l, std::string text) {
@@ -48,43 +34,39 @@ void parser::token_underscore(location l) {
 }
 
 void parser::token_l_paren(location l) {
-	open(l, ast::group::value);
+	open(l, group::delim::parens);
 }
 
 void parser::token_r_paren(location r) {
-	close(ast::group::value, r);
+	close(group::delim::parens, r);
 }
 
 void parser::token_l_bracket(location l) {
-	open(l, ast::group::spec);
+	open(l, group::delim::brackets);
 }
 
 void parser::token_r_bracket(location r) {
-	close(ast::group::spec, r);
+	close(group::delim::brackets, r);
 }
 
 void parser::token_l_brace(location l) {
-	open(l, ast::group::scope);
+	open(l, group::delim::braces);
 }
 
 void parser::token_r_brace(location r) {
-	close(ast::group::scope, r);
+	close(group::delim::braces, r);
 }
 
 void parser::token_comma(location l) {
-	if (!accept_infix(l)) return;
-	if (context.group->id != ast::group::value) {
-		err.parser_comma_outside_tuple(l);
-	}
-	commit_expression(l);
+	infix({precedence::structure, l, [this]() {
+		emit(new ast::tuple(pop(), cur()));
+	}});
 }
 
 void parser::token_semicolon(location l) {
-	if (!accept_infix(l)) return;
-	if (context.group->id == ast::group::value) {
-		err.parser_semicolon_in_tuple(l);
-	}
-	commit_expression(l);
+	infix({precedence::structure, l, [this]() {
+		emit(new ast::sequence(pop(), cur()));
+	}});
 }
 
 void parser::token_colon(location l) {
@@ -252,7 +234,13 @@ void parser::prefix(oprec op) {
 
 void parser::infix(oprec op) {
 	if (!accept_infix(op.loc)) return;
-	if (rightassoc(op.prec)) {
+	// is this a right-associative operator?
+	bool rightassoc = false;
+	switch (op.prec) {
+		case precedence::binding:
+		case precedence::negation: rightassoc = true;
+	}
+	if (rightassoc) {
 		while (!context.ops.empty() && op.prec < context.ops.top().prec) {
 			commit_next();
 		}
@@ -270,7 +258,7 @@ void parser::commit_next() {
 	context.ops.pop();
 }
 
-void parser::commit_all(location l) {
+bool parser::commit_all(location l) {
 	if (expecting_term() && !context.ops.empty()) {
 		err.parser_missing_right_operand(l);
 		emit(new ast::wildcard(l));
@@ -279,37 +267,43 @@ void parser::commit_all(location l) {
 		commit_next();
 	}
 	assert(context.vals.empty());
+	return context.exp != nullptr;
 }
 
-void parser::open(location l, ast::group::opcode g) {
+void parser::open(location l, group::delim g) {
 	if (!accept_term(l)) return;
-	outer.push(std::move(context));
-	context.group.reset(new ast::group(g, l));
-	out.ast_open(*context.group);
+	outer.emplace(l, g, std::move(context));
 }
 
-void parser::close(ast::group::opcode c, location r) {
-	if (context.group->id != c) {
-		std::string expected;
-		switch (context.group->id) {
-			case ast::group::root: err.parser_unexpected(r); return;
-			case ast::group::value: expected = "')'"; break;
-			case ast::group::spec: expected = "']'";  break;
-			case ast::group::scope: expected = "'}'"; break;
-		}
-		err.parser_expected(r, expected, context.group->loc());
+void parser::close(group::delim g, location r) {
+	if (outer.empty()) {
+		err.parser_unexpected(r);
 		return;
 	}
-	commit_expression(r);
-	context.group->close_loc = r;
-	out.ast_close(*context.group);
-	if (!outer.empty()) {
-		ast::group *result = context.group.release();
-		context = std::move(outer.top());
-		outer.pop();
-		assert(!context.exp);
-		emit(result);
+	group top = std::move(outer.top());
+	outer.pop();
+	commit_all(r);
+	// don't use cur() to build these subexpressions, because it requires that
+	// there actually be a current expression, which is true for all infix and
+	// prefix operators. A pair of group delimiters might not contain anything,
+	// and that's a legal expression.
+	ast::group *exp;
+	switch (top.type) {
+		case group::delim::parens:
+			if (g != top.type) err.parser_expected(r, "')'", top.loc);
+			exp = new ast::parens(top.loc, std::move(context.exp), r);
+			break;
+		case group::delim::brackets:
+			if (g != top.type) err.parser_expected(r, "']'", top.loc);
+			exp = new ast::brackets(top.loc, std::move(context.exp), r);
+			break;
+		case group::delim::braces:
+			if (g != top.type) err.parser_expected(r, "'}'", top.loc);
+			exp = new ast::braces(top.loc, std::move(context.exp), r);
+			break;
 	}
+	context = std::move(top.context);
+	emit(exp);
 }
 
 bool parser::expecting_term() {
@@ -346,14 +340,6 @@ bool parser::accept_infix(location l) {
 void parser::emit(ast::node *n) {
 	assert(n && !context.exp);
 	context.exp.reset(n);
-}
-
-void parser::commit_expression(location l) {
-	commit_all(l);
-	if (context.exp) {
-		out.ast_process(*context.exp);
-		context.group->items.push_back(cur());
-	}
 }
 
 ast::ptr parser::pop() {

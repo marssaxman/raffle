@@ -24,27 +24,6 @@ void printer::visit(ast::wildcard& n) {
 	out << "_";
 }
 
-void printer::visit(ast::operate& n) {
-	switch (n.id) {
-		case operate::add: infix(n, "+"); break;
-		case operate::sub: infix(n, "-"); break;
-		case operate::mul: infix(n, "*"); break;
-		case operate::div: infix(n, "/"); break;
-		case operate::rem: infix(n, "%"); break;
-		case operate::shl: infix(n, "<<"); break;
-		case operate::shr: infix(n, ">>"); break;
-		case operate::conjoin: infix(n, "&"); break;
-		case operate::disjoin: infix(n, "|"); break;
-		case operate::exclude: infix(n, "^"); break;
-		case operate::eq: infix(n, "="); break;
-		case operate::lt: infix(n, "<"); break;
-		case operate::gt: infix(n, ">"); break;
-		case operate::neq: infix(n, "!="); break;
-		case operate::nlt: infix(n, "!<"); break;
-		case operate::ngt: infix(n, "!>"); break;
-	}
-}
-
 void printer::visit(negate& n) {
 	switch (n.id) {
 		case negate::numeric: out << "-"; break;
@@ -53,41 +32,39 @@ void printer::visit(negate& n) {
 	n.source->accept(*this);
 }
 
-void printer::visit(ast::group& n) {
-	unsigned saved = level;
-	level = 0;
-	std::string sep = "; ";
+void printer::visit(ast::operate& n) {
 	switch (n.id) {
-		case ast::group::root: break;
-		case ast::group::value: out << "("; sep = ", "; break;
-		case ast::group::spec: out << "["; break;
-		case ast::group::scope: out << "{"; break;
+		case operate::add: infix(n, " + "); break;
+		case operate::sub: infix(n, " - "); break;
+		case operate::mul: infix(n, " * "); break;
+		case operate::div: infix(n, " / "); break;
+		case operate::rem: infix(n, " % "); break;
+		case operate::shl: infix(n, " << "); break;
+		case operate::shr: infix(n, " >> "); break;
+		case operate::conjoin: infix(n, " & "); break;
+		case operate::disjoin: infix(n, " | "); break;
+		case operate::exclude: infix(n, " ^ "); break;
+		case operate::eq: infix(n, " = "); break;
+		case operate::lt: infix(n, " < "); break;
+		case operate::gt: infix(n, " > "); break;
+		case operate::neq: infix(n, " != "); break;
+		case operate::nlt: infix(n, " !< "); break;
+		case operate::ngt: infix(n, " !> "); break;
 	}
-	bool pre = false;
-	for (auto &i: n.items) {
-		if (pre) out << sep;
-		i->accept(*this);
-		pre = true;
-	}
-	switch (n.id) {
-		case ast::group::root: break;
-		case ast::group::value: out << ")"; break;
-		case ast::group::spec: out << "]"; break;
-		case ast::group::scope: out << "}"; break;
-	}
-	level = saved;
 }
 
 void printer::infix(binary &n, std::string t) {
-	infix(*n.left, t, *n.right);
+	if (level++) out << "\xC2\xAB";
+	n.left->accept(*this);
+	out << t;
+	n.right->accept(*this);
+	if (--level) out << "\xC2\xBB";
 }
 
-void printer::infix(node &l, std::string t, node &r) {
-	if (level++) out << "\xC2\xAB";
-	l.accept(*this);
-	if (!t.empty()) out << " " << t;
-	out << " ";
-	r.accept(*this);
-	if (--level) out << "\xC2\xBB";
+void printer::group(std::string l, ast::group& n, std::string r) {
+	out << l;
+	printer sub(out);
+	n.source->accept(sub);
+	out << r;
 }
 

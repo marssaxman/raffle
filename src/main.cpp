@@ -16,14 +16,12 @@
 
 struct output: public ast::traversal {
 	unsigned nesting = 0;
-	virtual void ast_open(ast::group &n) override { ++nesting; }
-	virtual void ast_process(ast::node &n) override {
+	virtual void ast_process(ast::ptr &&n) override {
 		if (nesting > 1) return;
 		printer p(std::cout);
-		n.accept(p);
+		n->accept(p);
 		std::cout << ";" << std::endl;
 	}
-	virtual void ast_close(ast::group &n) override { --nesting; }
 };
 
 static int run(std::istream &i) {

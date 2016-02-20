@@ -20,9 +20,7 @@ struct resolver: public ast::traversal {
 		virtual void resolver_unexpected_wildcard(location) = 0;
 	};
 	resolver(ast::traversal &o, error &e): out(o), err(e) {}
-	virtual void ast_open(ast::group&) override;
-	virtual void ast_process(ast::node&) override;
-	virtual void ast_close(ast::group&) override;
+	virtual void ast_process(ast::ptr&&) override;
 private:
 	ast::traversal &out;
 	error &err;

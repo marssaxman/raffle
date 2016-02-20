@@ -61,6 +61,46 @@ private:
 	location tk_loc;
 };
 
+struct unary: public node {
+	ptr source;
+	unary(ptr &&s): source(std::move(s)) {}
+};
+
+struct negate: public unary {
+	typedef enum {
+		numeric, logical,
+	} opcode;
+	opcode id;
+	negate(opcode o, ptr &&s, location l);
+	virtual location loc() override { return tk_loc + source->loc(); }
+	virtual void accept(visitor &v) override;
+private:
+	location tk_loc;
+};
+
+struct group: public unary {
+	group(location l, ptr &&s, location r);
+	virtual location loc() override { return openloc + closeloc; }
+private:
+	location openloc;
+	location closeloc;
+};
+
+struct parens: public group {
+	using group::group;
+	virtual void accept(visitor &v) override;
+};
+
+struct brackets: public group {
+	using group::group;
+	virtual void accept(visitor &v) override;
+};
+
+struct braces: public group {
+	using group::group;
+	virtual void accept(visitor &v) override;
+};
+
 struct binary: public node {
 	ptr left;
 	ptr right;
@@ -103,6 +143,21 @@ struct typealias: public binary {
 	virtual void accept(visitor &v) override;
 };
 
+struct range: public binary {
+	using binary::binary;
+	virtual void accept(visitor &v) override;
+};
+
+struct sequence: public binary {
+	using binary::binary;
+	virtual void accept(visitor &v) override;
+};
+
+struct tuple: public binary {
+	using binary::binary;
+	virtual void accept(visitor &v) override;
+};
+
 struct operate: public binary {
 	typedef enum {
 		add, sub, mul, div, rem, shl, shr,
@@ -114,45 +169,19 @@ struct operate: public binary {
 	virtual void accept(visitor &v) override;
 };
 
-struct range: public binary {
-	using binary::binary;
-	virtual void accept(visitor &v) override;
-};
-
-struct negate: public node {
-	typedef enum {
-		numeric, logical,
-	} opcode;
-	opcode id;
-	ptr source;
-	negate(opcode o, ptr &&s, location l);
-	virtual location loc() override { return tk_loc + source->loc(); }
-	virtual void accept(visitor &v) override;
-private:
-	location tk_loc;
-};
-
-struct group: public node {
-	typedef enum {
-		root, value, spec, scope
-	} opcode;
-	opcode id;
-	location open_loc;
-	std::list<ptr> items;
-	location close_loc;
-	group(opcode o, std::list<ptr> &&i, location l, location r);
-	group(opcode o, location l): id(o), open_loc(l), close_loc(l) {}
-	virtual location loc() override { return open_loc + close_loc; }
-	virtual void accept(visitor &v) override;
-};
-
 struct visitor {
 	virtual void visit(node&) {}
-	virtual void visit(binary &n) { visit((node&)n); }
 	virtual void visit(number &n) { visit((node&)n); }
 	virtual void visit(string &n) { visit((node&)n); }
 	virtual void visit(symbol &n) { visit((node&)n); }
 	virtual void visit(wildcard &n) { visit((node&)n); }
+	virtual void visit(unary &n) {visit((node&)n); }
+	virtual void visit(negate &n) { visit((unary&)n); }
+	virtual void visit(group &n) { visit((unary&)n); }
+	virtual void visit(parens &n) { visit((group&)n); }
+	virtual void visit(brackets &n) { visit((group&)n); }
+	virtual void visit(braces &n) { visit((group&)n); }
+	virtual void visit(binary &n) { visit((node&)n); }
 	virtual void visit(apply &n) { visit((binary&)n); }
 	virtual void visit(pipeline &n) { visit((binary&)n); }
 	virtual void visit(assign &n) { visit((binary&)n); }
@@ -160,16 +189,14 @@ struct visitor {
 	virtual void visit(declare &n) { visit((binary&)n); }
 	virtual void visit(define &n) { visit((binary&)n); }
 	virtual void visit(typealias &n) { visit((binary&)n); }
-	virtual void visit(operate &n) { visit((binary&)n); }
 	virtual void visit(range &n) { visit((binary&)n); }
-	virtual void visit(negate &n) { visit((node&)n); }
-	virtual void visit(group &n) { visit((node&)n); }
+	virtual void visit(sequence &n) { visit((binary&)n); }
+	virtual void visit(tuple &n) { visit((binary&)n); }
+	virtual void visit(operate &n) { visit((binary&)n); }
 };
 
 struct traversal {
-	virtual void ast_open(group&) = 0;
-	virtual void ast_process(node&) = 0;
-	virtual void ast_close(group&) = 0;
+	virtual void ast_process(ptr&&) = 0;
 };
 
 } // namespace ast

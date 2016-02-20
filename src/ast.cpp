@@ -33,6 +33,36 @@ void wildcard::accept(visitor &v) {
 	v.visit(*this);
 }
 
+negate::negate(opcode o, ptr &&s, location l):
+		unary(std::move(s)), id(o), tk_loc(l) {
+}
+
+void negate::accept(visitor &v) {
+	v.visit(*this);
+}
+
+group::group(location l, ptr &&s, location r):
+	unary(std::move(s)), openloc(l), closeloc(r) {
+}
+
+void parens::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void brackets::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void braces::accept(visitor &v) {
+	v.visit(*this);
+}
+
+binary::binary(ptr &&l, ptr &&r):
+		left(std::move(l)), right(std::move(r)) {
+	assert(left);
+	assert(right);
+}
+
 void apply::accept(visitor &v) {
 	v.visit(*this);
 }
@@ -61,10 +91,16 @@ void typealias::accept(visitor &v) {
 	v.visit(*this);
 }
 
-binary::binary(ptr &&l, ptr &&r):
-		left(std::move(l)), right(std::move(r)) {
-	assert(left);
-	assert(right);
+void range::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void sequence::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void tuple::accept(visitor &v) {
+	v.visit(*this);
 }
 
 operate::operate(opcode o, ptr &&l, ptr &&r):
@@ -72,26 +108,6 @@ operate::operate(opcode o, ptr &&l, ptr &&r):
 }
 
 void operate::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void range::accept(visitor &v) {
-	v.visit(*this);
-}
-
-negate::negate(opcode o, ptr &&s, location l):
-		id(o), source(std::move(s)), tk_loc(l) {
-}
-
-void negate::accept(visitor &v) {
-	v.visit(*this);
-}
-
-group::group(opcode o, std::list<ptr> &&i, location l, location r):
-		id(o), items(std::move(i)), open_loc(l), close_loc(r) {
-}
-
-void group::accept(visitor &v) {
 	v.visit(*this);
 }
 

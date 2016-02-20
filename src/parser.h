@@ -17,10 +17,8 @@ struct parser: public token::delegate {
 		virtual void parser_missing_left_operand(location) = 0;
 		virtual void parser_missing_right_operand(location) = 0;
 		virtual void parser_expected(location, std::string, location) = 0;
-		virtual void parser_semicolon_in_tuple(location) = 0;
-		virtual void parser_comma_outside_tuple(location) = 0;
 	};
-	parser(ast::traversal &o, error &e);
+	parser(ast::traversal &o, error &e): out(o), err(e) {}
 	virtual void token_eof(location) override;
 	virtual void token_number(location, std::string) override;
 	virtual void token_symbol(location, std::string) override;
@@ -63,6 +61,7 @@ struct parser: public token::delegate {
 private:
 	// the classic shunting-yard algorithm
 	enum class precedence {
+		structure, //R
 		binding, //R
 		relation, //L
 		additive, //L
@@ -70,15 +69,13 @@ private:
 		negation, //R
 		primary //L
 	};
-	static bool rightassoc(precedence);
 	struct oprec {
 		precedence prec;
 		location loc;
 		std::function<void(void)> commit;
 	};
-	// Current state being evaluated
+	// Current state of the expression being parsed
 	struct state {
-		std::unique_ptr<ast::group> group;
 		// infix operators in flight
 		std::stack<oprec> ops;
 		// most recent term or operator value
@@ -86,23 +83,34 @@ private:
 		// other values awaiting operators
 		std::stack<ast::ptr> vals;
 	} context;
-	// Previous states, from outer expressions
-	std::stack<state> outer;
-	void open(location, ast::group::opcode);
-	void close(ast::group::opcode, location);
+	// Outer context for a subexpression
+	struct group {
+		enum class delim { parens, brackets, braces };
+		group(location l, delim t, state &&s):
+				loc(l), type(t), context(std::move(s)) {}
+		// location of the left-bracket used to enter this group
+		location loc;
+		// type of bracket we must match to close the group
+		delim type;
+		// the state as it existed before we entered the subexpression
+		state context;
+	};
+	// Grouping stack outside the current expression context
+	std::stack<group> outer;
+	void open(location, group::delim);
+	void close(group::delim, location);
 	bool expecting_term();
 	bool accept_term(location);
 	bool accept_prefix(location);
 	bool accept_infix(location);
 	void emit(ast::node*);
-	void commit_expression(location);
 	ast::ptr pop();
 	ast::ptr cur();
 	void term(location);
 	void prefix(oprec);
 	void infix(oprec);
 	void commit_next();
-	void commit_all(location);
+	bool commit_all(location);
 	ast::traversal &out;
 	error &err;
 };
