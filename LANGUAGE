@@ -4,7 +4,7 @@ terse and its type model is minimal, in order to keep its compilation simple
 and streamline the generation of efficient code. Friendlier, more expressive
 language features can be developed using the macro system.
 
-I like the idea of a language like haskell, F#, or OCaml, but I want to code in
+I like the idea of a language like Haskell, F#, or OCaml, but I want to code in
 functional style without having to take such an abstract view of the machine.
 I want pattern matching and type inference, I want lazy sequences and flexible
 data structure manipulation - but I want to write lean, tight, performance-
@@ -15,5 +15,39 @@ cleaning up garbage are explicit and therefore easy to reason about. RFL is an
 attempt at a simple, expressive language, on which a wide variety of complex
 datastructure support can be constructed, which makes few intrinsic commitments
 about the capabilities of its runtime environment.
+
+# Lexical grammar
+
+program    ::= (token | space)*
+space      ::= [\s\t\v\f\n\r]+ | comment
+comment    ::= '#' [^\n]*
+token      ::= number | string | symbol | delimiter | operator
+number     ::= [0..9]+
+string     ::= [\'] [^\']* [\'] | [\"] [^\"]* [\"]
+symbol     ::= [A..Za..z] [_A..Za..z0..9]*
+delimiter  ::= '(' | ')' | '[' | ']' | '{' | '}' | ';' | ','
+operator   ::= [\!\$\%\&\*\+\-\.\/\:\<\=\>\?\@\^\~\|]+
+
+# Syntactic grammar
+
+program    ::= sequence
+sequence   ::= (sequence ';')* expression?
+structure  ::= (structure ',')* expression?
+expression ::= element (operator element)*
+element    ::= primary | prefix expression
+prefix     ::= '-' | '!'
+primary    ::= primary* term
+term       ::= number | string | symbol | group
+group      ::= '(' structure ')' | '[' sequence ']' | '{' sequence '}'
+
+# Operators and precedence
+
+From most loosely to most tightly associating:
+binding     <- -> : := ::=
+relation    = < > != !< !>
+add/sub     + - | ^
+mul/div     * / % << >> &
+pipeline    .
+All operators associate leftward except the binding operators.
 
 

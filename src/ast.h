@@ -69,31 +69,37 @@ struct binary: public node {
 };
 
 struct apply: public binary {
-	apply(ptr &&t, ptr &&a);
+	using binary::binary;
 	virtual void accept(visitor &v) override;
 };
 
 struct pipeline: public binary {
-	pipeline(ptr &&a, ptr &&t);
+	using binary::binary;
 	virtual void accept(visitor &v) override;
 };
 
 struct assign: public binary {
-	assign(ptr &&t, ptr &&a);
+	using binary::binary;
 	virtual void accept(visitor &v) override;
 };
 
 struct capture: public binary {
-	capture(ptr &&t, ptr &&a);
+	using binary::binary;
+	virtual void accept(visitor &v) override;
+};
+
+struct declare: public binary {
+	using binary::binary;
 	virtual void accept(visitor &v) override;
 };
 
 struct define: public binary {
-	typedef enum {
-		target, alias, type
-	} opcode;
-	opcode id;
-	define(opcode o, ptr &&t, ptr &&a);
+	using binary::binary;
+	virtual void accept(visitor &v) override;
+};
+
+struct typealias: public binary {
+	using binary::binary;
 	virtual void accept(visitor &v) override;
 };
 
@@ -109,7 +115,7 @@ struct operate: public binary {
 };
 
 struct range: public binary {
-	range(ptr &&l, ptr &&r);
+	using binary::binary;
 	virtual void accept(visitor &v) override;
 };
 
@@ -124,11 +130,6 @@ struct negate: public node {
 	virtual void accept(visitor &v) override;
 private:
 	location tk_loc;
-};
-
-struct tuple: public binary {
-	tuple(ptr &&l, ptr &&r);
-	virtual void accept(visitor &v) override;
 };
 
 struct group: public node {
@@ -146,26 +147,28 @@ struct group: public node {
 };
 
 struct visitor {
-	virtual void visit(number&) = 0;
-	virtual void visit(string&) = 0;
-	virtual void visit(symbol&) = 0;
-	virtual void visit(wildcard&) = 0;
-	virtual void visit(apply&) = 0;
-	virtual void visit(pipeline&) = 0;
-	virtual void visit(assign&) = 0;
-	virtual void visit(capture&) = 0;
-	virtual void visit(define&) = 0;
-	virtual void visit(operate&) = 0;
-	virtual void visit(range&) = 0;
-	virtual void visit(negate&) = 0;
-	virtual void visit(tuple&) = 0;
-	virtual void visit(group&) = 0;
+	virtual void visit(node&) {}
+	virtual void visit(binary &n) { visit((node&)n); }
+	virtual void visit(number &n) { visit((node&)n); }
+	virtual void visit(string &n) { visit((node&)n); }
+	virtual void visit(symbol &n) { visit((node&)n); }
+	virtual void visit(wildcard &n) { visit((node&)n); }
+	virtual void visit(apply &n) { visit((binary&)n); }
+	virtual void visit(pipeline &n) { visit((binary&)n); }
+	virtual void visit(assign &n) { visit((binary&)n); }
+	virtual void visit(capture &n) { visit((binary&)n); }
+	virtual void visit(declare &n) { visit((binary&)n); }
+	virtual void visit(define &n) { visit((binary&)n); }
+	virtual void visit(typealias &n) { visit((binary&)n); }
+	virtual void visit(operate &n) { visit((binary&)n); }
+	virtual void visit(range &n) { visit((binary&)n); }
+	virtual void visit(negate &n) { visit((node&)n); }
+	virtual void visit(group &n) { visit((node&)n); }
 };
 
 struct traversal {
 	virtual void ast_open(group&) = 0;
-	virtual void ast_expression(node&) = 0;
-	virtual void ast_statement(node&) = 0;
+	virtual void ast_process(node&) = 0;
 	virtual void ast_close(group&) = 0;
 };
 

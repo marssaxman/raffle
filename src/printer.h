@@ -24,7 +24,6 @@ struct printer: public ast::visitor {
 	virtual void visit(ast::operate&) override;
 	virtual void visit(ast::range &n) override { infix(n, ".."); }
 	virtual void visit(ast::negate&) override;
-	virtual void visit(ast::tuple &n) override;
 	virtual void visit(ast::group&) override;
 private:
 	void infix(ast::node &l, std::string, ast::node &r);

@@ -21,8 +21,14 @@ struct errors:
 	virtual void parser_missing_left_operand(location) override;
 	virtual void parser_missing_right_operand(location) override;
 	virtual void parser_expected(location, std::string, location) override;
+	virtual void parser_semicolon_in_tuple(location) override;
+	virtual void parser_comma_outside_tuple(location) override;
 	virtual void resolver_undefined(location) override;
 	virtual void resolver_redefined(location, location) override;
+	virtual void resolver_unexpected_definition(location) override;
+	virtual void resolver_unexpected_target(location) override;
+	virtual void resolver_unexpected_constraint(location) override;
+	virtual void resolver_unexpected_wildcard(location) override;
 private:
 	void print_loc(location);
 	void report(location, std::string message);

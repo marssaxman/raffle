@@ -12,12 +12,9 @@ parser::parser(ast::traversal &o, error &e): out(o), err(e) {
 	out.ast_open(*context.group);
 }
 
-
 bool parser::rightassoc(precedence x) {
 	switch (x) {
-		case precedence::statement: return true;
-		case precedence::tuple: return true;
-		case precedence::definition: return false;
+		case precedence::binding: return true;
 		case precedence::relation: return false;
 		case precedence::additive: return false;
 		case precedence::multiplicative: return false;
@@ -75,32 +72,37 @@ void parser::token_r_brace(location r) {
 }
 
 void parser::token_comma(location l) {
-	infix({precedence::tuple, l, [this]() {
-		emit(new ast::tuple(pop(), cur()));
-	}});
-}
-
-void parser::token_colon(location l) {
-	infix({precedence::definition, l, [this]() {
-		emit(new ast::define(ast::define::target, pop(), cur()));
-	}});
-}
-
-void parser::token_colon_equal(location l) {
-	infix({precedence::definition, l, [this]() {
-		emit(new ast::define(ast::define::alias, pop(), cur()));
-	}});
-}
-
-void parser::token_double_colon_equal(location l) {
-	infix({precedence::definition, l, [this]() {
-		emit(new ast::define(ast::define::type, pop(), cur()));
-	}});
+	if (!accept_infix(l)) return;
+	if (context.group->id != ast::group::value) {
+		err.parser_comma_outside_tuple(l);
+	}
+	commit_expression(l);
 }
 
 void parser::token_semicolon(location l) {
 	if (!accept_infix(l)) return;
-	commit_statement(l);
+	if (context.group->id == ast::group::value) {
+		err.parser_semicolon_in_tuple(l);
+	}
+	commit_expression(l);
+}
+
+void parser::token_colon(location l) {
+	infix({precedence::binding, l, [this]() {
+		emit(new ast::declare(pop(), cur()));
+	}});
+}
+
+void parser::token_colon_equal(location l) {
+	infix({precedence::binding, l, [this]() {
+		emit(new ast::define(pop(), cur()));
+	}});
+}
+
+void parser::token_double_colon_equal(location l) {
+	infix({precedence::binding, l, [this]() {
+		emit(new ast::typealias(pop(), cur()));
+	}});
 }
 
 void parser::token_dot(location l) {
@@ -116,13 +118,13 @@ void parser::token_dot_dot(location l) {
 }
 
 void parser::token_l_arrow(location l) {
-	infix({precedence::statement, l, [this]() {
+	infix({precedence::binding, l, [this]() {
 		emit(new ast::assign(pop(), cur()));
 	}});
 }
 
 void parser::token_r_arrow(location l) {
-	infix({precedence::statement, l, [this]() {
+	infix({precedence::binding, l, [this]() {
 		emit(new ast::capture(pop(), cur()));
 	}});
 }
@@ -298,7 +300,7 @@ void parser::close(ast::group::opcode c, location r) {
 		err.parser_expected(r, expected, context.group->loc());
 		return;
 	}
-	commit_statement(r);
+	commit_expression(r);
 	context.group->close_loc = r;
 	out.ast_close(*context.group);
 	if (!outer.empty()) {
@@ -344,13 +346,12 @@ bool parser::accept_infix(location l) {
 void parser::emit(ast::node *n) {
 	assert(n && !context.exp);
 	context.exp.reset(n);
-	out.ast_expression(*n);
 }
 
-void parser::commit_statement(location l) {
+void parser::commit_expression(location l) {
 	commit_all(l);
 	if (context.exp) {
-		out.ast_statement(*context.exp);
+		out.ast_process(*context.exp);
 		context.group->items.push_back(cur());
 	}
 }
