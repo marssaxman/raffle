@@ -5,6 +5,7 @@
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
 #include "printer.h"
+#include <sstream>
 
 using namespace ast;
 
@@ -56,7 +57,7 @@ void printer::visit(ast::operate& n) {
 void printer::visit(ast::sequence& n) {
 	for (ast::sequence *x = &n; x; x = x->next.get()) {
 		x->item->accept(*this);
-		out << ";" << std::endl;
+		if (x->next) out << ";" << std::endl;
 	}
 }
 
@@ -77,8 +78,23 @@ void printer::infix(binary &n, std::string t) {
 
 void printer::group(std::string l, ast::group& n, std::string r) {
 	out << l;
-	printer sub(out);
-	n.source->accept(sub);
+	struct check_seq: public ast::visitor {
+		check_seq(ast::node &n) { n.accept(*this); }
+		bool match = false;
+		virtual void visit(sequence &n) { match = true; }
+	} is_seq(*n.source);
+	if (is_seq.match) {
+		std::stringstream buf;
+		printer sub(buf);
+		n.source->accept(sub);
+		out << std::endl;
+		for (std::string line; std::getline(buf, line);) {
+			out << "    " << line << std::endl;
+		}
+	} else {
+		printer sub(out);
+		n.source->accept(sub);
+	}
 	out << r;
 }
 
