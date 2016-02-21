@@ -237,6 +237,7 @@ void parser::infix(oprec op) {
 	// is this a right-associative operator?
 	bool rightassoc = false;
 	switch (op.prec) {
+		case precedence::structure:
 		case precedence::binding:
 		case precedence::negation: rightassoc = true;
 	}
