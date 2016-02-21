@@ -181,6 +181,7 @@ struct parameter: public node {
 	unsigned index;	// de bruijn
 	parameter(unsigned i, location l): index(i), src_loc(l) {}
 	virtual void accept(visitor &v) override;
+	virtual location loc() override { return src_loc; }
 private:
 	location src_loc;
 };
