@@ -111,3 +111,11 @@ void operate::accept(visitor &v) {
 	v.visit(*this);
 }
 
+void parameter::accept(visitor &v) {
+	v.visit(*this);
+}
+
+void lambda::accept(visitor &v) {
+	v.visit(*this);
+}
+

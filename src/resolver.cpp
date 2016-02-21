@@ -24,8 +24,41 @@
 // all uses of "foo" become references to the parameter, followed by a call to
 // that anonymous function which supplies the value.
 
+namespace {
+struct search: public ast::visitor {
+	ast::ptr out;
+	virtual void visit(ast::symbol &n) override;
+	virtual void visit(ast::assign &n) override;
+	virtual void visit(ast::capture &n) override;
+	virtual void visit(ast::define &n) override;
+	virtual void visit(ast::typealias &n) override;
+	virtual void visit(ast::sequence &n) override;
+};
+}
+
+void search::visit(ast::symbol &n) {
+	// 
+}
+
+void search::visit(ast::assign &n) {
+}
+
+void search::visit(ast::capture &n) {
+}
+
+void search::visit(ast::define &n) {
+}
+
+void search::visit(ast::typealias &n) {
+}
+
+void search::visit(ast::sequence &n) {
+}
+
 void resolver::ast_process(ast::ptr &&n) {
-	out.ast_process(std::move(n));
+	search s;
+	n->accept(s);
+	out.ast_process(std::move(s.out? s.out: n));
 }
 
 

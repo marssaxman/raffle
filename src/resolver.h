@@ -8,9 +8,8 @@
 #define RESOLVER_H
 
 #include "ast.h"
-#include "hoas.h"
 
-struct resolver: public ast::traversal {
+struct resolver: public ast::processor {
 	struct error {
 		virtual void resolver_undefined(location) = 0;
 		virtual void resolver_redefined(location, location) = 0;
@@ -19,10 +18,10 @@ struct resolver: public ast::traversal {
 		virtual void resolver_unexpected_constraint(location) = 0;
 		virtual void resolver_unexpected_wildcard(location) = 0;
 	};
-	resolver(ast::traversal &o, error &e): out(o), err(e) {}
+	resolver(ast::processor &o, error &e): out(o), err(e) {}
 	virtual void ast_process(ast::ptr&&) override;
 private:
-	ast::traversal &out;
+	ast::processor &out;
 	error &err;
 };
 

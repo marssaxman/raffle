@@ -14,7 +14,7 @@
 
 #include <unistd.h>
 
-struct output: public ast::traversal {
+struct output: public ast::processor {
 	unsigned nesting = 0;
 	virtual void ast_process(ast::ptr &&n) override {
 		if (nesting > 1) return;
