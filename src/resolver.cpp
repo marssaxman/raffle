@@ -5,28 +5,14 @@
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
 #include "resolver.h"
+#include <stack>
 
-// nodes the resolver might care about:
-// symbol: meaning depends on context
-// assign: binds a new value to a symbol in place of the old one
-// capture: LHS declared as abstract inside RHS
-// define: RHS evaluated and bound to LHS
-// typealias: RHS evaluated and bound to LHS
-// sequence: evaluate LHS, then RHS, returning only the value of RHS
-// tuple: evaluate LHS, then RHS, returning both values
-
-// The resolver looks for these patterns:
-//   foo := bar; baz
-//   foo <- bar; baz
-// It converts them into a pair of higher-order operations, like this:
-//   (_ -> baz)(bar)
-// That is, we convert "baz" into a function of some anonymous parameter, where
-// all uses of "foo" become references to the parameter, followed by a call to
-// that anonymous function which supplies the value.
+// Traverse an AST and resolve its symbol bindings.
 
 namespace {
-struct search: public ast::visitor {
-	ast::ptr out;
+
+struct lookup: public ast::visitor {
+	ast::ptr rewrite;
 	virtual void visit(ast::symbol &n) override;
 	virtual void visit(ast::assign &n) override;
 	virtual void visit(ast::capture &n) override;
@@ -36,29 +22,25 @@ struct search: public ast::visitor {
 };
 }
 
-void search::visit(ast::symbol &n) {
-	// 
+void lookup::visit(ast::symbol &n) {
 }
 
-void search::visit(ast::assign &n) {
+void lookup::visit(ast::assign &n) {
 }
 
-void search::visit(ast::capture &n) {
+void lookup::visit(ast::capture &n) {
 }
 
-void search::visit(ast::define &n) {
+void lookup::visit(ast::define &n) {
 }
 
-void search::visit(ast::typealias &n) {
+void lookup::visit(ast::typealias &n) {
 }
 
-void search::visit(ast::sequence &n) {
+void lookup::visit(ast::sequence &n) {
 }
 
 void resolver::ast_process(ast::ptr &&n) {
-	search s;
-	n->accept(s);
-	out.ast_process(std::move(s.out? s.out: n));
+	out.ast_process(std::move(n));
 }
-
 

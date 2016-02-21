@@ -148,16 +148,6 @@ struct range: public binary {
 	virtual void accept(visitor &v) override;
 };
 
-struct sequence: public binary {
-	using binary::binary;
-	virtual void accept(visitor &v) override;
-};
-
-struct tuple: public binary {
-	using binary::binary;
-	virtual void accept(visitor &v) override;
-};
-
 struct operate: public binary {
 	typedef enum {
 		add, sub, mul, div, rem, shl, shr,
@@ -166,6 +156,22 @@ struct operate: public binary {
 	} opcode;
 	opcode id;
 	operate(opcode o, ptr &&l, ptr &&r);
+	virtual void accept(visitor &v) override;
+};
+
+struct sequence: public node {
+	ptr item;
+	std::unique_ptr<sequence> next;
+	sequence(ptr &&i, std::unique_ptr<sequence> &&n);
+	virtual location loc() override { return item->loc() + next->loc(); }
+	virtual void accept(visitor &v) override;
+};
+
+struct tuple: public node {
+	ptr item;
+	std::unique_ptr<tuple> next;
+	tuple(ptr &&i, std::unique_ptr<tuple> &&n);
+	virtual location loc() override { return item->loc() + next->loc(); }
 	virtual void accept(visitor &v) override;
 };
 
@@ -205,9 +211,9 @@ struct visitor {
 	virtual void visit(define &n) { visit((binary&)n); }
 	virtual void visit(typealias &n) { visit((binary&)n); }
 	virtual void visit(range &n) { visit((binary&)n); }
-	virtual void visit(sequence &n) { visit((binary&)n); }
-	virtual void visit(tuple &n) { visit((binary&)n); }
 	virtual void visit(operate &n) { visit((binary&)n); }
+	virtual void visit(sequence &n) { visit((node&)n); }
+	virtual void visit(tuple &n) { visit((node&)n); }
 	virtual void visit(parameter &n) { visit((node&)n); }
 	virtual void visit(lambda &n) { visit((unary&)n); }
 };

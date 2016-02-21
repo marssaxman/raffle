@@ -95,19 +95,27 @@ void range::accept(visitor &v) {
 	v.visit(*this);
 }
 
-void sequence::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void tuple::accept(visitor &v) {
-	v.visit(*this);
-}
-
 operate::operate(opcode o, ptr &&l, ptr &&r):
 		binary(std::move(l), std::move(r)), id(o) {
 }
 
 void operate::accept(visitor &v) {
+	v.visit(*this);
+}
+
+sequence::sequence(ptr &&i, std::unique_ptr<sequence> &&n):
+	item(std::move(i)), next(std::move(n)) {
+}
+
+void sequence::accept(visitor &v) {
+	v.visit(*this);
+}
+
+tuple::tuple(ptr &&i, std::unique_ptr<tuple> &&n):
+	item(std::move(i)), next(std::move(n)) {
+}
+
+void tuple::accept(visitor &v) {
 	v.visit(*this);
 }
 

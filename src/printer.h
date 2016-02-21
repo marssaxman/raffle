@@ -28,9 +28,9 @@ struct printer: public ast::visitor {
 	virtual void visit(ast::define &n) override { infix(n, " := "); }
 	virtual void visit(ast::typealias &n) override { infix(n, " ::= "); }
 	virtual void visit(ast::range &n) override { infix(n, ".."); }
-	virtual void visit(ast::sequence &n) override { infix(n, "; "); }
-	virtual void visit(ast::tuple &n) override { infix(n, ", "); }
 	virtual void visit(ast::operate&) override;
+	virtual void visit(ast::sequence &n) override;
+	virtual void visit(ast::tuple &n) override;
 private:
 	void infix(ast::binary&, std::string);
 	void group(std::string, ast::group&, std::string);

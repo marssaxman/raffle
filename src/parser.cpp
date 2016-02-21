@@ -57,15 +57,34 @@ void parser::token_r_brace(location r) {
 	close(group::delim::braces, r);
 }
 
+template<typename T>
+struct terminate: public ast::visitor {
+	terminate(ast::ptr &&i): in(std::move(i)) {
+		in->accept(*this);
+	}
+	virtual void visit(T &n) override {
+		in.release();
+		out.reset(&n);
+	}
+	virtual void visit(ast::node &n) override {
+		out.reset(new T(std::move(in), 0));
+	}
+	operator std::unique_ptr<T>() {
+		return std::move(out);
+	}
+	ast::ptr in;
+	std::unique_ptr<T> out;
+};
+
 void parser::token_comma(location l) {
 	infix({precedence::structure, l, [this]() {
-		emit(new ast::tuple(pop(), cur()));
+		emit(new ast::tuple(pop(), terminate<ast::tuple>(cur())));
 	}});
 }
 
 void parser::token_semicolon(location l) {
 	infix({precedence::structure, l, [this]() {
-		emit(new ast::sequence(pop(), cur()));
+		emit(new ast::sequence(pop(), terminate<ast::sequence>(cur())));
 	}});
 }
 
@@ -261,8 +280,16 @@ void parser::commit_next() {
 
 bool parser::commit_all(location l) {
 	if (expecting_term() && !context.ops.empty()) {
-		err.parser_missing_right_operand(l);
-		emit(new ast::wildcard(l));
+		if (context.ops.top().prec == precedence::structure) {
+			// Trailing field delimiters are OK; we'll just ignore them, rather
+			// than reopen the good old "terminators vs separators" holy war.
+			context.ops.pop();
+			context.exp = std::move(context.vals.top());
+			context.vals.pop();
+		} else {
+			err.parser_missing_right_operand(l);
+			emit(new ast::wildcard(l));
+		}
 	}
 	while (!context.ops.empty()) {
 		commit_next();

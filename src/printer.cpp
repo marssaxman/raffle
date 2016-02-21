@@ -53,6 +53,20 @@ void printer::visit(ast::operate& n) {
 	}
 }
 
+void printer::visit(ast::sequence& n) {
+	for (ast::sequence *x = &n; x; x = x->next.get()) {
+		x->item->accept(*this);
+		out << ";" << std::endl;
+	}
+}
+
+void printer::visit(ast::tuple &n) {
+	for (ast::tuple *x = &n; x; x = x->next.get()) {
+		x->item->accept(*this);
+		out << ", ";
+	}
+}
+
 void printer::infix(binary &n, std::string t) {
 	if (level++) out << "\xC2\xAB";
 	n.left->accept(*this);

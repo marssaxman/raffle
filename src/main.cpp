@@ -19,8 +19,10 @@ struct output: public ast::processor {
 	virtual void ast_process(ast::ptr &&n) override {
 		if (nesting > 1) return;
 		printer p(std::cout);
-		n->accept(p);
-		std::cout << ";" << std::endl;
+		if (n) {
+			n->accept(p);
+			std::cout << ";" << std::endl;
+		}
 	}
 };
 
