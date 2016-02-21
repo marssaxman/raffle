@@ -43,6 +43,7 @@ group      ::= '(' structure ')' | '[' sequence ']' | '{' sequence '}'
 # Operators and precedence
 
 From most loosely to most tightly associating:
+structure   ; ,
 binding     <- -> : := ::=
 relation    = < > != !< !>
 add/sub     + - | ^
