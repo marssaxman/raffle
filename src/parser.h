@@ -26,34 +26,7 @@ struct parser: public token::delegate {
 	virtual void token_underscore(location) override;
 	virtual void token_open(location, token::delim) override;
 	virtual void token_close(location, token::delim) override;
-	virtual void token_comma(location) override;
-	virtual void token_colon(location) override;
-	virtual void token_colon_equal(location) override;
-	virtual void token_double_colon_equal(location) override;
-	virtual void token_semicolon(location) override;
-	virtual void token_dot(location) override;
-	virtual void token_dot_dot(location) override;
-	virtual void token_plus(location) override;
-	virtual void token_hyphen(location) override;
-	virtual void token_star(location) override;
-	virtual void token_slash(location) override;
-	virtual void token_percent(location) override;
-	virtual void token_equal(location) override;
-	virtual void token_l_angle(location) override;
-	virtual void token_r_angle(location) override;
-	virtual void token_tilde(location) override;
-	virtual void token_bang(location) override;
-	virtual void token_bang_equal(location) override;
-	virtual void token_l_bangle(location) override;
-	virtual void token_r_bangle(location) override;
-	virtual void token_bang_tilde(location) override;
-	virtual void token_ampersand(location) override;
-	virtual void token_pipe(location) override;
-	virtual void token_caret(location) override;
-	virtual void token_l_guillemet(location) override;
-	virtual void token_r_guillemet(location) override;
-	virtual void token_l_arrow(location) override;
-	virtual void token_r_arrow(location) override;
+	virtual void token_symbol(location, std::string) override;
 private:
 	// the classic shunting-yard algorithm
 	enum class precedence {
@@ -62,7 +35,7 @@ private:
 		relation, //L
 		additive, //L
 		multiplicative, //L
-		negation, //R
+		prefix, //R
 		primary //L
 	};
 	struct oprec {

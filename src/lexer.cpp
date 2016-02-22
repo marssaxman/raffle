@@ -31,6 +31,32 @@ void lexer::read_file(std::istream &in) {
 	out.token_eof({pos, pos});
 }
 
+static bool issymbol(char c) {
+	switch (c) {
+		case '!':
+		case '$':
+		case '%':
+		case '&':
+		case '*':
+		case '+':
+		case '-':
+		case '.':
+		case '/':
+		case ':':
+		case '<':
+		case '=':
+		case '>':
+		case '?':
+		case '@':
+		case '^':
+		case '~':
+		case '|':
+			return true;
+		default:
+			return false;
+	}
+}
+
 void lexer::next(string::const_iterator &i, string::const_iterator end) {
 	loc.begin = pos;
 	auto tokenstart = i;
@@ -46,56 +72,33 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 		case ')': out.token_close(loc, token::delim::paren); break;
 		case ']': out.token_close(loc, token::delim::bracket); break;
 		case '}': out.token_close(loc, token::delim::brace); break;
+		case ',': out.token_symbol(loc, ","); break;
+		case ';': out.token_symbol(loc, ";"); break;
+		case '_': out.token_underscore(loc); break;
 
-		case ':': switch (adv(i, end)) {
-			case '=': out.token_colon_equal(loc); break;
-			case ':': switch (adv(i, end)) {
-				case '=':out.token_double_colon_equal(loc); break;
-				default: ret(i, end);
-			} break;
-			default: ret(i, end); out.token_colon(loc);
-		} break;
-
-		case ',': out.token_comma(loc); break;
-		case ';': out.token_semicolon(loc); break;
-		case '+': out.token_plus(loc); break;
-		case '*': out.token_star(loc); break;
-		case '/': out.token_slash(loc); break;
-		case '%': out.token_percent(loc); break;
-		case '=': out.token_equal(loc); break;
-		case '&': out.token_ampersand(loc); break;
-		case '|': out.token_pipe(loc); break;
-		case '^': out.token_caret(loc); break;
-		case '~': out.token_tilde(loc); break;
-
-		case '!': switch (adv(i, end)) {
-			case '=': out.token_bang_equal(loc); break;
-			case '<': out.token_l_bangle(loc); break;
-			case '>': out.token_r_bangle(loc); break;
-			case '~': out.token_bang_tilde(loc); break;
-			default: ret(i, end); out.token_bang(loc);
-		} break;
-
-		case '.': switch (adv(i, end)) {
-			case '.': out.token_dot_dot(loc); break;
-			default: ret(i, end); out.token_dot(loc);
-		} break;
-
-		case '<': switch (adv(i, end)) {
-			case '-': out.token_l_arrow(loc); break;
-			case '<': out.token_l_guillemet(loc); break;
-			default: ret(i, end); out.token_l_angle(loc);
-		} break;
-
-		case '>': switch (adv(i, end)) {
-			case '>': out.token_r_guillemet(loc); break;
-			default: ret(i, end); out.token_r_angle(loc);
-		} break;
-
-		case '-': switch (adv(i, end)) {
-			case '>': out.token_r_arrow(loc); break;
-			default: ret(i, end); out.token_hyphen(loc);
-		} break;
+		case '!':
+		case '$':
+		case '%':
+		case '&':
+		case '*':
+		case '+':
+		case '-':
+		case '.':
+		case '/':
+		case ':':
+		case '<':
+		case '=':
+		case '>':
+		case '?':
+		case '@':
+		case '^':
+		case '~':
+		case '|':
+			while (i != end && issymbol(*i)) {
+				adv(i, end);
+			}
+			out.token_symbol(loc, string(tokenstart, i));
+			break;
 
 		case '\"':
 		case '\'':
@@ -134,9 +137,6 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 			out.token_number(loc, string(tokenstart, i));
 			break;
 
-		case '_':
-			out.token_underscore(loc);
-			break;
 
 		case 'A': case 'a':
 		case 'B': case 'b':

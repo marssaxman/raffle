@@ -5,6 +5,7 @@
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
 #include "parser.h"
+#include <map>
 #include <assert.h>
 
 void parser::state::commit_next() {
@@ -40,7 +41,7 @@ bool parser::state::expecting_term() {
 void parser::state::prep(precedence prec) {
 	switch (prec) {
 		case precedence::binding:
-		case precedence::negation:
+		case precedence::prefix:
 			// right-associative
 			while (!ops.empty() && prec < ops.top().prec) {
 				commit_next();
@@ -154,120 +155,58 @@ void parser::token_close(location r, token::delim g) {
 	emit(exp);
 }
 
-void parser::token_comma(location l) {
-	infix({ast::binary::tuple, precedence::structure, l});
-}
-
-void parser::token_semicolon(location l) {
-	infix({ast::binary::sequence, precedence::structure, l});
-}
-
-void parser::token_colon(location l) {
-	infix({ast::binary::declare, precedence::binding, l});
-}
-
-void parser::token_colon_equal(location l) {
-	infix({ast::binary::define, precedence::binding, l});
-}
-
-void parser::token_double_colon_equal(location l) {
-	infix({ast::binary::typealias, precedence::binding, l});
-}
-
-void parser::token_dot(location l) {
-	infix({ast::binary::pipeline, precedence::primary, l});
-}
-
-void parser::token_dot_dot(location l) {
-	infix({ast::binary::range, precedence::additive, l});
-}
-
-void parser::token_l_arrow(location l) {
-	infix({ast::binary::assign, precedence::binding, l});
-}
-
-void parser::token_r_arrow(location l) {
-	infix({ast::binary::capture, precedence::binding, l});
-}
-
-void parser::token_plus(location l) {
-	infix({ast::binary::add, precedence::additive, l});
-}
-
-void parser::token_hyphen(location l) {
-	if (context.expecting_term()) {
-		prefix({ast::binary::sub, precedence::negation, l});
-	} else {
-		infix({ast::binary::sub, precedence::additive, l});
+void parser::token_symbol(location l, std::string text) {
+	enum {
+		infix = 0,
+		prefix,
+		flexy,
+	};
+	struct opdesc {
+		ast::binary::opcode id;
+		precedence prec;
+		int mode;
+	};
+	static std::map<std::string, opdesc> ops = {
+		{";", {ast::binary::sequence, precedence::structure}},
+		{",", {ast::binary::tuple, precedence::structure}},
+		{":", {ast::binary::declare, precedence::binding}},
+		{":=", {ast::binary::define, precedence::binding}},
+		{"::=", {ast::binary::typealias, precedence::binding}},
+		{"<-", {ast::binary::assign, precedence::binding}},
+		{"->", {ast::binary::capture, precedence::binding}},
+		{"=", {ast::binary::eq, precedence::relation}},
+		{"<", {ast::binary::lt, precedence::relation}},
+		{">", {ast::binary::gt, precedence::relation}},
+		{"!=", {ast::binary::neq, precedence::relation}},
+		{"!<", {ast::binary::nlt, precedence::relation}},
+		{"!>", {ast::binary::ngt, precedence::relation}},
+		{"+", {ast::binary::add, precedence::additive}},
+		{"-", {ast::binary::sub, precedence::additive, flexy}},
+		{"|", {ast::binary::disjoin, precedence::additive}},
+		{"^", {ast::binary::exclude, precedence::additive}},
+		{"..", {ast::binary::range, precedence::additive}},
+		{"!", {ast::binary::exclude, precedence::additive, prefix}},
+		{"*", {ast::binary::mul, precedence::multiplicative}},
+		{"/", {ast::binary::div, precedence::multiplicative}},
+		{"%", {ast::binary::rem, precedence::multiplicative}},
+		{"&", {ast::binary::conjoin, precedence::multiplicative}},
+		{"<<", {ast::binary::shl, precedence::multiplicative}},
+		{">>", {ast::binary::shr, precedence::multiplicative}},
+		{".", {ast::binary::pipeline, precedence::primary}}
+	};
+	auto iter = ops.find(text);
+	if (iter == ops.end()) {
+		err.parser_unexpected(l);
+		return;
 	}
-}
-
-void parser::token_star(location l) {
-	infix({ast::binary::mul, precedence::multiplicative, l});
-}
-
-void parser::token_slash(location l) {
-	infix({ast::binary::div, precedence::multiplicative, l});
-}
-
-void parser::token_percent(location l) {
-	infix({ast::binary::rem, precedence::multiplicative, l});
-}
-
-void parser::token_equal(location l) {
-	infix({ast::binary::eq, precedence::relation, l});
-}
-
-void parser::token_tilde(location l) {
-	err.parser_unexpected(l);
-}
-
-void parser::token_l_angle(location l) {
-	infix({ast::binary::lt, precedence::relation, l});
-}
-
-void parser::token_r_angle(location l) {
-	infix({ast::binary::gt, precedence::relation, l});
-}
-
-void parser::token_bang(location l) {
-	prefix({ast::binary::sub, precedence::negation, l});
-}
-
-void parser::token_bang_equal(location l) {
-	infix({ast::binary::neq, precedence::relation, l});
-}
-
-void parser::token_bang_tilde(location l) {
-	err.parser_unexpected(l);
-}
-
-void parser::token_l_bangle(location l) {
-	infix({ast::binary::nlt, precedence::relation, l});
-}
-
-void parser::token_r_bangle(location l) {
-	infix({ast::binary::ngt, precedence::relation, l});
-}
-
-void parser::token_ampersand(location l) {
-	infix({ast::binary::conjoin, precedence::multiplicative, l});
-}
-
-void parser::token_pipe(location l) {
-	infix({ast::binary::disjoin, precedence::additive, l});
-}
-
-void parser::token_caret(location l) {
-	infix({ast::binary::exclude, precedence::additive, l});
-}
-
-void parser::token_l_guillemet(location l) {
-	infix({ast::binary::shl, precedence::multiplicative, l});
-}
-
-void parser::token_r_guillemet(location l) {
-	infix({ast::binary::shr, precedence::multiplicative, l});
+	opdesc &op = iter->second;
+	switch(op.mode) {
+		case infix: this->infix({op.id, op.prec, l}); break;
+		case prefix: this->prefix({op.id, precedence::prefix, l}); break;
+		case flexy:
+			if (!context.expecting_term()) this->infix({op.id, op.prec, l});
+			else this->prefix({op.id, precedence::primary, l});
+	}
 }
 
 bool parser::accept_term(location l) {
