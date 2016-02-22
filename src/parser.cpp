@@ -13,7 +13,19 @@ void parser::state::commit_next() {
 	emit(new ast::binary(op.id, pop(), cur()));
 }
 
-bool parser::state::commit_all() {
+bool parser::state::commit_all(location l, error &err) {
+	if (expecting_term() && !ops.empty()) {
+		if (ops.top().prec == precedence::structure) {
+			// Trailing field delimiters are OK; we'll just ignore them, rather
+			// than reopen the good old "terminators vs separators" holy war.
+			ops.pop();
+			exp = std::move(vals.top());
+			vals.pop();
+		} else {
+			err.parser_missing_right_operand(l);
+			emit(new ast::wildcard(l));
+		}
+	}
 	while (!ops.empty()) {
 		commit_next();
 	}
@@ -43,7 +55,7 @@ void parser::state::prep(precedence prec) {
 	}
 }
 
-void parser::state::push_unary(oprec op, error &err) {
+void parser::state::prefix(oprec op, error &err) {
 	if (expecting_term()) {
 		prep(op.prec);
 		ops.push(op);
@@ -53,7 +65,7 @@ void parser::state::push_unary(oprec op, error &err) {
 	}
 }
 
-void parser::state::push_binary(oprec op, error &err) {
+void parser::state::infix(oprec op, error &err) {
 	if (!expecting_term()) {
 		prep(op.prec);
 		ops.push(op);
@@ -82,7 +94,7 @@ ast::ptr parser::state::cur() {
 
 void parser::token_eof(location l) {
 	if (commit_all(l)) {
-		out << cur();
+		out << context.cur();
 	}
 }
 
@@ -244,30 +256,6 @@ void parser::token_l_guillemet(location l) {
 
 void parser::token_r_guillemet(location l) {
 	infix({ast::binary::shr, precedence::multiplicative, l});
-}
-
-void parser::prefix(oprec op) {
-	context.push_unary(op, err);
-}
-
-void parser::infix(oprec op) {
-	context.push_binary(op, err);
-}
-
-bool parser::commit_all(location l) {
-	if (context.expecting_term() && !context.ops.empty()) {
-		if (context.ops.top().prec == precedence::structure) {
-			// Trailing field delimiters are OK; we'll just ignore them, rather
-			// than reopen the good old "terminators vs separators" holy war.
-			context.ops.pop();
-			context.exp = std::move(context.vals.top());
-			context.vals.pop();
-		} else {
-			err.parser_missing_right_operand(l);
-			emit(new ast::wildcard(l));
-		}
-	}
-	context.commit_all();
 }
 
 void parser::open(location l, group::delim g) {

@@ -83,10 +83,10 @@ private:
 		// other values awaiting operators
 		std::stack<ast::ptr> vals;
 		void commit_next();
-		bool commit_all();
+		bool commit_all(location, error&);
 		bool expecting_term();
-		void push_unary(oprec, error&);
-		void push_binary(oprec, error&);
+		void prefix(oprec, error&);
+		void infix(oprec, error&);
 		void emit(ast::node*);
 		ast::ptr pop();
 		ast::ptr cur();
@@ -111,12 +111,10 @@ private:
 	void close(group::delim, location);
 	bool accept_term(location);
 	void emit(ast::node *n) { context.emit(n); }
-	ast::ptr pop() { return context.pop(); }
-	ast::ptr cur() { return context.cur(); }
 	void term(location);
-	void prefix(oprec);
-	void infix(oprec);
-	bool commit_all(location);
+	void prefix(oprec op) { context.prefix(op, err); }
+	void infix(oprec op) { context.infix(op, err); }
+	bool commit_all(location l) { return context.commit_all(l, err); }
 	ast::ostream &out;
 	error &err;
 };
