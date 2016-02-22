@@ -159,19 +159,13 @@ struct operate: public binary {
 	virtual void accept(visitor &v) override;
 };
 
-struct sequence: public node {
-	ptr item;
-	std::unique_ptr<sequence> next;
-	sequence(ptr &&i, std::unique_ptr<sequence> &&n);
-	virtual location loc() override { return item->loc() + next->loc(); }
+struct sequence: public binary {
+	using binary::binary;
 	virtual void accept(visitor &v) override;
 };
 
-struct tuple: public node {
-	ptr item;
-	std::unique_ptr<tuple> next;
-	tuple(ptr &&i, std::unique_ptr<tuple> &&n);
-	virtual location loc() override { return item->loc() + next->loc(); }
+struct tuple: public binary {
+	using binary::binary;
 	virtual void accept(visitor &v) override;
 };
 

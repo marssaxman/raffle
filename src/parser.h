@@ -61,7 +61,7 @@ struct parser: public token::delegate {
 private:
 	// the classic shunting-yard algorithm
 	enum class precedence {
-		structure, //R
+		structure, //L
 		binding, //R
 		relation, //L
 		additive, //L

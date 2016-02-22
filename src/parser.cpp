@@ -57,34 +57,15 @@ void parser::token_r_brace(location r) {
 	close(group::delim::braces, r);
 }
 
-template<typename T>
-struct terminate: public ast::visitor {
-	terminate(ast::ptr &&i): in(std::move(i)) {
-		in->accept(*this);
-	}
-	virtual void visit(T &n) override {
-		in.release();
-		out.reset(&n);
-	}
-	virtual void visit(ast::node &n) override {
-		out.reset(new T(std::move(in), 0));
-	}
-	operator std::unique_ptr<T>() {
-		return std::move(out);
-	}
-	ast::ptr in;
-	std::unique_ptr<T> out;
-};
-
 void parser::token_comma(location l) {
 	infix({precedence::structure, l, [this]() {
-		emit(new ast::tuple(pop(), terminate<ast::tuple>(cur())));
+		emit(new ast::tuple(pop(), cur()));
 	}});
 }
 
 void parser::token_semicolon(location l) {
 	infix({precedence::structure, l, [this]() {
-		emit(new ast::sequence(pop(), terminate<ast::sequence>(cur())));
+		emit(new ast::sequence(pop(), cur()));
 	}});
 }
 
@@ -256,7 +237,6 @@ void parser::infix(oprec op) {
 	// is this a right-associative operator?
 	bool rightassoc = false;
 	switch (op.prec) {
-		case precedence::structure:
 		case precedence::binding:
 		case precedence::negation: rightassoc = true;
 	}
