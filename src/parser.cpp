@@ -8,13 +8,13 @@
 #include <map>
 #include <assert.h>
 
-void parser::state::commit_next() {
+void parser::state::commit() {
 	oprec op = ops.top();
 	ops.pop();
 	emit(new ast::binary(op.id, pop(), cur()));
 }
 
-bool parser::state::commit_all(location l, error &err) {
+void parser::state::close(location l, ast::ostream &out, error &err) {
 	if (expecting_term() && !ops.empty()) {
 		if (ops.top().prec == precedence::structure) {
 			// Trailing field delimiters are OK; we'll just ignore them, rather
@@ -27,11 +27,9 @@ bool parser::state::commit_all(location l, error &err) {
 			emit(new ast::wildcard(l));
 		}
 	}
-	while (!ops.empty()) {
-		commit_next();
-	}
+	while (!ops.empty()) commit();
 	assert(vals.empty());
-	return exp != nullptr;
+	if (exp) out << cur();
 }
 
 bool parser::state::expecting_term() {
@@ -44,13 +42,13 @@ void parser::state::prep(precedence prec) {
 		case precedence::prefix:
 			// right-associative
 			while (!ops.empty() && prec < ops.top().prec) {
-				commit_next();
+				commit();
 			}
 			break;
 		default:
 			// left-associative
 			while (!ops.empty() && prec <= ops.top().prec) {
-				commit_next();
+				commit();
 			}
 			break;
 	}
@@ -85,6 +83,67 @@ void parser::state::term(ast::node *n) {
 	emit(n);
 }
 
+void parser::state::symbol(location l, std::string text, error &err) {
+	enum {
+		mode_infix = 0,
+		mode_prefix,
+		mode_either,
+	};
+	struct opdesc {
+		ast::binary::opcode id;
+		precedence prec;
+		int mode;
+	};
+	static std::map<std::string, opdesc> ops = {
+		{";", {ast::binary::sequence, precedence::structure}},
+		{",", {ast::binary::tuple, precedence::structure}},
+		{":", {ast::binary::declare, precedence::binding}},
+		{":=", {ast::binary::define, precedence::binding}},
+		{"::=", {ast::binary::typealias, precedence::binding}},
+		{"<-", {ast::binary::assign, precedence::binding}},
+		{"->", {ast::binary::capture, precedence::binding}},
+		{"=", {ast::binary::eq, precedence::relation}},
+		{"<", {ast::binary::lt, precedence::relation}},
+		{">", {ast::binary::gt, precedence::relation}},
+		{"!=", {ast::binary::neq, precedence::relation}},
+		{"!<", {ast::binary::nlt, precedence::relation}},
+		{"!>", {ast::binary::ngt, precedence::relation}},
+		{"+", {ast::binary::add, precedence::additive}},
+		{"-", {ast::binary::sub, precedence::additive, mode_either}},
+		{"|", {ast::binary::disjoin, precedence::additive}},
+		{"^", {ast::binary::exclude, precedence::additive}},
+		{"..", {ast::binary::range, precedence::additive}},
+		{"!", {ast::binary::exclude, precedence::additive, mode_prefix}},
+		{"*", {ast::binary::mul, precedence::multiplicative}},
+		{"/", {ast::binary::div, precedence::multiplicative}},
+		{"%", {ast::binary::rem, precedence::multiplicative}},
+		{"&", {ast::binary::conjoin, precedence::multiplicative}},
+		{"<<", {ast::binary::shl, precedence::multiplicative}},
+		{">>", {ast::binary::shr, precedence::multiplicative}},
+		{".", {ast::binary::pipeline, precedence::primary}}
+	};
+	auto iter = ops.find(text);
+	if (iter == ops.end()) {
+		err.parser_unexpected(l);
+		return;
+	}
+	opdesc &op = iter->second;
+	switch(op.mode) {
+		case mode_infix:
+			infix({op.id, op.prec, l}, err);
+			break;
+		case mode_prefix:
+			prefix({op.id, precedence::prefix, l}, err);
+			break;
+		case mode_either:
+			if (!expecting_term()) {
+				infix({op.id, op.prec, l}, err);
+			} else {
+				prefix({op.id, precedence::prefix, l}, err);
+			}
+	}
+}
+
 void parser::state::emit(ast::node *n) {
 	assert(n && !exp);
 	exp.reset(n);
@@ -103,9 +162,7 @@ ast::ptr parser::state::cur() {
 }
 
 void parser::token_eof(location l) {
-	if (context.commit_all(l, err)) {
-		out << context.cur();
-	}
+	context.close(l, out, err);
 }
 
 void parser::token_number(location l, std::string text) {
@@ -135,7 +192,14 @@ void parser::token_close(location r, token::delim g) {
 	}
 	group top = std::move(outer.top());
 	outer.pop();
-	context.commit_all(r, err);
+	struct tanker: public ast::ostream {
+		virtual ostream &operator<<(ast::ptr &&n) override {
+			exp = std::move(n);
+			return *this;
+		}
+		ast::ptr exp;
+	} subscope;
+	context.close(r, subscope, err);
 	// don't use cur() to build these subexpressions, because it requires that
 	// there actually be a current expression, which is true for all infix and
 	// prefix operators. A pair of group delimiters might not contain anything,
@@ -144,15 +208,15 @@ void parser::token_close(location r, token::delim g) {
 	switch (top.type) {
 		case token::delim::paren:
 			if (g != top.type) err.parser_expected(r, "')'", top.loc);
-			exp = new ast::parens(top.loc, std::move(context.exp), r);
+			exp = new ast::parens(top.loc, std::move(subscope.exp), r);
 			break;
 		case token::delim::bracket:
 			if (g != top.type) err.parser_expected(r, "']'", top.loc);
-			exp = new ast::brackets(top.loc, std::move(context.exp), r);
+			exp = new ast::brackets(top.loc, std::move(subscope.exp), r);
 			break;
 		case token::delim::brace:
 			if (g != top.type) err.parser_expected(r, "'}'", top.loc);
-			exp = new ast::braces(top.loc, std::move(context.exp), r);
+			exp = new ast::braces(top.loc, std::move(subscope.exp), r);
 			break;
 	}
 	context = std::move(top.context);
@@ -160,63 +224,6 @@ void parser::token_close(location r, token::delim g) {
 }
 
 void parser::token_symbol(location l, std::string text) {
-	enum {
-		infix = 0,
-		prefix,
-		flexy,
-	};
-	struct opdesc {
-		ast::binary::opcode id;
-		precedence prec;
-		int mode;
-	};
-	static std::map<std::string, opdesc> ops = {
-		{";", {ast::binary::sequence, precedence::structure}},
-		{",", {ast::binary::tuple, precedence::structure}},
-		{":", {ast::binary::declare, precedence::binding}},
-		{":=", {ast::binary::define, precedence::binding}},
-		{"::=", {ast::binary::typealias, precedence::binding}},
-		{"<-", {ast::binary::assign, precedence::binding}},
-		{"->", {ast::binary::capture, precedence::binding}},
-		{"=", {ast::binary::eq, precedence::relation}},
-		{"<", {ast::binary::lt, precedence::relation}},
-		{">", {ast::binary::gt, precedence::relation}},
-		{"!=", {ast::binary::neq, precedence::relation}},
-		{"!<", {ast::binary::nlt, precedence::relation}},
-		{"!>", {ast::binary::ngt, precedence::relation}},
-		{"+", {ast::binary::add, precedence::additive}},
-		{"-", {ast::binary::sub, precedence::additive, flexy}},
-		{"|", {ast::binary::disjoin, precedence::additive}},
-		{"^", {ast::binary::exclude, precedence::additive}},
-		{"..", {ast::binary::range, precedence::additive}},
-		{"!", {ast::binary::exclude, precedence::additive, prefix}},
-		{"*", {ast::binary::mul, precedence::multiplicative}},
-		{"/", {ast::binary::div, precedence::multiplicative}},
-		{"%", {ast::binary::rem, precedence::multiplicative}},
-		{"&", {ast::binary::conjoin, precedence::multiplicative}},
-		{"<<", {ast::binary::shl, precedence::multiplicative}},
-		{">>", {ast::binary::shr, precedence::multiplicative}},
-		{".", {ast::binary::pipeline, precedence::primary}}
-	};
-	auto iter = ops.find(text);
-	if (iter == ops.end()) {
-		err.parser_unexpected(l);
-		return;
-	}
-	opdesc &op = iter->second;
-	switch(op.mode) {
-		case infix:
-			context.infix({op.id, op.prec, l}, err);
-			break;
-		case prefix:
-			context.prefix({op.id, precedence::prefix, l}, err);
-			break;
-		case flexy:
-			if (!context.expecting_term()) {
-				context.infix({op.id, op.prec, l}, err);
-			} else {
-				context.prefix({op.id, precedence::prefix, l}, err);
-			}
-	}
+	context.symbol(l, text, err);
 }
 

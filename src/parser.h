@@ -38,28 +38,29 @@ private:
 		prefix, //R
 		primary //L
 	};
-	struct oprec {
-		ast::binary::opcode id;
-		precedence prec;
-		location loc;
-	};
 	// Current state of the expression being parsed
 	struct state {
+		void close(location, ast::ostream&, error&);
+		void term(ast::node*);
+		void symbol(location, std::string, error&);
+	private:
 		// infix operators in flight
+		struct oprec {
+			ast::binary::opcode id;
+			precedence prec;
+			location loc;
+		};
 		std::stack<oprec> ops;
 		// most recent term or operator value
 		ast::ptr exp;
 		// other values awaiting operators
 		std::stack<ast::ptr> vals;
-		void commit_next();
-		bool commit_all(location, error&);
+		ast::ptr pop();
+		ast::ptr cur();
+		void commit();
 		bool expecting_term();
 		void prefix(oprec, error&);
 		void infix(oprec, error&);
-		void term(ast::node*);
-		ast::ptr pop();
-		ast::ptr cur();
-	private:
 		void emit(ast::node*);
 		void prep(precedence);
 	} context;
