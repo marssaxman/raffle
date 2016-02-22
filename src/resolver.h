@@ -24,7 +24,7 @@ struct resolver: public ast::processor {
 	};
 	resolver(ast::ostream &o, error &e): ast::processor(o), err(e) {}
 private:
-	virtual void visit(ast::capture&) override;
+	virtual void visit(ast::binary&) override;
 	error &err;
 };
 

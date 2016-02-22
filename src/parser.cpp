@@ -8,8 +8,9 @@
 #include <assert.h>
 
 void parser::state::commit_next() {
-	ops.top().commit();
+	oprec op = ops.top();
 	ops.pop();
+	emit(new ast::binary(op.id, pop(), cur()));
 }
 
 bool parser::state::commit_all() {
@@ -46,6 +47,7 @@ void parser::state::push_unary(oprec op, error &err) {
 	if (expecting_term()) {
 		prep(op.prec);
 		ops.push(op);
+		vals.emplace(new ast::wildcard(op.loc));
 	} else {
 		err.parser_unexpected(op.loc);
 	}
@@ -59,6 +61,11 @@ void parser::state::push_binary(oprec op, error &err) {
 	} else {
 		err.parser_missing_left_operand(op.loc);
 	}
+}
+
+void parser::state::emit(ast::node *n) {
+	assert(n && !exp);
+	exp.reset(n);
 }
 
 ast::ptr parser::state::pop() {
@@ -124,99 +131,67 @@ void parser::token_r_brace(location r) {
 }
 
 void parser::token_comma(location l) {
-	infix({precedence::structure, l, [this]() {
-		emit(new ast::tuple(pop(), cur()));
-	}});
+	infix({ast::binary::tuple, precedence::structure, l});
 }
 
 void parser::token_semicolon(location l) {
-	infix({precedence::structure, l, [this]() {
-		emit(new ast::sequence(pop(), cur()));
-	}});
+	infix({ast::binary::sequence, precedence::structure, l});
 }
 
 void parser::token_colon(location l) {
-	infix({precedence::binding, l, [this]() {
-		emit(new ast::declare(pop(), cur()));
-	}});
+	infix({ast::binary::declare, precedence::binding, l});
 }
 
 void parser::token_colon_equal(location l) {
-	infix({precedence::binding, l, [this]() {
-		emit(new ast::define(pop(), cur()));
-	}});
+	infix({ast::binary::define, precedence::binding, l});
 }
 
 void parser::token_double_colon_equal(location l) {
-	infix({precedence::binding, l, [this]() {
-		emit(new ast::typealias(pop(), cur()));
-	}});
+	infix({ast::binary::typealias, precedence::binding, l});
 }
 
 void parser::token_dot(location l) {
-	infix({precedence::primary, l, [this]() {
-		emit(new ast::pipeline(pop(), cur()));
-	}});
+	infix({ast::binary::pipeline, precedence::primary, l});
 }
 
 void parser::token_dot_dot(location l) {
-	infix({precedence::additive, l, [this]() {
-		emit(new ast::range(pop(), cur()));
-	}});
+	infix({ast::binary::range, precedence::additive, l});
 }
 
 void parser::token_l_arrow(location l) {
-	infix({precedence::binding, l, [this]() {
-		emit(new ast::assign(pop(), cur()));
-	}});
+	infix({ast::binary::assign, precedence::binding, l});
 }
 
 void parser::token_r_arrow(location l) {
-	infix({precedence::binding, l, [this]() {
-		emit(new ast::capture(pop(), cur()));
-	}});
+	infix({ast::binary::capture, precedence::binding, l});
 }
 
 void parser::token_plus(location l) {
-	infix({precedence::additive, l, [this]() {
-		emit(new ast::operate(ast::operate::add, pop(), cur()));
-	}});
+	infix({ast::binary::add, precedence::additive, l});
 }
 
 void parser::token_hyphen(location l) {
 	if (context.expecting_term()) {
-		prefix({precedence::negation, l, [this, l]() {
-			emit(new ast::negate(ast::negate::numeric, cur(), l));
-		}});
+		prefix({ast::binary::sub, precedence::negation, l});
 	} else {
-		infix({precedence::additive, l, [this]() {
-			emit(new ast::operate(ast::operate::sub, pop(), cur()));
-		}});
+		infix({ast::binary::sub, precedence::additive, l});
 	}
 }
 
 void parser::token_star(location l) {
-	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::operate(ast::operate::mul, pop(), cur()));
-	}});
+	infix({ast::binary::mul, precedence::multiplicative, l});
 }
 
 void parser::token_slash(location l) {
-	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::operate(ast::operate::div, pop(), cur()));
-	}});
+	infix({ast::binary::div, precedence::multiplicative, l});
 }
 
 void parser::token_percent(location l) {
-	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::operate(ast::operate::rem, pop(), cur()));
-	}});
+	infix({ast::binary::rem, precedence::multiplicative, l});
 }
 
 void parser::token_equal(location l) {
-	infix({precedence::relation, l, [this]() {
-		emit(new ast::operate(ast::operate::eq, pop(), cur()));
-	}});
+	infix({ast::binary::eq, precedence::relation, l});
 }
 
 void parser::token_tilde(location l) {
@@ -224,27 +199,19 @@ void parser::token_tilde(location l) {
 }
 
 void parser::token_l_angle(location l) {
-	infix({precedence::relation, l, [this]() {
-		emit(new ast::operate(ast::operate::lt, pop(), cur()));
-	}});
+	infix({ast::binary::lt, precedence::relation, l});
 }
 
 void parser::token_r_angle(location l) {
-	infix({precedence::relation, l, [this]() {
-		emit(new ast::operate(ast::operate::gt, pop(), cur()));
-	}});
+	infix({ast::binary::gt, precedence::relation, l});
 }
 
 void parser::token_bang(location l) {
-	prefix({precedence::negation, l, [this, l]() {
-		emit(new ast::negate(ast::negate::logical, cur(), l));
-	}});
+	prefix({ast::binary::sub, precedence::negation, l});
 }
 
 void parser::token_bang_equal(location l) {
-	infix({precedence::relation, l, [this]() {
-		emit(new ast::operate(ast::operate::neq, pop(), cur()));
-	}});
+	infix({ast::binary::neq, precedence::relation, l});
 }
 
 void parser::token_bang_tilde(location l) {
@@ -252,45 +219,31 @@ void parser::token_bang_tilde(location l) {
 }
 
 void parser::token_l_bangle(location l) {
-	infix({precedence::relation, l, [this]() {
-		emit(new ast::operate(ast::operate::nlt, pop(), cur()));
-	}});
+	infix({ast::binary::nlt, precedence::relation, l});
 }
 
 void parser::token_r_bangle(location l) {
-	infix({precedence::relation, l, [this]() {
-		emit(new ast::operate(ast::operate::ngt, pop(), cur()));
-	}});
+	infix({ast::binary::ngt, precedence::relation, l});
 }
 
 void parser::token_ampersand(location l) {
-	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::operate(ast::operate::conjoin, pop(), cur()));
-	}});
+	infix({ast::binary::conjoin, precedence::multiplicative, l});
 }
 
 void parser::token_pipe(location l) {
-	infix({precedence::additive, l, [this]() {
-		emit(new ast::operate(ast::operate::disjoin, pop(), cur()));
-	}});
+	infix({ast::binary::disjoin, precedence::additive, l});
 }
 
 void parser::token_caret(location l) {
-	infix({precedence::additive, l, [this]() {
-		emit(new ast::operate(ast::operate::exclude, pop(), cur()));
-	}});
+	infix({ast::binary::exclude, precedence::additive, l});
 }
 
 void parser::token_l_guillemet(location l) {
-	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::operate(ast::operate::shl, pop(), cur()));
-	}});
+	infix({ast::binary::shl, precedence::multiplicative, l});
 }
 
 void parser::token_r_guillemet(location l) {
-	infix({precedence::multiplicative, l, [this]() {
-		emit(new ast::operate(ast::operate::shr, pop(), cur()));
-	}});
+	infix({ast::binary::shr, precedence::multiplicative, l});
 }
 
 void parser::prefix(oprec op) {
@@ -355,15 +308,8 @@ void parser::close(group::delim g, location r) {
 
 bool parser::accept_term(location l) {
 	if (!context.expecting_term()) {
-		infix({precedence::primary, l, [this](){
-			emit(new ast::apply(pop(), cur()));
-		}});
+		infix({ast::binary::apply, precedence::primary, l});
 	}
 	return true;
-}
-
-void parser::emit(ast::node *n) {
-	assert(n && !context.exp);
-	context.exp.reset(n);
 }
 

@@ -6,6 +6,7 @@
 
 #include "printer.h"
 #include <sstream>
+#include <map>
 
 using namespace ast;
 
@@ -25,36 +26,42 @@ void printer::visit(ast::wildcard& n) {
 	out << "_";
 }
 
-void printer::visit(negate& n) {
-	switch (n.id) {
-		case negate::numeric: out << "-"; break;
-		case negate::logical: out << "!"; break;
+void printer::visit(ast::binary& n) {
+	static std::map<ast::binary::opcode, std::string> labels = {
+		{binary::opcode::add, " + "},
+		{binary::opcode::sub, " - "},
+		{binary::opcode::mul, " * "},
+		{binary::opcode::div, " / "},
+		{binary::opcode::rem, " % "},
+		{binary::opcode::shl, " << "},
+		{binary::opcode::shr, " >> "},
+		{binary::opcode::conjoin, " & "},
+		{binary::opcode::disjoin, " | "},
+		{binary::opcode::exclude, " ^ "},
+		{binary::opcode::eq, " = "},
+		{binary::opcode::lt, " < "},
+		{binary::opcode::gt, " > "},
+		{binary::opcode::neq, " != "},
+		{binary::opcode::nlt, " !< "},
+		{binary::opcode::ngt, " !> "},
+		{binary::opcode::apply, ""},
+		{binary::opcode::pipeline, "."},
+		{binary::opcode::assign, " <- "},
+		{binary::opcode::capture, " -> "},
+		{binary::opcode::declare, " := "},
+		{binary::opcode::define, ": "},
+		{binary::opcode::typealias, " ::= "},
+		{binary::opcode::range, ".."},
+		{binary::opcode::sequence, "; "},
+		{binary::opcode::tuple, ", "},
+	};
+	auto iter = labels.find(n.id);
+	std::string t;
+	if (iter != labels.end()) {
+		t = iter->second;
+	} else {
+		t = " ?" + std::to_string((int)n.id) + "? ";
 	}
-	n.source->accept(*this);
-}
-
-void printer::visit(ast::operate& n) {
-	switch (n.id) {
-		case operate::add: infix(n, " + "); break;
-		case operate::sub: infix(n, " - "); break;
-		case operate::mul: infix(n, " * "); break;
-		case operate::div: infix(n, " / "); break;
-		case operate::rem: infix(n, " % "); break;
-		case operate::shl: infix(n, " << "); break;
-		case operate::shr: infix(n, " >> "); break;
-		case operate::conjoin: infix(n, " & "); break;
-		case operate::disjoin: infix(n, " | "); break;
-		case operate::exclude: infix(n, " ^ "); break;
-		case operate::eq: infix(n, " = "); break;
-		case operate::lt: infix(n, " < "); break;
-		case operate::gt: infix(n, " > "); break;
-		case operate::neq: infix(n, " != "); break;
-		case operate::nlt: infix(n, " !< "); break;
-		case operate::ngt: infix(n, " !> "); break;
-	}
-}
-
-void printer::infix(binary &n, std::string t) {
 	if (level++) out << "\xC2\xAB";
 	n.left->accept(*this);
 	out << t;
@@ -64,23 +71,8 @@ void printer::infix(binary &n, std::string t) {
 
 void printer::group(std::string l, ast::group& n, std::string r) {
 	out << l;
-	struct check_seq: public ast::visitor {
-		check_seq(ast::node &n) { n.accept(*this); }
-		bool match = false;
-		virtual void visit(sequence &n) { match = true; }
-	} is_seq(*n.source);
-	if (is_seq.match) {
-		std::stringstream buf;
-		printer sub(buf);
-		n.source->accept(sub);
-		out << std::endl;
-		for (std::string line; std::getline(buf, line);) {
-			out << "    " << line << std::endl;
-		}
-	} else {
-		printer sub(out);
-		n.source->accept(sub);
-	}
+	printer sub(out);
+	n.source->accept(sub);
 	out << r;
 }
 

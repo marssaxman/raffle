@@ -33,16 +33,8 @@ void wildcard::accept(visitor &v) {
 	v.visit(*this);
 }
 
-negate::negate(opcode o, ptr &&s, location l):
-		unary(std::move(s)), id(o), tk_loc(l) {
-}
-
-void negate::accept(visitor &v) {
-	v.visit(*this);
-}
-
 group::group(location l, ptr &&s, location r):
-	unary(std::move(s)), openloc(l), closeloc(r) {
+	source(std::move(s)), openloc(l), closeloc(r) {
 }
 
 void parens::accept(visitor &v) {
@@ -57,65 +49,13 @@ void braces::accept(visitor &v) {
 	v.visit(*this);
 }
 
-binary::binary(ptr &&l, ptr &&r):
-		left(std::move(l)), right(std::move(r)) {
+binary::binary(opcode o, ptr &&l, ptr &&r):
+		id(o), left(std::move(l)), right(std::move(r)) {
 	assert(left);
 	assert(right);
 }
 
-void apply::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void pipeline::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void assign::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void capture::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void declare::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void define::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void typealias::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void range::accept(visitor &v) {
-	v.visit(*this);
-}
-
-operate::operate(opcode o, ptr &&l, ptr &&r):
-		binary(std::move(l), std::move(r)), id(o) {
-}
-
-void operate::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void sequence::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void tuple::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void parameter::accept(visitor &v) {
-	v.visit(*this);
-}
-
-void lambda::accept(visitor &v) {
+void binary::accept(visitor &v) {
 	v.visit(*this);
 }
 

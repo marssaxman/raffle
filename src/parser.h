@@ -70,9 +70,9 @@ private:
 		primary //L
 	};
 	struct oprec {
+		ast::binary::opcode id;
 		precedence prec;
 		location loc;
-		std::function<void(void)> commit;
 	};
 	// Current state of the expression being parsed
 	struct state {
@@ -87,6 +87,7 @@ private:
 		bool expecting_term();
 		void push_unary(oprec, error&);
 		void push_binary(oprec, error&);
+		void emit(ast::node*);
 		ast::ptr pop();
 		ast::ptr cur();
 	private:
@@ -109,7 +110,7 @@ private:
 	void open(location, group::delim);
 	void close(group::delim, location);
 	bool accept_term(location);
-	void emit(ast::node*);
+	void emit(ast::node *n) { context.emit(n); }
 	ast::ptr pop() { return context.pop(); }
 	ast::ptr cur() { return context.cur(); }
 	void term(location);
