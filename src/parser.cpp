@@ -103,7 +103,7 @@ void parser::token_number(location l, std::string text) {
 	emit(new ast::number(text, l));
 }
 
-void parser::token_symbol(location l, std::string text) {
+void parser::token_identifier(location l, std::string text) {
 	if (!accept_term(l)) return;
 	emit(new ast::symbol(text, l));
 }
@@ -118,28 +118,40 @@ void parser::token_underscore(location l) {
 	emit(new ast::wildcard(l));
 }
 
-void parser::token_l_paren(location l) {
-	open(l, group::delim::parens);
+void parser::token_open(location l, token::delim g) {
+	if (!accept_term(l)) return;
+	outer.emplace(l, g, std::move(context));
 }
 
-void parser::token_r_paren(location r) {
-	close(group::delim::parens, r);
-}
-
-void parser::token_l_bracket(location l) {
-	open(l, group::delim::brackets);
-}
-
-void parser::token_r_bracket(location r) {
-	close(group::delim::brackets, r);
-}
-
-void parser::token_l_brace(location l) {
-	open(l, group::delim::braces);
-}
-
-void parser::token_r_brace(location r) {
-	close(group::delim::braces, r);
+void parser::token_close(location r, token::delim g) {
+	if (outer.empty()) {
+		err.parser_unexpected(r);
+		return;
+	}
+	group top = std::move(outer.top());
+	outer.pop();
+	commit_all(r);
+	// don't use cur() to build these subexpressions, because it requires that
+	// there actually be a current expression, which is true for all infix and
+	// prefix operators. A pair of group delimiters might not contain anything,
+	// and that's a legal expression.
+	ast::group *exp;
+	switch (top.type) {
+		case token::delim::paren:
+			if (g != top.type) err.parser_expected(r, "')'", top.loc);
+			exp = new ast::parens(top.loc, std::move(context.exp), r);
+			break;
+		case token::delim::bracket:
+			if (g != top.type) err.parser_expected(r, "']'", top.loc);
+			exp = new ast::brackets(top.loc, std::move(context.exp), r);
+			break;
+		case token::delim::brace:
+			if (g != top.type) err.parser_expected(r, "'}'", top.loc);
+			exp = new ast::braces(top.loc, std::move(context.exp), r);
+			break;
+	}
+	context = std::move(top.context);
+	emit(exp);
 }
 
 void parser::token_comma(location l) {
@@ -256,42 +268,6 @@ void parser::token_l_guillemet(location l) {
 
 void parser::token_r_guillemet(location l) {
 	infix({ast::binary::shr, precedence::multiplicative, l});
-}
-
-void parser::open(location l, group::delim g) {
-	if (!accept_term(l)) return;
-	outer.emplace(l, g, std::move(context));
-}
-
-void parser::close(group::delim g, location r) {
-	if (outer.empty()) {
-		err.parser_unexpected(r);
-		return;
-	}
-	group top = std::move(outer.top());
-	outer.pop();
-	commit_all(r);
-	// don't use cur() to build these subexpressions, because it requires that
-	// there actually be a current expression, which is true for all infix and
-	// prefix operators. A pair of group delimiters might not contain anything,
-	// and that's a legal expression.
-	ast::group *exp;
-	switch (top.type) {
-		case group::delim::parens:
-			if (g != top.type) err.parser_expected(r, "')'", top.loc);
-			exp = new ast::parens(top.loc, std::move(context.exp), r);
-			break;
-		case group::delim::brackets:
-			if (g != top.type) err.parser_expected(r, "']'", top.loc);
-			exp = new ast::brackets(top.loc, std::move(context.exp), r);
-			break;
-		case group::delim::braces:
-			if (g != top.type) err.parser_expected(r, "'}'", top.loc);
-			exp = new ast::braces(top.loc, std::move(context.exp), r);
-			break;
-	}
-	context = std::move(top.context);
-	emit(exp);
 }
 
 bool parser::accept_term(location l) {

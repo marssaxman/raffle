@@ -21,15 +21,11 @@ struct parser: public token::delegate {
 	parser(ast::ostream &o, error &e): out(o), err(e) {}
 	virtual void token_eof(location) override;
 	virtual void token_number(location, std::string) override;
-	virtual void token_symbol(location, std::string) override;
+	virtual void token_identifier(location, std::string) override;
 	virtual void token_string(location, std::string) override;
 	virtual void token_underscore(location) override;
-	virtual void token_l_paren(location) override;
-	virtual void token_r_paren(location) override;
-	virtual void token_l_bracket(location) override;
-	virtual void token_r_bracket(location) override;
-	virtual void token_l_brace(location) override;
-	virtual void token_r_brace(location) override;
+	virtual void token_open(location, token::delim) override;
+	virtual void token_close(location, token::delim) override;
 	virtual void token_comma(location) override;
 	virtual void token_colon(location) override;
 	virtual void token_colon_equal(location) override;
@@ -95,20 +91,17 @@ private:
 	} context;
 	// Outer context for a subexpression
 	struct group {
-		enum class delim { parens, brackets, braces };
-		group(location l, delim t, state &&s):
+		group(location l, token::delim t, state &&s):
 				loc(l), type(t), context(std::move(s)) {}
 		// location of the left-bracket used to enter this group
 		location loc;
 		// type of bracket we must match to close the group
-		delim type;
+		token::delim type;
 		// the state as it existed before we entered the subexpression
 		state context;
 	};
 	// Grouping stack outside the current expression context
 	std::stack<group> outer;
-	void open(location, group::delim);
-	void close(group::delim, location);
 	bool accept_term(location);
 	void emit(ast::node *n) { context.emit(n); }
 	void term(location);

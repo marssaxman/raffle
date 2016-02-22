@@ -18,7 +18,7 @@
 // 	comment: '#' [^\n]*
 // 	token: number | symbol | string | space | blank | delimiter | operator
 // 	number: [0-9]+
-// 	symbol: [A-Za-z] [_A-Za-z0-9]*
+// 	identifier: [A-Za-z] [_A-Za-z0-9]*
 // 	string: ('\"' [^\"]* '\"') | ('\'' [^\']* '\'')
 // 	space: [\s\t]+
 //	blank: '_'

@@ -40,12 +40,12 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 			i = end;
 			break;
 
-		case '(': out.token_l_paren(loc); break;
-		case ')': out.token_r_paren(loc); break;
-		case '[': out.token_l_bracket(loc); break;
-		case ']': out.token_r_bracket(loc); break;
-		case '{': out.token_l_brace(loc); break;
-		case '}': out.token_r_brace(loc); break;
+		case '(': out.token_open(loc, token::delim::paren); break;
+		case '[': out.token_open(loc, token::delim::bracket); break;
+		case '{': out.token_open(loc, token::delim::brace); break;
+		case ')': out.token_close(loc, token::delim::paren); break;
+		case ']': out.token_close(loc, token::delim::bracket); break;
+		case '}': out.token_close(loc, token::delim::brace); break;
 
 		case ':': switch (adv(i, end)) {
 			case '=': out.token_colon_equal(loc); break;
@@ -167,7 +167,7 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 			while (i != end && isalnum(*i) || '_' == *i) {
 				adv(i, end);
 			}
-			out.token_symbol(loc, string(tokenstart, i));
+			out.token_identifier(loc, string(tokenstart, i));
 			break;
 
 		default:
