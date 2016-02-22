@@ -13,7 +13,7 @@
 // The resolver receives an AST, matches symbol references with definitions,
 // and produces a higher-order AST, a "lambda syntax tree", where bindings are
 // represented by lambda capture and function application.
-struct resolver: public ast::processor, private ast::visitor {
+struct resolver: public ast::ostream, private ast::visitor {
 	struct error {
 		virtual void resolver_undefined(location) = 0;
 		virtual void resolver_redefined(location, location) = 0;
@@ -22,8 +22,8 @@ struct resolver: public ast::processor, private ast::visitor {
 		virtual void resolver_unexpected_constraint(location) = 0;
 		virtual void resolver_unexpected_wildcard(location) = 0;
 	};
-	resolver(ast::processor &o, error &e): out(o), err(e) {}
-	virtual void process(ast::ptr&&) override;
+	resolver(ast::ostream &o, error &e): out(o), err(e) {}
+	virtual ast::ostream &operator<<(ast::ptr&&) override;
 private:
 	virtual void visit(ast::symbol&) override;
 	virtual void visit(ast::assign&) override;
@@ -31,7 +31,7 @@ private:
 	unsigned lambda_level = 0;
 	std::map<std::string, size_t> bindings;
 	ast::ptr rewrite = nullptr;
-	ast::processor &out;
+	ast::ostream &out;
 	error &err;
 };
 

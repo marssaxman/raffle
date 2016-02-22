@@ -219,8 +219,8 @@ struct visitor {
 	virtual void visit(lambda &n) { visit((unary&)n); }
 };
 
-struct processor {
-	virtual void process(ptr&&) = 0;
+struct ostream {
+	virtual ostream &operator<<(ptr&&) = 0;
 };
 
 } // namespace ast

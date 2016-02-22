@@ -9,7 +9,7 @@
 
 void parser::token_eof(location l) {
 	if (commit_all(l)) {
-		out.process(cur());
+		out << cur();
 	}
 }
 

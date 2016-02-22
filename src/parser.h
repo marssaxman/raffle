@@ -18,7 +18,7 @@ struct parser: public token::delegate {
 		virtual void parser_missing_right_operand(location) = 0;
 		virtual void parser_expected(location, std::string, location) = 0;
 	};
-	parser(ast::processor &o, error &e): out(o), err(e) {}
+	parser(ast::ostream &o, error &e): out(o), err(e) {}
 	virtual void token_eof(location) override;
 	virtual void token_number(location, std::string) override;
 	virtual void token_symbol(location, std::string) override;
@@ -111,7 +111,7 @@ private:
 	void infix(oprec);
 	void commit_next();
 	bool commit_all(location);
-	ast::processor &out;
+	ast::ostream &out;
 	error &err;
 };
 

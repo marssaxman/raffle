@@ -89,9 +89,9 @@ void resolver::visit(ast::capture &n) {
 //	rewrite.reset(new ast::lambda(
 }
 
-void resolver::process(ast::ptr &&tree) {
-	if (!tree) return;
-	tree->accept(*this);
-	out.process(std::move(rewrite? rewrite: tree));
+ast::ostream &resolver::operator<<(ast::ptr &&tree) {
+	if (!tree) tree->accept(*this);
+	out << std::move(rewrite? rewrite: tree);
+	return *this;
 }
 

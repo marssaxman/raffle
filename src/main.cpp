@@ -14,15 +14,16 @@
 
 #include <unistd.h>
 
-struct output: public ast::processor {
+struct output: public ast::ostream {
 	unsigned nesting = 0;
-	virtual void process(ast::ptr &&n) override {
-		if (nesting > 1) return;
+	virtual ast::ostream &operator<<(ast::ptr &&n) override {
+		if (nesting > 1) return *this;
 		printer p(std::cout);
 		if (n) {
 			n->accept(p);
 			std::cout << ";" << std::endl;
 		}
+		return *this;
 	}
 };
 
