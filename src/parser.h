@@ -82,6 +82,15 @@ private:
 		ast::ptr exp;
 		// other values awaiting operators
 		std::stack<ast::ptr> vals;
+		void commit_next();
+		bool commit_all();
+		bool expecting_term();
+		void push_unary(oprec, error&);
+		void push_binary(oprec, error&);
+		ast::ptr pop();
+		ast::ptr cur();
+	private:
+		void prep(precedence);
 	} context;
 	// Outer context for a subexpression
 	struct group {
@@ -99,17 +108,13 @@ private:
 	std::stack<group> outer;
 	void open(location, group::delim);
 	void close(group::delim, location);
-	bool expecting_term();
 	bool accept_term(location);
-	bool accept_prefix(location);
-	bool accept_infix(location);
 	void emit(ast::node*);
-	ast::ptr pop();
-	ast::ptr cur();
+	ast::ptr pop() { return context.pop(); }
+	ast::ptr cur() { return context.cur(); }
 	void term(location);
 	void prefix(oprec);
 	void infix(oprec);
-	void commit_next();
 	bool commit_all(location);
 	ast::ostream &out;
 	error &err;

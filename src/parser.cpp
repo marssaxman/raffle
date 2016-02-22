@@ -7,6 +7,72 @@
 #include "parser.h"
 #include <assert.h>
 
+void parser::state::commit_next() {
+	ops.top().commit();
+	ops.pop();
+}
+
+bool parser::state::commit_all() {
+	while (!ops.empty()) {
+		commit_next();
+	}
+	assert(vals.empty());
+	return exp != nullptr;
+}
+
+bool parser::state::expecting_term() {
+	return !exp;
+}
+
+void parser::state::prep(precedence prec) {
+	switch (prec) {
+		case precedence::binding:
+		case precedence::negation:
+			// right-associative
+			while (!ops.empty() && prec < ops.top().prec) {
+				commit_next();
+			}
+			break;
+		default:
+			// left-associative
+			while (!ops.empty() && prec <= ops.top().prec) {
+				commit_next();
+			}
+			break;
+	}
+}
+
+void parser::state::push_unary(oprec op, error &err) {
+	if (expecting_term()) {
+		prep(op.prec);
+		ops.push(op);
+	} else {
+		err.parser_unexpected(op.loc);
+	}
+}
+
+void parser::state::push_binary(oprec op, error &err) {
+	if (!expecting_term()) {
+		prep(op.prec);
+		ops.push(op);
+		vals.push(std::move(exp));
+	} else {
+		err.parser_missing_left_operand(op.loc);
+	}
+}
+
+ast::ptr parser::state::pop() {
+	assert(!vals.empty());
+	ast::ptr n = std::move(vals.top());
+	vals.pop();
+	return n;
+}
+
+ast::ptr parser::state::cur() {
+	assert(exp);
+	return std::move(exp);
+}
+
 void parser::token_eof(location l) {
 	if (commit_all(l)) {
 		out << cur();
@@ -118,7 +184,7 @@ void parser::token_plus(location l) {
 }
 
 void parser::token_hyphen(location l) {
-	if (expecting_term()) {
+	if (context.expecting_term()) {
 		prefix({precedence::negation, l, [this, l]() {
 			emit(new ast::negate(ast::negate::numeric, cur(), l));
 		}});
@@ -228,38 +294,15 @@ void parser::token_r_guillemet(location l) {
 }
 
 void parser::prefix(oprec op) {
-	if (!accept_prefix(op.loc)) return;
-	context.ops.push(op);
+	context.push_unary(op, err);
 }
 
 void parser::infix(oprec op) {
-	if (!accept_infix(op.loc)) return;
-	// is this a right-associative operator?
-	bool rightassoc = false;
-	switch (op.prec) {
-		case precedence::binding:
-		case precedence::negation: rightassoc = true;
-	}
-	if (rightassoc) {
-		while (!context.ops.empty() && op.prec < context.ops.top().prec) {
-			commit_next();
-		}
-	} else {
-		while (!context.ops.empty() && op.prec <= context.ops.top().prec) {
-			commit_next();
-		}
-	}
-	context.vals.push(std::move(context.exp));
-	context.ops.push(op);
-}
-
-void parser::commit_next() {
-	context.ops.top().commit();
-	context.ops.pop();
+	context.push_binary(op, err);
 }
 
 bool parser::commit_all(location l) {
-	if (expecting_term() && !context.ops.empty()) {
+	if (context.expecting_term() && !context.ops.empty()) {
 		if (context.ops.top().prec == precedence::structure) {
 			// Trailing field delimiters are OK; we'll just ignore them, rather
 			// than reopen the good old "terminators vs separators" holy war.
@@ -271,11 +314,7 @@ bool parser::commit_all(location l) {
 			emit(new ast::wildcard(l));
 		}
 	}
-	while (!context.ops.empty()) {
-		commit_next();
-	}
-	assert(context.vals.empty());
-	return context.exp != nullptr;
+	context.commit_all();
 }
 
 void parser::open(location l, group::delim g) {
@@ -314,12 +353,8 @@ void parser::close(group::delim g, location r) {
 	emit(exp);
 }
 
-bool parser::expecting_term() {
-	return !context.exp;
-}
-
 bool parser::accept_term(location l) {
-	if (!expecting_term()) {
+	if (!context.expecting_term()) {
 		infix({precedence::primary, l, [this](){
 			emit(new ast::apply(pop(), cur()));
 		}});
@@ -327,37 +362,8 @@ bool parser::accept_term(location l) {
 	return true;
 }
 
-bool parser::accept_prefix(location l) {
-	if (expecting_term()) {
-		return true;
-	} else {
-		err.parser_unexpected(l);
-		return false;
-	}
-}
-
-bool parser::accept_infix(location l) {
-	if (expecting_term()) {
-		err.parser_missing_left_operand(l);
-		return false;
-	} else {
-		return true;
-	}
-}
-
 void parser::emit(ast::node *n) {
 	assert(n && !context.exp);
 	context.exp.reset(n);
 }
 
-ast::ptr parser::pop() {
-	assert(!context.vals.empty());
-	ast::ptr n = std::move(context.vals.top());
-	context.vals.pop();
-	return n;
-}
-
-ast::ptr parser::cur() {
-	assert(context.exp);
-	return std::move(context.exp);
-}
