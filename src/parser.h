@@ -56,10 +56,11 @@ private:
 		bool expecting_term();
 		void prefix(oprec, error&);
 		void infix(oprec, error&);
-		void emit(ast::node*);
+		void term(ast::node*);
 		ast::ptr pop();
 		ast::ptr cur();
 	private:
+		void emit(ast::node*);
 		void prep(precedence);
 	} context;
 	// Outer context for a subexpression
@@ -75,12 +76,6 @@ private:
 	};
 	// Grouping stack outside the current expression context
 	std::stack<group> outer;
-	bool accept_term(location);
-	void emit(ast::node *n) { context.emit(n); }
-	void term(location);
-	void prefix(oprec op) { context.prefix(op, err); }
-	void infix(oprec op) { context.infix(op, err); }
-	bool commit_all(location l) { return context.commit_all(l, err); }
 	ast::ostream &out;
 	error &err;
 };
