@@ -6,7 +6,7 @@
 
 #ifndef AST_H
 #define AST_H
-
+ 
 #include "location.h"
 #include <string>
 #include <memory>
@@ -220,7 +220,7 @@ struct visitor {
 };
 
 struct processor {
-	virtual void ast_process(ptr&&) = 0;
+	virtual void process(ptr&&) = 0;
 };
 
 } // namespace ast

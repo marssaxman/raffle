@@ -16,7 +16,7 @@
 
 struct output: public ast::processor {
 	unsigned nesting = 0;
-	virtual void ast_process(ast::ptr &&n) override {
+	virtual void process(ast::ptr &&n) override {
 		if (nesting > 1) return;
 		printer p(std::cout);
 		if (n) {
