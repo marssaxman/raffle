@@ -6,7 +6,7 @@
 
 #ifndef AST_H
 #define AST_H
- 
+
 #include "location.h"
 #include <string>
 #include <memory>
@@ -221,6 +221,16 @@ struct visitor {
 
 struct ostream {
 	virtual ostream &operator<<(ptr&&) = 0;
+};
+
+struct processor: public ostream, protected visitor {
+	processor(ostream &o): out(o) {}
+	virtual ostream &operator<<(ptr&&) override;
+protected:
+	void send(ptr &&n);
+private:
+	ptr replace;
+	ostream &out;
 };
 
 } // namespace ast

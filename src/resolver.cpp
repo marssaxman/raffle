@@ -5,21 +5,6 @@
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
 #include "resolver.h"
-#include <stack>
-
-namespace {
-class rewriter: protected ast::visitor {
-	ast::ptr out;
-public:
-	rewriter(ast::ptr &&o) {
-		if (o) o->accept(*this);
-		if (!out) out = std::move(o);
-	}
-	operator ast::ptr() {
-		return std::move(out);
-	}
-};
-}
 
 // ok so the glorious truth is that this process completely inverts the tree
 // we start out with this:
@@ -50,48 +35,10 @@ public:
 // So: there we go. First job, turn the tree inside out. Second job, match all
 // the names up with symbols.
 
-namespace {
-typedef std::map<std::string, size_t> symtab;
-struct definer: public ast::visitor {
-	definer(symtab &b, unsigned l): bindings(b), lambda_level(l) {}
-	virtual void visit(ast::symbol &n) override {}
-	symtab &bindings;
-	unsigned lambda_level;
-};
-}
-
-void resolver::visit(ast::symbol &n) {
-	auto iter = bindings.find(n.text);
-	if (iter == bindings.end()) {
-		err.resolver_undefined(n.loc());
-	}
-	// The binding records the lambda nesting level of its container, from
-	// the outside in. The parameter must record the context level of the
-	// bound expression, from the inside out.
-	unsigned index = lambda_level - iter->second;
-	rewrite.reset(new ast::parameter(index, n.loc()));
-}
-
-void resolver::visit(ast::assign &n) {
-	// assign ::= left <- right
-
-}
-
 void resolver::visit(ast::capture &n) {
 	// capture ::= left -> right
 	// Reduce to a lambda expression, substituting 'parameter' for 'left'
 	// wherever it occurs inside 'right'.
-	symtab nested(bindings);
-	definer d(nested, lambda_level);
-	n.left->accept(d);
-//	binder b(nested, lambda_level);
-//	n.right->accept(b);
-//	rewrite.reset(new ast::lambda(
-}
-
-ast::ostream &resolver::operator<<(ast::ptr &&tree) {
-	if (!tree) tree->accept(*this);
-	out << std::move(rewrite? rewrite: tree);
-	return *this;
+	
 }
 

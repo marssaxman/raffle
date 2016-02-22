@@ -15,15 +15,14 @@
 #include <unistd.h>
 
 struct output: public ast::ostream {
-	unsigned nesting = 0;
 	virtual ast::ostream &operator<<(ast::ptr &&n) override {
-		if (nesting > 1) return *this;
+		result = std::move(n);
+	}
+	ast::ptr result;
+	void print() {
 		printer p(std::cout);
-		if (n) {
-			n->accept(p);
-			std::cout << ";" << std::endl;
-		}
-		return *this;
+		if (result) result->accept(p);
+		std::cout << std::endl;
 	}
 };
 
@@ -34,6 +33,7 @@ static int run(std::istream &i) {
 	parser p(r, e);
 	lexer l(p, e);
 	l.read_file(i);
+	o.print();
 }
 
 int main(int argc, const char *argv[]) {
@@ -45,6 +45,7 @@ int main(int argc, const char *argv[]) {
 			parser p(o, e);
 			lexer l(p, e);
 			l.read_line(line);
+			o.print();
 			std::cout << std::endl << "$> ";
 		}
 		return EXIT_SUCCESS;

@@ -127,3 +127,14 @@ void lambda::accept(visitor &v) {
 	v.visit(*this);
 }
 
+ostream &processor::operator<<(ptr &&n) {
+	if (n) n->accept(*this);
+	out << std::move(replace? replace: n);
+	return *this;
+}
+
+void processor::send(ptr &&n) {
+	if (replace) out << std::move(replace);
+	replace = std::move(n);
+}
+
