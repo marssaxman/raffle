@@ -30,7 +30,7 @@ private:
 	// the classic shunting-yard algorithm
 	enum class precedence {
 		none = 0,
-		structure, //L
+		sequence, //L
 		binding, //R
 		relation, //L
 		additive, //L

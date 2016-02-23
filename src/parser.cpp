@@ -36,7 +36,15 @@ void parser::token_underscore(location loc) {
 }
 
 void parser::token_open(location loc, token::delim c) {
-	prep_term(loc);
+	if (!expecting_term) {
+		ast::branch::tag subscript;
+		switch (c) {
+			case token::delim::paren: subscript = ast::branch::invoke; break;
+			case token::delim::bracket: subscript = ast::branch::slice; break;
+			case token::delim::brace: subscript = ast::branch::extend; break;
+		}
+		push(loc, subscript, precedence::primary);
+	}
 	context current{loc, c, std::move(ops)};
 	outer.push(std::move(current));
 	expecting_term = true;
@@ -49,6 +57,7 @@ void parser::token_close(location loc, token::delim c) {
 	}
 	if (outer.top().type != c) {
 		err.parser_mismatched_delimiter(loc);
+		return;
 	}
 	close(loc);
 	ops = std::move(outer.top().ops);
@@ -62,8 +71,8 @@ void parser::token_symbol(location loc, std::string text) {
 		precedence prec;
 	};
 	static std::map<std::string, opdesc> ops = {
-		{";", {ast::branch::sequence, precedence::structure}},
-		{",", {ast::branch::tuple, precedence::structure}},
+		{";", {ast::branch::sequence, precedence::sequence}},
+		{",", {ast::branch::pair, precedence::binding}},
 		{":", {ast::branch::declare, precedence::binding}},
 		{":=", {ast::branch::define, precedence::binding}},
 		{"::=", {ast::branch::typealias, precedence::binding}},

@@ -16,19 +16,16 @@
 // 	file: (line '\n')*
 // 	line: token* comment?
 // 	comment: '#' [^\n]*
-// 	token: number | symbol | string | space | blank | delimiter | operator
+// 	token: literal | identifier | blank | open | close | symbol | space
+//  literal: number | string
 // 	number: [0-9]+
-// 	identifier: [A-Za-z] [_A-Za-z0-9]*
 // 	string: ('\"' [^\"]* '\"') | ('\'' [^\']* '\'')
-// 	space: [\s\t]+
+// 	identifier: [A-Za-z] [_A-Za-z0-9]*
 //	blank: '_'
-// 	delimiter: '(' | '[' | '{' | '}' | ']' | ')'
-// 	operator: arithmetic | relation | structure
-//	arithmetic: '+' | '-' | '*' | '/' | '%' | '<<' | '>>'
-//  logic/set: '|' | '&' | '^' | '!'
-//	relation: '=' | '<' | '>' '!=' | '!<' | '!>'
-//	structure: ',' | ';' | '<-' | '->' | '.' | '..'
-//  definition: ':' | ':=' '::='
+//  open: '(' | '[' | '{'
+//  close: ')' | ']' | '}'
+//  symbol: [\;\,\+\-\*\/\%\<\>\|\&\^\!\=\.\:]+
+// 	space: [\s\t]+
 
 class lexer {
 public:

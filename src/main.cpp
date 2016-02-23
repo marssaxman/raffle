@@ -16,11 +16,11 @@
 struct output: public ast::builder {
 	std::stack<std::string> nodes;
 	virtual void build_blank(location l) override {
-		nodes.push("_");
+		nodes.push("?");
 	}
 	virtual void build_leaf(
 			location l, ast::leaf::tag id, std::string t) override {
-		nodes.push(id == ast::leaf::string? "\"" + t + "\"": t);
+		nodes.push(t);
 	}
 	virtual void build_branch(location l, ast::branch::tag t) override {
 		std::string right = nodes.top();
@@ -45,7 +45,10 @@ struct output: public ast::builder {
 			case ast::branch::neq: opname = "!="; break;
 			case ast::branch::nlt: opname = "!<"; break;
 			case ast::branch::ngt: opname = "!>"; break;
-			case ast::branch::apply: opname = "call"; break;
+			case ast::branch::apply: opname = "apply"; break;
+			case ast::branch::invoke: opname = "call"; break;
+			case ast::branch::slice: opname = "slice"; break;
+			case ast::branch::extend: opname = "extend"; break;
 			case ast::branch::pipeline: opname = "."; break;
 			case ast::branch::assign: opname = "<-"; break;
 			case ast::branch::capture: opname = "->"; break;
@@ -54,7 +57,7 @@ struct output: public ast::builder {
 			case ast::branch::typealias: opname = "::="; break;
 			case ast::branch::range: opname = ".."; break;
 			case ast::branch::sequence: opname = ";"; break;
-			case ast::branch::tuple: opname = ","; break;
+			case ast::branch::pair: opname = ","; break;
 		}
 		nodes.push("(" + opname + " " + left + " " + right + ")");
 	}

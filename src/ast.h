@@ -46,8 +46,9 @@ struct leaf: public node {
 
 struct branch: public node {
 	typedef enum {
-		sequence, tuple, range, conjoin, disjoin, exclude,
-		apply, pipeline, assign, capture, declare, define, typealias,
+		sequence, pair, range, conjoin, disjoin, exclude,
+		apply, invoke, slice, extend, pipeline,
+		assign, capture, declare, define, typealias,
 		add, sub, mul, div, rem, shl, shr, eq, gt, lt, neq, ngt, nlt,
 	} tag;
 	tag id;
