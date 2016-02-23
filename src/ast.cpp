@@ -9,14 +9,22 @@
 
 using namespace ast;
 
+void blank::accept(visitor &v) {
+	v.visit(*this);
+}
+
 void leaf::accept(visitor &v) {
 	v.visit(*this);
 }
 
-branch::branch(tag o, ptr &&l, ptr &&r):
-		id(o), left(std::move(l)), right(std::move(r)) {
+branch::branch(location loc, tag i, ptr &&l, ptr &&r):
+		node(loc), id(i), left(std::move(l)), right(std::move(r)) {
 	assert(left);
 	assert(right);
+}
+
+location branch::treeloc() {
+	return left->treeloc() + nodeloc() + right->treeloc();
 }
 
 void branch::accept(visitor &v) {

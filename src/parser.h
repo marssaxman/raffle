@@ -41,17 +41,17 @@ private:
 
 	// binary operators waiting for operands
 	struct oprec {
+		location loc;
 		ast::branch::tag id;
 		precedence prec;
-		location loc;
 	};
 	std::stack<oprec> ops;
 	bool expecting_term = true;
 
 	// saved state for contexts outside the current expression
 	struct context {
-		token::delim type;
 		location loc;
+		token::delim type;
 		std::stack<oprec> ops;
 	};
 	std::stack<context> outer;
@@ -60,7 +60,7 @@ private:
 	void reduce(precedence);
 	void prep_term(location);
 	void prep_operator(location);
-	void push(ast::branch::tag id, precedence prec, location loc);
+	void push(location, ast::branch::tag, precedence);
 	void close(location);
 
 	// Client that actually builds the AST we specify

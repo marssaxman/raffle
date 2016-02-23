@@ -6,7 +6,6 @@
 
 #include "parser.h"
 #include <map>
-#include <assert.h>
 
 void parser::token_eof(location loc) {
 	if (!outer.empty()) {
@@ -18,17 +17,17 @@ void parser::token_eof(location loc) {
 
 void parser::token_number(location loc, std::string text) {
 	prep_term(loc);
-	out.build_leaf(ast::leaf::number, text, loc);
+	out.build_leaf(loc, ast::leaf::number, text);
 }
 
 void parser::token_identifier(location loc, std::string text) {
 	prep_term(loc);
-	out.build_leaf(ast::leaf::symbol, text, loc);
+	out.build_leaf(loc, ast::leaf::symbol, text);
 }
 
 void parser::token_string(location loc, std::string text) {
 	prep_term(loc);
-	out.build_leaf(ast::leaf::string, text, loc);
+	out.build_leaf(loc, ast::leaf::string, text);
 }
 
 void parser::token_underscore(location loc) {
@@ -38,7 +37,7 @@ void parser::token_underscore(location loc) {
 
 void parser::token_open(location loc, token::delim c) {
 	prep_term(loc);
-	context current{c, loc, std::move(ops)};
+	context current{loc, c, std::move(ops)};
 	outer.push(std::move(current));
 	expecting_term = true;
 }
@@ -100,7 +99,7 @@ void parser::token_symbol(location loc, std::string text) {
 		out.build_blank(loc);
 		prec = precedence::prefix;
 	}
-	push(iter->second.id, prec, loc);
+	push(loc, iter->second.id, prec);
 }
 
 void parser::reduce(precedence prec) {
@@ -112,21 +111,21 @@ void parser::reduce(precedence prec) {
 	while (!ops.empty()) {
 		if (prec > ops.top().prec) break;
 		if (rightassoc && prec == ops.top().prec) break;
-		out.build_branch(ops.top().id, ops.top().loc);
+		out.build_branch(ops.top().loc, ops.top().id);
 		ops.pop();
 	}
 }
 
 void parser::prep_term(location loc) {
 	if (!expecting_term) {
-		push(ast::branch::apply, precedence::primary, loc);
+		push(loc, ast::branch::apply, precedence::primary);
 	}
 	expecting_term = false;
 }
 
-void parser::push(ast::branch::tag id, precedence prec, location loc) {
+void parser::push(location loc, ast::branch::tag id, precedence prec) {
 	reduce(prec);
-	ops.push({id, prec, loc});
+	ops.push({loc, id, prec});
 	expecting_term = true;
 }
 

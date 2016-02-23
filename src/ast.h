@@ -20,9 +20,18 @@ typedef std::unique_ptr<node> ptr;
 struct visitor;
 
 struct node {
+	node(location l): tk_loc(l) {}
 	virtual ~node() {}
 	virtual void accept(visitor&) = 0;
-	virtual location loc() = 0;
+	location nodeloc() { return tk_loc; }
+	virtual location treeloc() { return nodeloc(); }
+private:
+	location tk_loc;
+};
+
+struct blank: public node {
+	using node::node;
+	virtual void accept(visitor &v) override;
 };
 
 struct leaf: public node {
@@ -31,38 +40,34 @@ struct leaf: public node {
 	} tag;
 	tag id;
 	std::string text;
-	leaf(tag o, std::string t, location l): id(o), text(t), tk_loc(l) {}
+	leaf(location loc, tag i, std::string t): node(loc), id(i), text(t) {}
 	virtual void accept(visitor &v) override;
-	virtual location loc() override { return tk_loc; }
-private:
-	location tk_loc;
 };
 
 struct branch: public node {
 	typedef enum {
-		sequence, tuple, range,
+		sequence, tuple, range, conjoin, disjoin, exclude,
 		apply, pipeline, assign, capture, declare, define, typealias,
-		add, sub, mul, div, rem, shl, shr,
-		conjoin, disjoin, exclude,
-		eq, gt, lt, neq, ngt, nlt,
+		add, sub, mul, div, rem, shl, shr, eq, gt, lt, neq, ngt, nlt,
 	} tag;
 	tag id;
 	ptr left;
 	ptr right;
-	branch(tag o, ptr &&l, ptr &&r);
-	virtual location loc() override { return left->loc() + right->loc(); }
+	branch(location, tag, ptr &&l, ptr &&r);
+	virtual location treeloc() override;
 	virtual void accept(visitor &v) override;
 };
 
 struct visitor {
+	virtual void visit(blank&) {}
 	virtual void visit(leaf&) {}
 	virtual void visit(branch&) {}
 };
 
 struct builder {
 	virtual void build_blank(location) = 0;
-	virtual void build_leaf(ast::leaf::tag, std::string, location) = 0;
-	virtual void build_branch(ast::branch::tag, location) = 0;
+	virtual void build_leaf(location, leaf::tag, std::string) = 0;
+	virtual void build_branch(location, branch::tag) = 0;
 };
 
 } // namespace ast
