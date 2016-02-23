@@ -8,10 +8,116 @@
 #include <map>
 #include <assert.h>
 
-void parser::state::commit() {
-	oprec op = ops.top();
+void parser::token_eof(location loc) {
+	
+}
+
+void parser::token_number(location loc, std::string text) {
+	term(ast::leaf::number, text, loc);
+}
+
+void parser::token_identifier(location loc, std::string text) {
+	out.build_leaf(ast::leaf::symbol, text, loc);
+}
+
+void parser::token_string(location loc, std::string text) {
+	out.build_leaf(ast::leaf::string, text, loc);
+}
+
+void parser::token_underscore(location loc) {
+	out.build_blank(loc);
+}
+
+void parser::token_open(location loc, token::delim c) {
+}
+
+void parser::token_close(location loc, token::delim c) {
+}
+
+void parser::token_symbol(location loc, std::string text) {
+	struct opdesc {
+		ast::binary::opcode id;
+		precedence prec;
+	};
+	static std::map<std::string, opdesc> ops = {
+		{";", {ast::branch::sequence, precedence::structure}},
+		{",", {ast::branch::tuple, precedence::structure}},
+		{":", {ast::branch::declare, precedence::binding}},
+		{":=", {ast::branch::define, precedence::binding}},
+		{"::=", {ast::branch::typealias, precedence::binding}},
+		{"<-", {ast::branch::assign, precedence::binding}},
+		{"->", {ast::branch::capture, precedence::binding}},
+		{"=", {ast::branch::eq, precedence::relation}},
+		{"<", {ast::branch::lt, precedence::relation}},
+		{">", {ast::branhc::gt, precedence::relation}},
+		{"!=", {ast::branch::neq, precedence::relation}},
+		{"!<", {ast::branch::nlt, precedence::relation}},
+		{"!>", {ast::branch::ngt, precedence::relation}},
+		{"+", {ast::branch::add, precedence::additive}},
+		{"-", {ast::branch::sub, precedence::additive}},
+		{"|", {ast::branch::disjoin, precedence::additive}},
+		{"^", {ast::branch::exclude, precedence::additive}},
+		{"..", {ast::branch::range, precedence::additive}},
+		{"!", {ast::branch::exclude, precedence::additive}},
+		{"*", {ast::branch::mul, precedence::multiplicative}},
+		{"/", {ast::branch::div, precedence::multiplicative}},
+		{"%", {ast::branch::rem, precedence::multiplicative}},
+		{"&", {ast::branch::conjoin, precedence::multiplicative}},
+		{"<<", {ast::branch::shl, precedence::multiplicative}},
+		{">>", {ast::branch::shr, precedence::multiplicative}},
+		{".", {ast::branch::pipeline, precedence::primary}}
+	};
+	auto iter = ops.find(text);
+	if (iter == ops.end()) {
+		err.parser_unexpected(l);
+		return;
+	}
+	precedence prec = iter->second.prec;
+	if (expecting_term) {
+		// Allow this operator to be used as a prefix by giving it a blank
+		// left operand. The semantic analyzer can figure out later whether
+		// that actually makes any sense.
+		out.build_blank(loc);
+		prec = precedence::prefix;
+	}
+	push(iter->second.id, prec, l);
+}
+
+void parser::commit() {
+	out.build_branch(ops.top().id, ops.top().loc);
 	ops.pop();
-	emit(new ast::binary(op.id, pop(), cur()));
+}
+
+void parser::reduce(precedence prec) {
+	switch (prec) {
+		case precedence::binding:
+		case precedence::prefix:
+			// right-associative
+			while (!ops.empty() && prec < ops.top().prec) {
+				commit();
+			}
+			break;
+		default:
+			// left-associative
+			while (!ops.empty() && prec <= ops.top().prec) {
+				commit();
+			}
+			break;
+	}
+}
+
+void parser::term(ast::leaf::tag id, std::string text, location loc) {
+	if (!expecting_term) {
+		push(ast::branch::apply, precedence::primary, loc);
+	}
+	out.build_leaf(id, text, loc);
+	expecting_term = false;
+}
+
+void parser::push(ast::branch::tag id, precedence prec, location loc) {
+	reduce(prec);
+	ops.push({id, prec, loc});
+	expecting_term = true;
 }
 
 void parser::state::close(location l, ast::ostream &out, error &err) {
@@ -36,43 +142,6 @@ bool parser::state::expecting_term() {
 	return !exp;
 }
 
-void parser::state::prep(precedence prec) {
-	switch (prec) {
-		case precedence::binding:
-		case precedence::prefix:
-			// right-associative
-			while (!ops.empty() && prec < ops.top().prec) {
-				commit();
-			}
-			break;
-		default:
-			// left-associative
-			while (!ops.empty() && prec <= ops.top().prec) {
-				commit();
-			}
-			break;
-	}
-}
-
-void parser::state::prefix(oprec op, error &err) {
-	if (expecting_term()) {
-		prep(op.prec);
-		ops.push(op);
-		vals.emplace(new ast::wildcard(op.loc));
-	} else {
-		err.parser_unexpected(op.loc);
-	}
-}
-
-void parser::state::infix(oprec op, error &err) {
-	if (!expecting_term()) {
-		prep(op.prec);
-		ops.push(op);
-		vals.push(std::move(exp));
-	} else {
-		err.parser_missing_left_operand(op.loc);
-	}
-}
 
 void parser::state::term(ast::node *n) {
 	if (!expecting_term()) {

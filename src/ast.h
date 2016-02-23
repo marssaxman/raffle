@@ -17,7 +17,6 @@ namespace ast {
 
 struct node;
 typedef std::unique_ptr<node> ptr;
-
 struct visitor;
 
 struct node {
@@ -26,106 +25,44 @@ struct node {
 	virtual location loc() = 0;
 };
 
-struct number: public node {
+struct leaf: public node {
+	typedef enum {
+		number, string, symbol
+	} tag;
+	tag id;
 	std::string text;
-	number(std::string t, location l): text(t), tk_loc(l) {}
+	leaf(tag o, std::string t, location l): id(o), text(t), tk_loc(l) {}
 	virtual void accept(visitor &v) override;
 	virtual location loc() override { return tk_loc; }
 private:
 	location tk_loc;
 };
 
-struct string: public node {
-	std::string text;
-	string(std::string t, location l): text(t), tk_loc(l) {}
-	virtual void accept(visitor &v) override;
-	virtual location loc() override { return tk_loc; }
-private:
-	location tk_loc;
-};
-
-struct symbol: public node {
-	std::string text;
-	symbol(std::string t, location l);
-	virtual void accept(visitor &v) override;
-	virtual location loc() override;
-private:
-	location tk_loc;
-};
-
-struct wildcard: public node {
-	wildcard(location l): tk_loc(l) {}
-	virtual void accept(visitor &v) override;
-	virtual location loc() override { return tk_loc; }
-private:
-	location tk_loc;
-};
-
-struct group: public node {
-	ptr source;
-	group(location l, ptr &&s, location r);
-	virtual location loc() override { return openloc + closeloc; }
-private:
-	location openloc;
-	location closeloc;
-};
-
-struct parens: public group {
-	using group::group;
-	virtual void accept(visitor &v) override;
-};
-
-struct brackets: public group {
-	using group::group;
-	virtual void accept(visitor &v) override;
-};
-
-struct braces: public group {
-	using group::group;
-	virtual void accept(visitor &v) override;
-};
-
-struct binary: public node {
+struct branch: public node {
 	typedef enum {
 		sequence, tuple, range,
 		apply, pipeline, assign, capture, declare, define, typealias,
 		add, sub, mul, div, rem, shl, shr,
 		conjoin, disjoin, exclude,
 		eq, gt, lt, neq, ngt, nlt,
-	} opcode;
-	opcode id;
+	} tag;
+	tag id;
 	ptr left;
 	ptr right;
-	binary(opcode o, ptr &&l, ptr &&r);
+	branch(tag o, ptr &&l, ptr &&r);
 	virtual location loc() override { return left->loc() + right->loc(); }
 	virtual void accept(visitor &v) override;
 };
 
 struct visitor {
-	virtual void visit(node&) {}
-	virtual void visit(number &n) { visit((node&)n); }
-	virtual void visit(string &n) { visit((node&)n); }
-	virtual void visit(symbol &n) { visit((node&)n); }
-	virtual void visit(wildcard &n) { visit((node&)n); }
-	virtual void visit(group &n) { visit((node&)n); }
-	virtual void visit(parens &n) { visit((group&)n); }
-	virtual void visit(brackets &n) { visit((group&)n); }
-	virtual void visit(braces &n) { visit((group&)n); }
-	virtual void visit(binary &n) { visit((node&)n); }
+	virtual void visit(leaf&) {}
+	virtual void visit(branch&) {}
 };
 
-struct ostream {
-	virtual ostream &operator<<(ptr&&) = 0;
-};
-
-struct processor: public ostream, protected visitor {
-	processor(ostream &o): out(o) {}
-	virtual ostream &operator<<(ptr&&) override;
-protected:
-	void send(ptr &&n);
-private:
-	ptr replace;
-	ostream &out;
+struct builder {
+	virtual void build_blank(location) = 0;
+	virtual void build_leaf(ast::leaf::tag, std::string, location) = 0;
+	virtual void build_branch(ast::branch::tag, location) = 0;
 };
 
 } // namespace ast
