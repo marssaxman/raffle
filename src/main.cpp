@@ -8,7 +8,6 @@
 #include <fstream>
 #include "lexer.h"
 #include "parser.h"
-#include "resolver.h"
 #include "errors.h"
 #include "printer.h"
 
@@ -29,8 +28,7 @@ struct output: public ast::ostream {
 static int run(std::istream &i) {
 	errors e;
 	output o;
-	resolver r(o, e);
-	parser p(r, e);
+	parser p(o, e);
 	lexer l(p, e);
 	l.read_file(i);
 	o.print();

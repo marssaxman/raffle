@@ -8,12 +8,11 @@
 #define RESOLVER_H
 
 #include "ast.h"
-#include <map>
 
 // The resolver receives an AST, matches symbol references with definitions,
 // and produces a higher-order AST, a "lambda syntax tree", where bindings are
 // represented by lambda capture and function application.
-struct resolver: public ast::processor {
+struct resolver {
 	struct error {
 		virtual void resolver_undefined(location) = 0;
 		virtual void resolver_redefined(location, location) = 0;
@@ -22,9 +21,8 @@ struct resolver: public ast::processor {
 		virtual void resolver_unexpected_constraint(location) = 0;
 		virtual void resolver_unexpected_wildcard(location) = 0;
 	};
-	resolver(ast::ostream &o, error &e): ast::processor(o), err(e) {}
+	resolver(error &e): err(e) {}
 private:
-	virtual void visit(ast::binary&) override;
 	error &err;
 };
 

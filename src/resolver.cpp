@@ -35,10 +35,4 @@
 // So: there we go. First job, turn the tree inside out. Second job, match all
 // the names up with symbols.
 
-void resolver::visit(ast::binary &n) {
-	// capture ::= left -> right
-	// Reduce to a lambda expression, substituting 'parameter' for 'left'
-	// wherever it occurs inside 'right'.
-	
-}
 
