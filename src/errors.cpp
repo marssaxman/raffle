@@ -35,38 +35,15 @@ void errors::parser_unexpected(location l) {
 	report(l, "syntax error");
 }
 
-void errors::parser_missing_left_operand(location l) {
-	report(l, "expected expression before this operator");
+void errors::parser_mismatched_delimiter(location l) {
+	report(l, "wrong closing delimiter for this expression");
 }
 
-void errors::parser_missing_right_operand(location l) {
-	report(l, "expected expression after this operator");
+void errors::parser_unclosed_delimiter(location l) {
+	report(l, "opening delimiter is never closed");
 }
 
-void errors::parser_expected(location l, std::string what, location prev) {
-	report(l, "expected " + what, prev);
+void errors::parser_unexpected_delimiter(location l) {
+	report(l, "no opening to match this closing delimiter");
 }
 
-void errors::resolver_undefined(location l) {
-	report(l, "undefined symbol");
-}
-
-void errors::resolver_redefined(location cur, location prev) {
-	report(cur, "symbol already defined", prev);
-}
-
-void errors::resolver_unexpected_definition(location l) {
-	report(l, "unexpected definition expression");
-}
-
-void errors::resolver_unexpected_target(location l) {
-	report(l, "unexpected binding target expression");
-}
-
-void errors::resolver_unexpected_constraint(location l) {
-	report(l, "unexpected type constraint expression");
-}
-
-void errors::resolver_unexpected_wildcard(location l) {
-	report(l, "unexpected wildcard outside pattern expression");
-}

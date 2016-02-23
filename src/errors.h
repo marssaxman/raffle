@@ -9,24 +9,14 @@
 
 #include "lexer.h"
 #include "parser.h"
-#include "resolver.h"
 
-struct errors:
-		public lexer::error,
-		public parser::error,
-		public resolver::error {
+struct errors: public lexer::error, public parser::error {
 	virtual void lexer_unknown(location, char) override;
 	virtual void lexer_nonterminated(location) override;
 	virtual void parser_unexpected(location) override;
-	virtual void parser_missing_left_operand(location) override;
-	virtual void parser_missing_right_operand(location) override;
-	virtual void parser_expected(location, std::string, location) override;
-	virtual void resolver_undefined(location) override;
-	virtual void resolver_redefined(location, location) override;
-	virtual void resolver_unexpected_definition(location) override;
-	virtual void resolver_unexpected_target(location) override;
-	virtual void resolver_unexpected_constraint(location) override;
-	virtual void resolver_unexpected_wildcard(location) override;
+	virtual void parser_mismatched_delimiter(location) override;
+	virtual void parser_unclosed_delimiter(location) override;
+	virtual void parser_unexpected_delimiter(location) override;
 private:
 	void print_loc(location);
 	void report(location, std::string message);

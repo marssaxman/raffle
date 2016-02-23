@@ -13,9 +13,9 @@
 struct parser: public token::delegate {
 	struct error {
 		virtual void parser_unexpected(location) = 0;
-		virtual void parser_missing_left_operand(location) = 0;
-		virtual void parser_missing_right_operand(location) = 0;
-		virtual void parser_expected(location, std::string, location) = 0;
+		virtual void parser_mismatched_delimiter(location) = 0;
+		virtual void parser_unclosed_delimiter(location) = 0;
+		virtual void parser_unexpected_delimiter(location) = 0;
 	};
 	parser(ast::builder &o, error &e): out(o), err(e) {}
 	virtual void token_eof(location) override;
@@ -57,8 +57,11 @@ private:
 	std::stack<context> outer;
 
 	// common state management for various types of tokens
-	void commit();
 	void reduce(precedence);
+	void prep_term(location);
+	void prep_operator(location);
+	void push(ast::branch::tag id, precedence prec, location loc);
+	void close(location);
 
 	// Client that actually builds the AST we specify
 	ast::builder &out;

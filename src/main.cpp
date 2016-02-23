@@ -9,19 +9,51 @@
 #include "lexer.h"
 #include "parser.h"
 #include "errors.h"
-#include "printer.h"
 
 #include <unistd.h>
 
-struct output: public ast::ostream {
-	virtual ast::ostream &operator<<(ast::ptr &&n) override {
-		result = std::move(n);
+struct output: public ast::builder {
+	virtual void build_blank(location l) override {
+		std::cout << "_ ";
 	}
-	ast::ptr result;
-	void print() {
-		printer p(std::cout);
-		if (result) result->accept(p);
-		std::cout << std::endl;
+	virtual void build_leaf(
+			ast::leaf::tag id, std::string t, location l) override {
+		if (id == ast::leaf::string) {
+			std::cout << "\"" << t << "\"";
+		} else {
+			std::cout << t;
+		}
+		std::cout << " ";
+	}
+	virtual void build_branch(ast::branch::tag t, location l) override {
+		switch (t) {
+			case ast::branch::add: std::cout << "+ "; break;
+			case ast::branch::sub: std::cout << "- "; break;
+			case ast::branch::mul: std::cout << "* "; break;
+			case ast::branch::div: std::cout << "/ "; break;
+			case ast::branch::rem: std::cout << "% "; break;
+			case ast::branch::shl: std::cout << "<< "; break;
+			case ast::branch::shr: std::cout << ">> "; break;
+			case ast::branch::conjoin: std::cout << "& "; break;
+			case ast::branch::disjoin: std::cout << "| "; break;
+			case ast::branch::exclude: std::cout << "^ "; break;
+			case ast::branch::eq: std::cout << "= "; break;
+			case ast::branch::lt: std::cout << "< "; break;
+			case ast::branch::gt: std::cout << "> "; break;
+			case ast::branch::neq: std::cout << "!= "; break;
+			case ast::branch::nlt: std::cout << "!< "; break;
+			case ast::branch::ngt: std::cout << "!> "; break;
+			case ast::branch::apply: break;
+			case ast::branch::pipeline: std::cout << "."; break;
+			case ast::branch::assign: std::cout << "<- "; break;
+			case ast::branch::capture: std::cout << "-> "; break;
+			case ast::branch::declare: std::cout << ":= "; break;
+			case ast::branch::define: std::cout << ": "; break;
+			case ast::branch::typealias: std::cout << "::= "; break;
+			case ast::branch::range: std::cout << ".."; break;
+			case ast::branch::sequence: std::cout << "; "; break;
+			case ast::branch::tuple: std::cout << ", "; break;
+		}
 	}
 };
 
@@ -31,7 +63,6 @@ static int run(std::istream &i) {
 	parser p(o, e);
 	lexer l(p, e);
 	l.read_file(i);
-	o.print();
 }
 
 int main(int argc, const char *argv[]) {
@@ -43,7 +74,6 @@ int main(int argc, const char *argv[]) {
 			parser p(o, e);
 			lexer l(p, e);
 			l.read_line(line);
-			o.print();
 			std::cout << std::endl << "$> ";
 		}
 		return EXIT_SUCCESS;
