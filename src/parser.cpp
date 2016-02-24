@@ -110,6 +110,7 @@ void parser::reduce(precedence prec) {
 	switch (prec) {
 		case precedence::binding:
 		case precedence::prefix: rightassoc = true;
+		default: rightassoc = false;
 	}
 	while (!ops.empty()) {
 		if (prec > ops.top().prec) break;

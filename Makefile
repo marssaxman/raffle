@@ -6,7 +6,7 @@ raffle: bin/rfl
 include srctree.mk
 -include $(call findtype, d, obj)
 
-CXXFLAGS+=-MD -MP -Werror -g -fvisibility=hidden
+CXXFLAGS+=-MD -MP -Werror -g -fvisibility=hidden -Wswitch
 
 bin/rfl: $(call cxx_objs, src, obj)
 	@mkdir -p $(@D)
