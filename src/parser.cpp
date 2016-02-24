@@ -32,7 +32,7 @@ void parser::token_string(location loc, std::string text) {
 
 void parser::token_underscore(location loc) {
 	prep_term(loc);
-	out.build_blank(loc);
+	out.build_atom(loc, ast::atom::wildcard);
 }
 
 void parser::token_open(location loc, token::delim c) {
@@ -105,7 +105,7 @@ void parser::token_symbol(location loc, std::string text) {
 	}
 	precedence prec = iter->second.prec;
 	if (expecting_term) {
-		out.build_blank(loc);
+		out.build_atom(loc, ast::atom::null);
 		prec = precedence::prefix;
 	}
 	push(loc, iter->second.id, prec);
@@ -140,7 +140,7 @@ void parser::push(location loc, ast::branch::tag id, precedence prec) {
 
 void parser::close(location loc) {
 	if (expecting_term) {
-		out.build_blank(loc);
+		out.build_atom(loc, ast::atom::null);
 	}
 	reduce(precedence::none);
 }

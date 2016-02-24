@@ -9,7 +9,7 @@
 
 using namespace ast;
 
-void blank::accept(visitor &v) {
+void atom::accept(visitor &v) {
 	v.visit(*this);
 }
 

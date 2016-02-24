@@ -15,8 +15,11 @@
 
 struct output: public ast::builder {
 	std::stack<std::string> nodes;
-	virtual void build_blank(location l) override {
-		nodes.push("?");
+	virtual void build_atom(location l, ast::atom::tag id) override {
+		switch (id) {
+			case ast::atom::wildcard: nodes.push("_"); break;
+			case ast::atom::null: nodes.push("?"); break;
+		}
 	}
 	virtual void build_leaf(
 			location l, ast::leaf::tag id, std::string t) override {

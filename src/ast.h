@@ -20,16 +20,22 @@ typedef std::unique_ptr<node> ptr;
 struct visitor;
 
 struct node {
-	node(location l): tk_loc(l) {}
 	virtual ~node() {}
 	virtual void accept(visitor&) = 0;
 	location nodeloc() { return tk_loc; }
 	virtual location treeloc() { return nodeloc(); }
+protected:
+	node(location l): tk_loc(l) {}
 private:
 	location tk_loc;
 };
 
-struct blank: public node {
+struct atom: public node {
+	typedef enum {
+		wildcard, null
+	} tag;
+	tag id;
+	atom(location loc, tag i): node(loc), id(i) {}
 	using node::node;
 	virtual void accept(visitor &v) override;
 };
@@ -60,13 +66,13 @@ struct branch: public node {
 };
 
 struct visitor {
-	virtual void visit(blank&) {}
+	virtual void visit(atom&) {}
 	virtual void visit(leaf&) {}
 	virtual void visit(branch&) {}
 };
 
 struct builder {
-	virtual void build_blank(location) = 0;
+	virtual void build_atom(location, atom::tag) = 0;
 	virtual void build_leaf(location, leaf::tag, std::string) = 0;
 	virtual void build_branch(location, branch::tag) = 0;
 };
