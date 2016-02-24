@@ -43,12 +43,12 @@ group      ::= '(' structure ')' | '[' sequence ']' | '{' sequence '}'
 # Operators and precedence
 
 From most loosely to most tightly associating:
-structure   ; ,
+sequence    ; ,
 binding     <- -> : := ::=
 relation    = < > != !< !>
 add/sub     + - | ^
 mul/div     * / % << >> &
-pipeline    .
+pipe        .
 All operators associate leftward except the binding operators.
 
 
