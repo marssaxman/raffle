@@ -17,7 +17,7 @@ struct parser: public token::delegate {
 		virtual void parser_unclosed_delimiter(location) = 0;
 		virtual void parser_unexpected_delimiter(location) = 0;
 	};
-	parser(ast::builder &o, error &e): out(o), err(e) {}
+	parser(ast::delegate &o, error &e): out(o), err(e) {}
 	virtual void token_eof(location) override;
 	virtual void token_number(location, std::string) override;
 	virtual void token_identifier(location, std::string) override;
@@ -44,6 +44,7 @@ private:
 		location loc;
 		ast::branch::tag id;
 		precedence prec;
+		std::string text;
 	};
 	std::stack<oprec> ops;
 	bool expecting_term = true;
@@ -60,11 +61,11 @@ private:
 	void reduce(precedence);
 	void prep_term(location);
 	void prep_operator(location);
-	void push(location, ast::branch::tag, precedence);
+	void push(oprec);
 	void close(location);
 
 	// Client that actually builds the AST we specify
-	ast::builder &out;
+	ast::delegate &out;
 	error &err;
 };
 

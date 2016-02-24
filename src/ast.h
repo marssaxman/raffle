@@ -52,8 +52,8 @@ struct leaf: public node {
 
 struct branch: public node {
 	typedef enum {
-		sequence, pair, range, conjoin, disjoin, exclude,
-		apply, invoke, slice, extend, pipeline,
+		apply, pipe, sequence,
+		pair, range, conjoin, disjoin, exclude,
 		assign, capture, declare, define, typealias,
 		add, sub, mul, div, rem, shl, shr, eq, gt, lt, neq, ngt, nlt,
 	} tag;
@@ -71,10 +71,10 @@ struct visitor {
 	virtual void visit(branch&) {}
 };
 
-struct builder {
-	virtual void build_atom(location, atom::tag) = 0;
-	virtual void build_leaf(location, leaf::tag, std::string) = 0;
-	virtual void build_branch(location, branch::tag) = 0;
+struct delegate {
+	virtual void ast_atom(location, atom::tag) = 0;
+	virtual void ast_leaf(location, leaf::tag, std::string) = 0;
+	virtual void ast_branch(location, branch::tag, std::string) = 0;
 };
 
 } // namespace ast
