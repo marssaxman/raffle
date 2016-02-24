@@ -10,11 +10,12 @@
 namespace lts {
 enum class atom { param, null, error, echo };
 enum class leaf { number, string, symbol };
-enum class branch { apply, lambda, match, join };
+enum class branch { apply, lambda, pair, match, join };
 struct delegate {
 	virtual void lts_atom(location, atom) = 0;
 	virtual void lts_leaf(location, leaf, std::string) = 0;
 	virtual void lts_branch(location, branch) = 0;
+	virtual void lts_swap() = 0;
 };
 } // namespace lts
 

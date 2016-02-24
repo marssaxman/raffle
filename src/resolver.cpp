@@ -7,60 +7,43 @@
 #include "resolver.h"
 
 void resolver::ast_atom(location loc, ast::atom::tag id) {
+	current_loc = loc;
 	switch (id) {
-		case ast::atom::wildcard:
-			// a function which has no context and returns any parameter value
-			out.lts_atom(loc, lts::atom::param);
-			out.lts_atom(loc, lts::atom::null);
-			out.lts_branch(loc, lts::branch::lambda);
-			break;
-		case ast::atom::null:
-			out.lts_atom(loc, lts::atom::null);
-			break;
+		case ast::atom::wildcard: echo(); break;
+		case ast::atom::null: null(); break;
 	}
 }
 
 void resolver::ast_leaf(location loc, ast::leaf::tag id, std::string t) {
-	lts::leaf tag;
+	current_loc = loc;
 	switch (id) {
-		case ast::leaf::number:
-			out.lts_leaf(loc, lts::leaf::number, t);
-			break;
-		case ast::leaf::string:
-			out.lts_leaf(loc, lts::leaf::string, t);
-			break;
-		case ast::leaf::symbol:
-			// the context is a function which returns a value when given the
-			// name of a variable; invoke it, supplying this variable symbol
-			out.lts_leaf(loc, lts::leaf::symbol, t);
-			out.lts_atom(loc, lts::atom::param);
-			out.lts_branch(loc, lts::branch::apply);
-			break;
+		case ast::leaf::number: number(t); break;
+		case ast::leaf::string: string(t); break;
+		case ast::leaf::symbol: param(); symbol(t); apply_LR(); break;
 	}
 }
 
 void resolver::ast_branch(location loc, ast::branch::tag id, std::string t) {
+	current_loc = loc;
 	switch (id) {
-		case ast::branch::add:
-		case ast::branch::sub:
-		case ast::branch::mul:
-		case ast::branch::div:
-		case ast::branch::rem:
-		case ast::branch::shl:
-		case ast::branch::shr:
-		case ast::branch::eq:
-		case ast::branch::gt:
-		case ast::branch::lt:
-		case ast::branch::neq:
-		case ast::branch::ngt:
-		case ast::branch::nlt:
-			out.lts_leaf(loc, lts::leaf::symbol, t);
-			out.lts_atom(loc, lts::atom::param);
-			out.lts_branch(loc, lts::branch::apply);
-			out.lts_branch(loc, lts::branch::apply);
-			out.lts_branch(loc, lts::branch::apply);
+		case ast::branch::apply: apply_LR(); break;
+		case ast::branch::pipe: apply_RL(); break;
+		case ast::branch::sequence: lambda_LR(); break;
+		// the "extend" subscript operation would be lambda_RL()
+		case ast::branch::assign:
+			swap(); echo(); lambda_RL(); match_RL(); param(); join_LR();
 			break;
-		default: err.resolver_unimplemented(loc);
+		case ast::branch::capture:
+			swap(); param(); match_LR(); apply_RL(); param(); lambda_RL();
+			break;
+		case ast::branch::declare:
+		case ast::branch::define:
+		case ast::branch::typealias:
+			err.resolver_unimplemented(loc);
+			break;
+		default:
+			pair_LR(); param(); symbol(t); apply_LR(); apply_RL();
+			break;
 	}
 }
 
