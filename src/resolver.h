@@ -21,6 +21,7 @@ struct resolver: public ast::delegate {
 private:
 	void swap() { out.lts_swap(); }
 	void param() { out.lts_atom(current_loc, lts::atom::param); }
+	void env() { out.lts_atom(current_loc, lts::atom::env); }
 	void null() { out.lts_atom(current_loc, lts::atom::null); }
 	void echo() { out.lts_atom(current_loc, lts::atom::echo); }
 	void leaf(lts::leaf i, std::string t) { out.lts_leaf(current_loc, i, t); }

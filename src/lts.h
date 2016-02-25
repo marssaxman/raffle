@@ -8,7 +8,7 @@
 #define LTS_H
 
 namespace lts {
-enum class atom { param, null, error, echo };
+enum class atom { param, env, null, echo };
 enum class leaf { number, string, symbol };
 enum class branch { apply, lambda, pair, match, join };
 struct delegate {

@@ -47,3 +47,7 @@ void errors::parser_unexpected_delimiter(location l) {
 	report(l, "no opening to match this closing delimiter");
 }
 
+void errors::resolver_unimplemented(location l) {
+	report(l, "mars hasn't gotten around to building that yet");
+}
+

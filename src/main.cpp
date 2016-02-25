@@ -11,27 +11,52 @@
 
 #include "lexer.h"
 #include "parser.h"
+#include "resolver.h"
 #include "errors.h"
 
-struct output: public ast::delegate {
+struct output: public lts::delegate {
 	std::stack<std::string> nodes;
-	virtual void ast_atom(location l, ast::atom::tag id) override {
+	virtual void lts_atom(location l, lts::atom id) override {
+		std::string t;
 		switch (id) {
-			case ast::atom::wildcard: nodes.push("_"); break;
-			case ast::atom::null: nodes.push("?"); break;
+			case lts::atom::param: t = "arg"; break;
+			case lts::atom::env: t = "env"; break;
+			case lts::atom::null: t = "null"; break;
+			case lts::atom::echo: t = "echo"; break;
 		}
-	}
-	virtual void ast_leaf(
-			location l, ast::leaf::tag id, std::string t) override {
 		nodes.push(t);
 	}
-	virtual void ast_branch(
-			location l, ast::branch::tag t, std::string opname) override {
+	virtual void lts_leaf(location l, lts::leaf id, std::string t) override {
+		nodes.push((id == lts::leaf::symbol)? "`" + t + "`": t);
+	}
+	virtual void lts_branch(location l, lts::branch id) override {
 		std::string right = nodes.top();
 		nodes.pop();
 		std::string left = nodes.top();
 		nodes.pop();
-		nodes.push("(" + opname + " " + left + " " + right + ")");
+		if (left.find_first_of(' ') != std::string::npos) {
+			left = "(" + left + ")";
+		}
+		if (right.find_first_of(' ') != std::string::npos) {
+			right = "(" + right + ")";
+		}
+		std::string t;
+		switch (id) {
+			case lts::branch::apply: nodes.push(left + " " + right); return;
+			case lts::branch::lambda: t = "\xC2\xA3"; break;
+			case lts::branch::pair: nodes.push(left + ", " + right); return;
+			case lts::branch::match: t = "\xC2\xBB"; break;
+			case lts::branch::join: t = "\xC2\xA6"; break;
+		}
+		nodes.push(left + " " + t + " " + right);
+	}
+	virtual void lts_swap() override {
+		std::string right = nodes.top();
+		nodes.pop();
+		std::string left = nodes.top();
+		nodes.pop();
+		nodes.push(right);
+		nodes.push(left);
 	}
 	void print() {
 		if (nodes.empty()) {
@@ -56,7 +81,8 @@ struct output: public ast::delegate {
 static int run(std::istream &i) {
 	errors e;
 	output o;
-	parser p(o, e);
+	resolver r(o, e);
+	parser p(r, e);
 	lexer l(p, e);
 	l.read_file(i);
 	o.print();
@@ -68,7 +94,8 @@ int main(int argc, const char *argv[]) {
 		for (std::string line; std::getline(std::cin, line);) {
 			errors e;
 			output o;
-			parser p(o, e);
+			resolver r(o, e);
+			parser p(r, e);
 			lexer l(p, e);
 			l.read_line(line);
 			o.print();
