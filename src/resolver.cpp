@@ -9,37 +9,85 @@
 void resolver::ast_atom(location loc, ast::atom::tag id) {
 	current_loc = loc;
 	switch (id) {
-		case ast::atom::wildcard: echo(); break;
-		case ast::atom::null: null(); break;
+		case ast::atom::wildcard:
+			echo();
+			break;
+		case ast::atom::null:
+			null();
+			break;
 	}
 }
 
 void resolver::ast_leaf(location loc, ast::leaf::tag id, std::string t) {
 	current_loc = loc;
 	switch (id) {
-		case ast::leaf::number: number(t); break;
-		case ast::leaf::string: string(t); break;
-		case ast::leaf::symbol: env(); symbol(t); apply_LR(); break;
+		case ast::leaf::number:
+			number(t);
+			break;
+		case ast::leaf::string:
+			string(t);
+			break;
+		case ast::leaf::symbol:
+			env();
+			symbol(t);
+			apply_LR();
+			break;
 	}
 }
 
 void resolver::ast_branch(location loc, ast::branch::tag id, std::string t) {
 	current_loc = loc;
 	switch (id) {
-		case ast::branch::apply: apply_LR(); break;
-		case ast::branch::pipe: apply_RL(); break;
-		case ast::branch::sequence: lambda_LR(); param(); apply_RL(); break;
+		case ast::branch::apply:
+			apply_LR();
+			break;
+		case ast::branch::pipe:
+			apply_RL();
+			break;
+		case ast::branch::sequence:
+			lambda_LR();
+			param();
+			apply_RL();
+			break;
 		case ast::branch::assign:
-			swap(); echo(); lambda_RL(); match_RL(); env(); join_LR();
+			swap();
+			echo();
+			lambda_RL();
+			match_RL();
+			env();
+			join_LR();
+			break;
+		case ast::branch::define:
+			swap();
+			echo();
+			lambda_RL();
+			match_RL();
+			env();
+			join_RL();
 			break;
 		case ast::branch::capture:
+			param();
+			swap();
+			echo();
+			lambda_RL();
+			match_RL();
+			env();
+			join_RL();
+			param();
+			apply_RL();
+			env();
+			lambda_RL();
+			break;
 		case ast::branch::declare:
-		case ast::branch::define:
 		case ast::branch::typealias:
 			err.resolver_unimplemented(loc);
 			break;
 		default:
-			pair_LR(); env(); symbol(t); apply_LR(); apply_RL();
+			pair_LR();
+			env();
+			symbol(t);
+			apply_LR();
+			apply_RL();
 			break;
 	}
 }
