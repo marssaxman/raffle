@@ -80,7 +80,7 @@ void binder::ast_branch(location loc, ast::branch id, std::string t) {
 			break;
 		case ast::branch::declare:
 		case ast::branch::typealias:
-			err.binder_unimplemented(loc);
+			err.report(loc, "not yet implemented");
 			break;
 		default:
 			pair_LR();

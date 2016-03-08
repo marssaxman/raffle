@@ -7,10 +7,11 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <string>
-#include <iostream>
+#include "errors.h"
 #include "location.h"
 #include "token.h"
+#include <string>
+#include <iostream>
 
 // lexical grammar:
 // 	file: (line '\n')*
@@ -29,11 +30,7 @@
 
 class lexer {
 public:
-	struct error {
-		virtual void lexer_unknown(location, char) = 0;
-		virtual void lexer_nonterminated(location) = 0;
-	};
-	lexer(token::delegate &o, error &e): out(o), err(e) {}
+	lexer(token::delegate &o, errors &e): out(o), err(e) {}
 	void read_line(const std::string&);
 	void read_file(std::istream &in);
 private:
@@ -44,7 +41,7 @@ private:
 	position pos;
 	location loc;
 	token::delegate &out;
-	error &err;
+	errors &err;
 };
 
 #endif //LEXER_H

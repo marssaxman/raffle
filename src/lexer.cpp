@@ -76,7 +76,18 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 		case ']': out.token_close(loc, token::delim::bracket); break;
 		case '}': out.token_close(loc, token::delim::brace); break;
 		case '_': out.token_underscore(loc); break;
-		default: err.lexer_unknown(loc, *tokenstart); break;
+		default: {
+			string msg;
+			char c = *tokenstart;
+			if (isprint(c)) {
+				msg = string(1, c);
+			} else {
+				static const char xdig[] = "0123456789ABCDEF";
+				char hex[5] {'\\', 'x', xdig[(c >> 4) & 0x0F], xdig[c & 0x0F]};
+				msg = string(hex);
+			}
+			err.report(loc, "unexpected character '" + msg + "'");
+		} break;
 	}
 }
 

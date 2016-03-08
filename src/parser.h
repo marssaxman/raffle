@@ -6,18 +6,15 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "errors.h"
 #include "token.h"
 #include "ast.h"
 #include <stack>
 
 struct parser: public token::delegate {
-	struct error {
-		virtual void parser_unexpected(location) = 0;
-		virtual void parser_mismatched_delimiter(location) = 0;
-		virtual void parser_unclosed_delimiter(location) = 0;
-		virtual void parser_unexpected_delimiter(location) = 0;
-	};
-	parser(ast::delegate &o, error &e): out(o), err(e) {}
+	parser(ast::delegate &o, errors &e): out(o), err(e) {}
+
+	// implementation of token::delegate
 	virtual void token_eof(location) override;
 	virtual void token_number(location, std::string) override;
 	virtual void token_identifier(location, std::string) override;
@@ -26,6 +23,7 @@ struct parser: public token::delegate {
 	virtual void token_open(location, token::delim) override;
 	virtual void token_close(location, token::delim) override;
 	virtual void token_symbol(location, std::string) override;
+
 private:
 	// the classic shunting-yard algorithm
 	enum class precedence {
@@ -66,7 +64,7 @@ private:
 
 	// Client that actually builds the AST we specify
 	ast::delegate &out;
-	error &err;
+	errors &err;
 };
 
 #endif //PARSER_H

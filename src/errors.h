@@ -7,23 +7,14 @@
 #ifndef ERRORS_H
 #define ERRORS_H
 
-#include "lexer.h"
-#include "parser.h"
-#include "binder.h"
+#include "location.h"
+#include <string>
 
-struct errors:
-		public lexer::error, public parser::error, public binder::error {
-	virtual void lexer_unknown(location, char) override;
-	virtual void lexer_nonterminated(location) override;
-	virtual void parser_unexpected(location) override;
-	virtual void parser_mismatched_delimiter(location) override;
-	virtual void parser_unclosed_delimiter(location) override;
-	virtual void parser_unexpected_delimiter(location) override;
-	virtual void binder_unimplemented(location) override;
+struct errors {
+	void report(location where, std::string message);
+	void report(location where, std::string message, location previous);
 private:
 	void print_loc(location);
-	void report(location, std::string message);
-	void report(location, std::string message, location);
 };
 
 #endif //ERRORS_H

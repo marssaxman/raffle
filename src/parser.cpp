@@ -9,7 +9,7 @@
 
 void parser::token_eof(location loc) {
 	if (!outer.empty()) {
-		err.parser_unclosed_delimiter(outer.top().loc);
+		err.report(outer.top().loc, "opening delimiter is never closed");
 		return;
 	}
 	close(loc);
@@ -46,11 +46,11 @@ void parser::token_open(location loc, token::delim c) {
 
 void parser::token_close(location loc, token::delim c) {
 	if (outer.empty()) {
-		err.parser_unexpected_delimiter(loc);
+		err.report(loc, "no opening to match this closing delimiter");
 		return;
 	}
 	if (outer.top().type != c) {
-		err.parser_mismatched_delimiter(loc);
+		err.report(loc, "wrong closing delimiter for this expression");
 		return;
 	}
 	close(loc);
@@ -94,7 +94,7 @@ void parser::token_symbol(location loc, std::string text) {
 	};
 	auto iter = ops.find(text);
 	if (iter == ops.end()) {
-		err.parser_unexpected(loc);
+		err.report(loc, "syntax error: unknown operator");
 		return;
 	}
 	precedence prec = iter->second.prec;

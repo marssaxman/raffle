@@ -7,14 +7,12 @@
 #ifndef BINDER_H
 #define BINDER_H
 
+#include "errors.h"
 #include "ast.h"
 #include "lts.h"
 
 struct binder: public ast::delegate {
-	struct error {
-		virtual void binder_unimplemented(location) = 0;
-	};
-	binder(lts::delegate &o, error &e): out(o), err(e) {}
+	binder(lts::delegate &o, errors &e): out(o), err(e) {}
 	virtual void ast_atom(location, ast::atom) override;
 	virtual void ast_leaf(location, ast::leaf, std::string) override;
 	virtual void ast_branch(location, ast::branch, std::string) override;
@@ -40,7 +38,7 @@ private:
 	void join_RL() { swap(); join_LR(); }
 	location current_loc;
 	lts::delegate &out;
-	error &err;
+	errors &err;
 };
 
 #endif //BINDER_H
