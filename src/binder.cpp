@@ -4,9 +4,9 @@
 // this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
-#include "resolver.h"
+#include "binder.h"
 
-void resolver::ast_atom(location loc, ast::atom id) {
+void binder::ast_atom(location loc, ast::atom id) {
 	current_loc = loc;
 	switch (id) {
 		case ast::atom::wildcard:
@@ -18,7 +18,7 @@ void resolver::ast_atom(location loc, ast::atom id) {
 	}
 }
 
-void resolver::ast_leaf(location loc, ast::leaf id, std::string t) {
+void binder::ast_leaf(location loc, ast::leaf id, std::string t) {
 	current_loc = loc;
 	switch (id) {
 		case ast::leaf::number:
@@ -35,7 +35,7 @@ void resolver::ast_leaf(location loc, ast::leaf id, std::string t) {
 	}
 }
 
-void resolver::ast_branch(location loc, ast::branch id, std::string t) {
+void binder::ast_branch(location loc, ast::branch id, std::string t) {
 	current_loc = loc;
 	switch (id) {
 		case ast::branch::apply:
@@ -80,7 +80,7 @@ void resolver::ast_branch(location loc, ast::branch id, std::string t) {
 			break;
 		case ast::branch::declare:
 		case ast::branch::typealias:
-			err.resolver_unimplemented(loc);
+			err.binder_unimplemented(loc);
 			break;
 		default:
 			pair_LR();

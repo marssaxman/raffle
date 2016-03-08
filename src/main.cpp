@@ -11,7 +11,7 @@
 
 #include "lexer.h"
 #include "parser.h"
-#include "resolver.h"
+#include "binder.h"
 #include "errors.h"
 
 struct output: public lts::delegate {
@@ -81,7 +81,7 @@ struct output: public lts::delegate {
 static int run(std::istream &i) {
 	errors e;
 	output o;
-	resolver r(o, e);
+	binder r(o, e);
 	parser p(r, e);
 	lexer l(p, e);
 	l.read_file(i);
@@ -94,7 +94,7 @@ int main(int argc, const char *argv[]) {
 		for (std::string line; std::getline(std::cin, line);) {
 			errors e;
 			output o;
-			resolver r(o, e);
+			binder r(o, e);
 			parser p(r, e);
 			lexer l(p, e);
 			l.read_line(line);

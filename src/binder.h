@@ -4,17 +4,17 @@
 // this paragraph and the above copyright notice. THIS SOFTWARE IS PROVIDED "AS
 // IS" WITH NO EXPRESS OR IMPLIED WARRANTY.
 
-#ifndef RESOLVER_H
-#define RESOLVER_H
+#ifndef BINDER_H
+#define BINDER_H
 
 #include "ast.h"
 #include "lts.h"
 
-struct resolver: public ast::delegate {
+struct binder: public ast::delegate {
 	struct error {
-		virtual void resolver_unimplemented(location) = 0;
+		virtual void binder_unimplemented(location) = 0;
 	};
-	resolver(lts::delegate &o, error &e): out(o), err(e) {}
+	binder(lts::delegate &o, error &e): out(o), err(e) {}
 	virtual void ast_atom(location, ast::atom) override;
 	virtual void ast_leaf(location, ast::leaf, std::string) override;
 	virtual void ast_branch(location, ast::branch, std::string) override;
@@ -43,5 +43,5 @@ private:
 	error &err;
 };
 
-#endif //RESOLVER_H
+#endif //BINDER_H
 
