@@ -42,7 +42,7 @@ private:
 	// binary operators waiting for operands
 	struct oprec {
 		location loc;
-		ast::branch::tag id;
+		ast::branch id;
 		precedence prec;
 		std::string text;
 	};

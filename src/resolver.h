@@ -15,9 +15,9 @@ struct resolver: public ast::delegate {
 		virtual void resolver_unimplemented(location) = 0;
 	};
 	resolver(lts::delegate &o, error &e): out(o), err(e) {}
-	virtual void ast_atom(location, ast::atom::tag) override;
-	virtual void ast_leaf(location, ast::leaf::tag, std::string) override;
-	virtual void ast_branch(location, ast::branch::tag, std::string) override;
+	virtual void ast_atom(location, ast::atom) override;
+	virtual void ast_leaf(location, ast::leaf, std::string) override;
+	virtual void ast_branch(location, ast::branch, std::string) override;
 private:
 	void swap() { out.lts_swap(); }
 	void param() { out.lts_atom(current_loc, lts::atom::param); }

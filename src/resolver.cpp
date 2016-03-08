@@ -6,7 +6,7 @@
 
 #include "resolver.h"
 
-void resolver::ast_atom(location loc, ast::atom::tag id) {
+void resolver::ast_atom(location loc, ast::atom id) {
 	current_loc = loc;
 	switch (id) {
 		case ast::atom::wildcard:
@@ -18,7 +18,7 @@ void resolver::ast_atom(location loc, ast::atom::tag id) {
 	}
 }
 
-void resolver::ast_leaf(location loc, ast::leaf::tag id, std::string t) {
+void resolver::ast_leaf(location loc, ast::leaf id, std::string t) {
 	current_loc = loc;
 	switch (id) {
 		case ast::leaf::number:
@@ -35,7 +35,7 @@ void resolver::ast_leaf(location loc, ast::leaf::tag id, std::string t) {
 	}
 }
 
-void resolver::ast_branch(location loc, ast::branch::tag id, std::string t) {
+void resolver::ast_branch(location loc, ast::branch id, std::string t) {
 	current_loc = loc;
 	switch (id) {
 		case ast::branch::apply:

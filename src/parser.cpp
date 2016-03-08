@@ -61,7 +61,7 @@ void parser::token_close(location loc, token::delim c) {
 
 void parser::token_symbol(location loc, std::string text) {
 	struct opdesc {
-		ast::branch::tag id;
+		ast::branch id;
 		precedence prec;
 	};
 	static std::map<std::string, opdesc> ops = {
