@@ -22,7 +22,7 @@ void parser::token_number(location loc, std::string text) {
 
 void parser::token_identifier(location loc, std::string text) {
 	prep_term(loc);
-	out.ast_leaf(loc, ast::leaf::symbol, text);
+	out.ast_leaf(loc, ast::leaf::identifier, text);
 }
 
 void parser::token_string(location loc, std::string text) {

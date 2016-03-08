@@ -27,7 +27,7 @@ void resolver::ast_leaf(location loc, ast::leaf id, std::string t) {
 		case ast::leaf::string:
 			string(t);
 			break;
-		case ast::leaf::symbol:
+		case ast::leaf::identifier:
 			env();
 			symbol(t);
 			apply_LR();

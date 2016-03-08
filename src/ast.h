@@ -16,7 +16,7 @@ enum class atom {
 	wildcard, null
 };
 enum class leaf {
-	number, string, symbol
+	number, string, identifier
 };
 enum class branch {
 	apply, pipe, sequence,
