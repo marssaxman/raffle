@@ -24,7 +24,7 @@ enum class branch {
 	assign, capture, declare, define, typealias,
 	add, sub, mul, div, rem, shl, shr, eq, gt, lt, neq, ngt, nlt,
 };
-struct delegate {
+struct builder {
 	virtual void ast_atom(location, atom) = 0;
 	virtual void ast_leaf(location, leaf, std::string) = 0;
 	virtual void ast_branch(location, branch, std::string) = 0;

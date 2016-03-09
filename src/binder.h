@@ -11,7 +11,7 @@
 #include "ast.h"
 #include "lts.h"
 
-struct binder: public ast::delegate {
+struct binder: public ast::builder {
 	binder(lts::delegate &o, errors &e): out(o), err(e) {}
 	virtual void ast_atom(location, ast::atom) override;
 	virtual void ast_leaf(location, ast::leaf, std::string) override;

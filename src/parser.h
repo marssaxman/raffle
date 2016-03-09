@@ -12,7 +12,7 @@
 #include <stack>
 
 struct parser: public token::delegate {
-	parser(ast::delegate &o, errors &e): out(o), err(e) {}
+	parser(ast::builder &o, errors &e): out(o), err(e) {}
 
 	// implementation of token::delegate
 	virtual void token_eof(location) override;
@@ -55,15 +55,13 @@ private:
 	};
 	std::stack<context> outer;
 
-	// common state management for various types of tokens
 	void reduce(precedence);
 	void prep_term(location);
 	void prep_operator(location);
 	void push(oprec);
 	void close(location);
 
-	// Client that actually builds the AST we specify
-	ast::delegate &out;
+	ast::builder &out;
 	errors &err;
 };
 
