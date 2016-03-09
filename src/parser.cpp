@@ -15,17 +15,17 @@ void parser::token_eof(location loc) {
 	close(loc);
 }
 
-void parser::token_number(location loc, std::string text) {
+void parser::token_number(std::string text, location loc) {
 	prep_term(loc);
 	out.ast_leaf(loc, ast::leaf::number, text);
 }
 
-void parser::token_identifier(location loc, std::string text) {
+void parser::token_identifier(std::string text, location loc) {
 	prep_term(loc);
 	out.ast_leaf(loc, ast::leaf::identifier, text);
 }
 
-void parser::token_string(location loc, std::string text) {
+void parser::token_string(std::string text, location loc) {
 	prep_term(loc);
 	out.ast_leaf(loc, ast::leaf::string, text);
 }
@@ -35,7 +35,7 @@ void parser::token_underscore(location loc) {
 	out.ast_atom(loc, ast::atom::wildcard);
 }
 
-void parser::token_open(location loc, token::delim c) {
+void parser::token_open(token::delim c, location loc) {
 	if (!expecting_term) {
 		push({loc, ast::branch::apply, precedence::primary});
 	}
@@ -44,7 +44,7 @@ void parser::token_open(location loc, token::delim c) {
 	expecting_term = true;
 }
 
-void parser::token_close(location loc, token::delim c) {
+void parser::token_close(token::delim c, location loc) {
 	if (outer.empty()) {
 		err.report(loc, "no opening to match this closing delimiter");
 		return;
@@ -59,7 +59,7 @@ void parser::token_close(location loc, token::delim c) {
 	expecting_term = false;
 }
 
-void parser::token_symbol(location loc, std::string text) {
+void parser::token_symbol(std::string text, location loc) {
 	struct opdesc {
 		ast::branch id;
 		precedence prec;

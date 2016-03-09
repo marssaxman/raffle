@@ -16,13 +16,13 @@ struct parser: public token::delegate {
 
 	// implementation of token::delegate
 	virtual void token_eof(location) override;
-	virtual void token_number(location, std::string) override;
-	virtual void token_identifier(location, std::string) override;
-	virtual void token_string(location, std::string) override;
+	virtual void token_number(std::string, location) override;
+	virtual void token_identifier(std::string, location) override;
+	virtual void token_string(std::string, location) override;
 	virtual void token_underscore(location) override;
-	virtual void token_open(location, token::delim) override;
-	virtual void token_close(location, token::delim) override;
-	virtual void token_symbol(location, std::string) override;
+	virtual void token_open(token::delim, location) override;
+	virtual void token_close(token::delim, location) override;
+	virtual void token_symbol(std::string, location) override;
 
 private:
 	// the classic shunting-yard algorithm

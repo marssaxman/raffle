@@ -18,13 +18,13 @@ enum class delim {
 };
 struct delegate {
 	virtual void token_eof(location) = 0;
-	virtual void token_number(location, std::string) = 0;
-	virtual void token_identifier(location, std::string) = 0;
-	virtual void token_string(location, std::string) = 0;
+	virtual void token_number(std::string, location) = 0;
+	virtual void token_identifier(std::string, location) = 0;
+	virtual void token_string(std::string, location) = 0;
 	virtual void token_underscore(location) = 0;
-	virtual void token_open(location, delim) = 0;
-	virtual void token_close(location, delim) = 0;
-	virtual void token_symbol(location, std::string) = 0;
+	virtual void token_open(delim, location) = 0;
+	virtual void token_close(delim, location) = 0;
+	virtual void token_symbol(std::string, location) = 0;
 };
 
 } // namespace token

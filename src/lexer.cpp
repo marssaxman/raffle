@@ -56,7 +56,7 @@ void lexer::read_file(std::istream &in) {
 #define ALL(X) switch(*i) {case X: adv(i, end); continue; default: break;}
 #define NOT(X) switch(*i) {case X: break; default: adv(i, end); continue;}
 #define UNTIL(X) switch(adv(i, end)) {case X: break; default: continue;}
-#define EMIT(X) out.X(loc, string(tokenstart, i))
+#define EMIT(X) out.X(string(tokenstart, i), loc)
 
 void lexer::next(string::const_iterator &i, string::const_iterator end) {
 	loc.begin = pos;
@@ -69,12 +69,12 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 		case '\'': MATCH(UNTIL('\'')); EMIT(token_string); break;
 		case '\"': MATCH(UNTIL('\"')); EMIT(token_string); break;
 		case '#': MATCH(NOT('\n')); break;
-		case '(': out.token_open(loc, token::delim::paren); break;
-		case '[': out.token_open(loc, token::delim::bracket); break;
-		case '{': out.token_open(loc, token::delim::brace); break;
-		case ')': out.token_close(loc, token::delim::paren); break;
-		case ']': out.token_close(loc, token::delim::bracket); break;
-		case '}': out.token_close(loc, token::delim::brace); break;
+		case '(': out.token_open(token::delim::paren, loc); break;
+		case '[': out.token_open(token::delim::bracket, loc); break;
+		case '{': out.token_open(token::delim::brace, loc); break;
+		case ')': out.token_close(token::delim::paren, loc); break;
+		case ']': out.token_close(token::delim::bracket, loc); break;
+		case '}': out.token_close(token::delim::brace, loc); break;
 		case '_': out.token_underscore(loc); break;
 		default: {
 			string msg;
