@@ -26,9 +26,10 @@ void binder::ast_branch(location loc, ast::branch id, std::string t) {
 		case ast::branch::apply: out.lts_apply_top(loc); break;
 		case ast::branch::pipe: out.lts_apply_next(loc); break;
 		case ast::branch::capture: out.lts_lambda(loc); break;
-		case ast::branch::sequence:
-		case ast::branch::assign:
+		case ast::branch::sequence: out.lts_eval(loc); break;
+		case ast::branch::assign: out.lts_bind(loc); break;
 		case ast::branch::declare:
+		case ast::branch::define:
 		case ast::branch::typealias:
 			err.report(loc, "operator '" + t + "' not yet implemented");
 			break;

@@ -45,6 +45,16 @@ struct output: public lts::builder {
 		string param = pop();
 		nodes.push("lambda " + param + " -> " + exp);
 	}
+	virtual void lts_bind(location l) override {
+		string val = pop();
+		string key = pop();
+		nodes.push("bind " + key + " -> " + val);
+	}
+	virtual void lts_eval(location l) override {
+		string exp = pop();
+		string ctx = pop();
+		nodes.push("eval " + ctx + " -> " + exp);
+	}
 	string pop() {
 		string v = nodes.top();
 		nodes.pop();
