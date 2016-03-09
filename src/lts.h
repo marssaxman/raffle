@@ -7,15 +7,18 @@
 #ifndef LTS_H
 #define LTS_H
 
+#include "location.h"
+#include <string>
+
 namespace lts {
-enum class atom { param, env, null, echo };
-enum class leaf { number, string, symbol };
-enum class branch { apply, lambda, pair, match, join };
-struct delegate {
-	virtual void lts_atom(location, atom) = 0;
-	virtual void lts_leaf(location, leaf, std::string) = 0;
-	virtual void lts_branch(location, branch) = 0;
-	virtual void lts_swap() = 0;
+struct builder {
+	virtual void lts_null(location) = 0;
+	virtual void lts_number(std::string, location) = 0;
+	virtual void lts_string(std::string, location) = 0;
+	virtual void lts_symbol(std::string, location) = 0;
+	virtual void lts_apply_top(location) = 0; // pop arg / apply it to next
+	virtual void lts_apply_next(location) = 0; // pop func / apply next to it
+	virtual void lts_lambda(location) = 0;
 };
 } // namespace lts
 

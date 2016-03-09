@@ -14,56 +14,48 @@
 #include "binder.h"
 #include "errors.h"
 
-struct output: public lts::delegate {
-	std::stack<std::string> nodes;
-	virtual void lts_atom(location l, lts::atom id) override {
-		std::string t;
-		switch (id) {
-			case lts::atom::param: t = "arg"; break;
-			case lts::atom::env: t = "env"; break;
-			case lts::atom::null: t = "null"; break;
-			case lts::atom::echo: t = "echo"; break;
-		}
+using std::string;
+
+struct output: public lts::builder {
+	std::stack<string> nodes;
+	virtual void lts_null(location l) override {
+		nodes.push("null");
+	}
+	virtual void lts_number(string t, location l) override {
 		nodes.push(t);
 	}
-	virtual void lts_leaf(location l, lts::leaf id, std::string t) override {
-		nodes.push((id == lts::leaf::symbol)? "`" + t + "`": t);
+	virtual void lts_string(string t, location l) override {
+		nodes.push(t);
 	}
-	virtual void lts_branch(location l, lts::branch id) override {
-		std::string right = nodes.top();
-		nodes.pop();
-		std::string left = nodes.top();
-		nodes.pop();
-		if (left.find_first_of(' ') != std::string::npos) {
-			left = "(" + left + ")";
-		}
-		if (right.find_first_of(' ') != std::string::npos) {
-			right = "(" + right + ")";
-		}
-		std::string t;
-		switch (id) {
-			case lts::branch::apply: nodes.push(left + " " + right); return;
-			case lts::branch::lambda: t = "\xC2\xA3"; break;
-			case lts::branch::pair: nodes.push(left + ", " + right); return;
-			case lts::branch::match: t = "\xC2\xBB"; break;
-			case lts::branch::join: t = "\xC2\xA6"; break;
-		}
-		nodes.push(left + " " + t + " " + right);
+	virtual void lts_symbol(string t, location l) override {
+		nodes.push("`" + t + "`");
 	}
-	virtual void lts_swap() override {
-		std::string right = nodes.top();
+	virtual void lts_apply_top(location l) override {
+		string arg = pop();
+		string func = pop();
+		nodes.push(func + " " + arg);
+	}
+	virtual void lts_apply_next(location l) override {
+		string func = pop();
+		string arg = pop();
+		nodes.push(func + " " + arg);
+	}
+	virtual void lts_lambda(location l) override {
+		string exp = pop();
+		string param = pop();
+		nodes.push("lambda " + param + " -> " + exp);
+	}
+	string pop() {
+		string v = nodes.top();
 		nodes.pop();
-		std::string left = nodes.top();
-		nodes.pop();
-		nodes.push(right);
-		nodes.push(left);
+		return (v.find_first_of(' ') != string::npos) ? ("(" + v + ")"): v;
 	}
 	void print() {
 		if (nodes.empty()) {
 			std::cout << "expression stack is empty" << std::endl;
 			return;
 		}
-		std::string top = nodes.top();
+		string top = nodes.top();
 		nodes.pop();
 		if (nodes.empty()) {
 			std::cout << top << std::endl;

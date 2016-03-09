@@ -7,88 +7,35 @@
 #include "binder.h"
 
 void binder::ast_atom(location loc, ast::atom id) {
-	current_loc = loc;
 	switch (id) {
-		case ast::atom::wildcard:
-			echo();
-			break;
-		case ast::atom::null:
-			null();
-			break;
+		case ast::atom::null: out.lts_null(loc); break;
+		default: err.report(loc, "not yet implemented");
 	}
 }
 
 void binder::ast_leaf(location loc, ast::leaf id, std::string t) {
-	current_loc = loc;
 	switch (id) {
-		case ast::leaf::number:
-			number(t);
-			break;
-		case ast::leaf::string:
-			string(t);
-			break;
-		case ast::leaf::identifier:
-			env();
-			symbol(t);
-			apply_LR();
-			break;
+		case ast::leaf::number: out.lts_number(t, loc); break;
+		case ast::leaf::string: out.lts_string(t, loc); break;
+		case ast::leaf::identifier: out.lts_symbol(t, loc); break;
 	}
 }
 
 void binder::ast_branch(location loc, ast::branch id, std::string t) {
-	current_loc = loc;
 	switch (id) {
-		case ast::branch::apply:
-			apply_LR();
-			break;
-		case ast::branch::pipe:
-			apply_RL();
-			break;
-		case ast::branch::sequence:
-			lambda_LR();
-			param();
-			apply_RL();
-			break;
-		case ast::branch::assign:
-			swap();
-			echo();
-			lambda_RL();
-			match_RL();
-			env();
-			join_LR();
-			break;
-		case ast::branch::define:
-			swap();
-			echo();
-			lambda_RL();
-			match_RL();
-			env();
-			join_RL();
-			break;
-		case ast::branch::capture:
-			param();
-			swap();
-			echo();
-			lambda_RL();
-			match_RL();
-			env();
-			join_RL();
-			param();
-			apply_RL();
-			env();
-			lambda_RL();
-			break;
-		case ast::branch::declare:
-		case ast::branch::typealias:
-			err.report(loc, "not yet implemented");
-			break;
+		case ast::branch::apply: out.lts_apply_top(loc); break;
+		case ast::branch::pipe: out.lts_apply_next(loc); break;
+		// sequence
+		// assign
+		case ast::branch::capture: out.lts_lambda(loc); break;
+		// declare
+		// define
+		// typealias
 		default:
-			pair_LR();
-			env();
-			symbol(t);
-			apply_LR();
-			apply_RL();
-			break;
+			out.lts_symbol(t, loc);
+			out.lts_apply_next(loc);
+			out.lts_apply_next(loc);
+
 	}
 }
 

@@ -19,9 +19,9 @@ enum class leaf {
 	number, string, identifier
 };
 enum class branch {
-	apply, pipe, sequence,
-	pair, range, conjoin, disjoin, exclude,
+	apply, pipe, sequence, pair, range,
 	assign, capture, declare, define, typealias,
+	and_join, or_join, xor_join, nand_join, nor_join, xnor_join,
 	add, sub, mul, div, rem, shl, shr, eq, gt, lt, neq, ngt, nlt,
 };
 struct builder {
