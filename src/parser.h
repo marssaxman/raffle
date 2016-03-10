@@ -19,7 +19,6 @@ struct parser: public token::delegate {
 	virtual void token_number(std::string, location) override;
 	virtual void token_identifier(std::string, location) override;
 	virtual void token_string(std::string, location) override;
-	virtual void token_underscore(location) override;
 	virtual void token_open(std::string, location) override;
 	virtual void token_close(std::string, location) override;
 	virtual void token_symbol(std::string, location) override;

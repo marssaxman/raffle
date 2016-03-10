@@ -16,7 +16,6 @@ struct delegate {
 	virtual void token_number(std::string, location) = 0;
 	virtual void token_identifier(std::string, location) = 0;
 	virtual void token_string(std::string, location) = 0;
-	virtual void token_underscore(location) = 0;
 	virtual void token_open(std::string, location) = 0;
 	virtual void token_close(std::string, location) = 0;
 	virtual void token_symbol(std::string, location) = 0;

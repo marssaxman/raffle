@@ -54,7 +54,9 @@ void lexer::read_file(std::istream &in) {
 	case 'S': case 's': case 'T': case 't': case 'U': case 'u': \
 	case 'V': case 'v': case 'W': case 'w': case 'X': case 'x': \
 	case 'Y': case 'y': case 'Z': case 'z'
-#define IDENT \
+#define IDSTART \
+	ALPHA: case '_'
+#define IDBODY \
 	ALPHA: case DIGIT: case '_'
 #define MATCH(X) while(i != end) { X break; }
 #define ALL(X) switch(*i) {case X: adv(); continue; default: break;}
@@ -68,13 +70,12 @@ void lexer::next() {
 		case SPACE: MATCH(ALL(SPACE)); break;
 		case SYMBOL: MATCH(ALL(SYMBOL)); EMIT(token_symbol); break;
 		case DIGIT: MATCH(ALL(DIGIT)); EMIT(token_number); break;
-		case ALPHA: MATCH(ALL(IDENT)); EMIT(token_identifier); break;
+		case IDSTART: MATCH(ALL(IDBODY)); EMIT(token_identifier); break;
 		case '\'': MATCH(UNTIL('\'')); EMIT(token_string); break;
 		case '\"': MATCH(UNTIL('\"')); EMIT(token_string); break;
 		case '#': MATCH(NOT('\n')); break;
 		case OPENER: EMIT(token_open); break;
 		case CLOSER: EMIT(token_close); break;
-		case '_': out.token_underscore(loc()); break;
 		default: {
 			string msg;
 			char c = *tokenstart;

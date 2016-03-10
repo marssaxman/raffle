@@ -30,11 +30,6 @@ void parser::token_string(std::string text, location loc) {
 	out.ast_leaf(loc, ast::leaf::string, text);
 }
 
-void parser::token_underscore(location loc) {
-	prep_term(loc);
-	out.ast_atom(loc, ast::atom::wildcard);
-}
-
 void parser::token_open(std::string text, location loc) {
 	static std::map<std::string, std::string> delims = {
 		{"(", ")"},
