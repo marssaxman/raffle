@@ -9,17 +9,17 @@
 using std::string;
 
 void lexer::read(const string &input) {
-	unsigned row = pos.row();
-	unsigned start = pos.col();
-	for (auto i = input.begin(); i != input.end(); next(i, input.end())) {
-		pos = position(row, start + i - input.begin());
+	i = input.begin();
+	end = input.end();
+	while (i != input.end()) {
+		next();
 	}
 }
 
 void lexer::read_line(const string &input) {
 	pos = position(1, 0);
 	read(input);
-	out.token_eof({pos, pos});
+	out.token_eof(loc());
 }
 
 void lexer::read_file(std::istream &in) {
@@ -28,7 +28,7 @@ void lexer::read_file(std::istream &in) {
 		pos = position(row, 0);
 		read(line);
 	}
-	out.token_eof({pos, pos});
+	out.token_eof(loc());
 }
 
 #define SPACE \
@@ -53,15 +53,14 @@ void lexer::read_file(std::istream &in) {
 #define IDENT \
 	ALPHA: case DIGIT: case '_'
 #define MATCH(X) while(i != end) { X break; }
-#define ALL(X) switch(*i) {case X: adv(i, end); continue; default: break;}
-#define NOT(X) switch(*i) {case X: break; default: adv(i, end); continue;}
-#define UNTIL(X) switch(adv(i, end)) {case X: break; default: continue;}
-#define EMIT(X) out.X(string(tokenstart, i), loc())
+#define ALL(X) switch(*i) {case X: adv(); continue; default: break;}
+#define NOT(X) switch(*i) {case X: break; default: adv(); continue;}
+#define UNTIL(X) switch(adv()) {case X: break; default: continue;}
+#define EMIT(X) out.X(text(), loc())
 
-void lexer::next(string::const_iterator &i, string::const_iterator end) {
-	begin = pos;
-	auto tokenstart = i;
-	switch (adv(i, end)) {
+void lexer::next() {
+	tokenstart = i;
+	switch (adv()) {
 		case SPACE: MATCH(ALL(SPACE)); break;
 		case SYMBOL: MATCH(ALL(SYMBOL)); EMIT(token_symbol); break;
 		case DIGIT: MATCH(ALL(DIGIT)); EMIT(token_number); break;
@@ -89,21 +88,23 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 			err.report(loc(), "unexpected character '" + msg + "'");
 		} break;
 	}
+	pos = position(pos.row(), pos.col() + i - tokenstart);
 }
 
-char lexer::adv(string::const_iterator &i, string::const_iterator end) {
+char lexer::adv() {
 	char c = 0;
 	if (i != end) {
 		c = *i;
-		pos = position(pos.row(), pos.col() + 1);
 		++i;
 	}
 	return c;
 }
 
-void lexer::ret(string::const_iterator &i, string::const_iterator end) {
-	if (pos.col() > 1) {
-		pos = position(pos.row(), pos.col() - 1);
-	}
-	--i;
+location lexer::loc() const {
+	size_t len = i - tokenstart;
+	return location::span(pos, len);
+}
+
+std::string lexer::text() const {
+	return std::string(tokenstart, i);
 }

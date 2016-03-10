@@ -25,6 +25,7 @@ struct location {
 	position end;
 	location() {}
 	location(position b, position e);
+	static location span(position, unsigned);
 	location operator+(const location&) const;
 };
 

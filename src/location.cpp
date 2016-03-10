@@ -31,6 +31,10 @@ location::location(position b, position e): begin(b), end(e) {
 	}
 }
 
+location location::span(position b, unsigned n) {
+	return location(b, position(b.row(), b.col() + n));
+}
+
 location location::operator+(const location &other) const {
 	location out = *this;
 	if (other.begin < begin) {

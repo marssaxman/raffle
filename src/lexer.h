@@ -35,12 +35,14 @@ public:
 	void read_file(std::istream &in);
 private:
 	void read(const std::string&);
-	void next(std::string::const_iterator &i, std::string::const_iterator end);
-	char adv(std::string::const_iterator &i, std::string::const_iterator end);
-	void ret(std::string::const_iterator &i, std::string::const_iterator end);
-	position begin;
+	void next();
+	char adv();
+	std::string::const_iterator tokenstart;
+	std::string::const_iterator i;
+	std::string::const_iterator end;
 	position pos;
-	location loc() const { return location(begin, pos); }
+	location loc() const;
+	std::string text() const;
 	token::delegate &out;
 	errors &err;
 };
