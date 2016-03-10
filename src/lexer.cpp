@@ -56,10 +56,10 @@ void lexer::read_file(std::istream &in) {
 #define ALL(X) switch(*i) {case X: adv(i, end); continue; default: break;}
 #define NOT(X) switch(*i) {case X: break; default: adv(i, end); continue;}
 #define UNTIL(X) switch(adv(i, end)) {case X: break; default: continue;}
-#define EMIT(X) out.X(string(tokenstart, i), loc)
+#define EMIT(X) out.X(string(tokenstart, i), loc())
 
 void lexer::next(string::const_iterator &i, string::const_iterator end) {
-	loc.begin = pos;
+	begin = pos;
 	auto tokenstart = i;
 	switch (adv(i, end)) {
 		case SPACE: MATCH(ALL(SPACE)); break;
@@ -69,13 +69,13 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 		case '\'': MATCH(UNTIL('\'')); EMIT(token_string); break;
 		case '\"': MATCH(UNTIL('\"')); EMIT(token_string); break;
 		case '#': MATCH(NOT('\n')); break;
-		case '(': out.token_open(token::delim::paren, loc); break;
-		case '[': out.token_open(token::delim::bracket, loc); break;
-		case '{': out.token_open(token::delim::brace, loc); break;
-		case ')': out.token_close(token::delim::paren, loc); break;
-		case ']': out.token_close(token::delim::bracket, loc); break;
-		case '}': out.token_close(token::delim::brace, loc); break;
-		case '_': out.token_underscore(loc); break;
+		case '(': out.token_open(token::delim::paren, loc()); break;
+		case '[': out.token_open(token::delim::bracket, loc()); break;
+		case '{': out.token_open(token::delim::brace, loc()); break;
+		case ')': out.token_close(token::delim::paren, loc()); break;
+		case ']': out.token_close(token::delim::bracket, loc()); break;
+		case '}': out.token_close(token::delim::brace, loc()); break;
+		case '_': out.token_underscore(loc()); break;
 		default: {
 			string msg;
 			char c = *tokenstart;
@@ -86,7 +86,7 @@ void lexer::next(string::const_iterator &i, string::const_iterator end) {
 				char hex[5] {'\\', 'x', xdig[(c >> 4) & 0x0F], xdig[c & 0x0F]};
 				msg = string(hex);
 			}
-			err.report(loc, "unexpected character '" + msg + "'");
+			err.report(loc(), "unexpected character '" + msg + "'");
 		} break;
 	}
 }
@@ -96,7 +96,6 @@ char lexer::adv(string::const_iterator &i, string::const_iterator end) {
 	if (i != end) {
 		c = *i;
 		pos = position(pos.row(), pos.col() + 1);
-		loc.end = pos;
 		++i;
 	}
 	return c;
@@ -105,7 +104,6 @@ char lexer::adv(string::const_iterator &i, string::const_iterator end) {
 void lexer::ret(string::const_iterator &i, string::const_iterator end) {
 	if (pos.col() > 1) {
 		pos = position(pos.row(), pos.col() - 1);
-		loc.end = pos;
 	}
 	--i;
 }

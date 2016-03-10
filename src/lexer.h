@@ -38,8 +38,9 @@ private:
 	void next(std::string::const_iterator &i, std::string::const_iterator end);
 	char adv(std::string::const_iterator &i, std::string::const_iterator end);
 	void ret(std::string::const_iterator &i, std::string::const_iterator end);
+	position begin;
 	position pos;
-	location loc;
+	location loc() const { return location(begin, pos); }
 	token::delegate &out;
 	errors &err;
 };
