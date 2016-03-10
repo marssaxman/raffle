@@ -41,8 +41,7 @@ private:
 	std::string::const_iterator i;
 	std::string::const_iterator end;
 	position pos;
-	location loc() const;
-	std::string text() const;
+	token current() const;
 	token::delegate &out;
 	errors &err;
 };

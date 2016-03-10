@@ -10,17 +10,19 @@
 #include "location.h"
 #include <string>
 
-namespace token {
-struct delegate {
-	virtual void token_eof(location) = 0;
-	virtual void token_number(std::string, location) = 0;
-	virtual void token_identifier(std::string, location) = 0;
-	virtual void token_string(std::string, location) = 0;
-	virtual void token_open(std::string, location) = 0;
-	virtual void token_close(std::string, location) = 0;
-	virtual void token_symbol(std::string, location) = 0;
+struct token {
+	token(std::string t, location l): text(t), loc(l) {}
+	std::string text;
+	location loc;
+	struct delegate {
+		virtual void token_eof(token) = 0;
+		virtual void token_number(token) = 0;
+		virtual void token_identifier(token) = 0;
+		virtual void token_string(token) = 0;
+		virtual void token_open(token) = 0;
+		virtual void token_close(token) = 0;
+		virtual void token_symbol(token) = 0;
+	};
 };
-
-} // namespace token
 
 #endif //TOKEN_H

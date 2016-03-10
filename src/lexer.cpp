@@ -9,17 +9,19 @@
 using std::string;
 
 void lexer::read(const string &input) {
+	tokenstart = input.begin();
 	i = input.begin();
 	end = input.end();
 	while (i != input.end()) {
 		next();
+		tokenstart = i;
 	}
 }
 
 void lexer::read_line(const string &input) {
 	pos = position(1, 0);
 	read(input);
-	out.token_eof(loc());
+	out.token_eof(current());
 }
 
 void lexer::read_file(std::istream &in) {
@@ -28,7 +30,7 @@ void lexer::read_file(std::istream &in) {
 		pos = position(row, 0);
 		read(line);
 	}
-	out.token_eof(loc());
+	out.token_eof(current());
 }
 
 #define SPACE \
@@ -62,10 +64,9 @@ void lexer::read_file(std::istream &in) {
 #define ALL(X) switch(*i) {case X: adv(); continue; default: break;}
 #define NOT(X) switch(*i) {case X: break; default: adv(); continue;}
 #define UNTIL(X) switch(adv()) {case X: break; default: continue;}
-#define EMIT(X) out.X(text(), loc())
+#define EMIT(X) out.X(current())
 
 void lexer::next() {
-	tokenstart = i;
 	switch (adv()) {
 		case SPACE: MATCH(ALL(SPACE)); break;
 		case SYMBOL: MATCH(ALL(SYMBOL)); EMIT(token_symbol); break;
@@ -86,7 +87,8 @@ void lexer::next() {
 				char hex[5] {'\\', 'x', xdig[(c >> 4) & 0x0F], xdig[c & 0x0F]};
 				msg = string(hex);
 			}
-			err.report(loc(), "unexpected character '" + msg + "'");
+			location errloc = location::span(pos, 1);
+			err.report(errloc, "unexpected character '" + msg + "'");
 		} break;
 	}
 	pos = position(pos.row(), pos.col() + i - tokenstart);
@@ -101,11 +103,8 @@ char lexer::adv() {
 	return c;
 }
 
-location lexer::loc() const {
+token lexer::current() const {
 	size_t len = i - tokenstart;
-	return location::span(pos, len);
+	return token(std::string(tokenstart, i), location::span(pos, len));
 }
 
-std::string lexer::text() const {
-	return std::string(tokenstart, i);
-}
