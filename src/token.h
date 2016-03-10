@@ -11,19 +11,14 @@
 #include <string>
 
 namespace token {
-enum class delim {
-	paren,
-	bracket,
-	brace,
-};
 struct delegate {
 	virtual void token_eof(location) = 0;
 	virtual void token_number(std::string, location) = 0;
 	virtual void token_identifier(std::string, location) = 0;
 	virtual void token_string(std::string, location) = 0;
 	virtual void token_underscore(location) = 0;
-	virtual void token_open(delim, location) = 0;
-	virtual void token_close(delim, location) = 0;
+	virtual void token_open(std::string, location) = 0;
+	virtual void token_close(std::string, location) = 0;
 	virtual void token_symbol(std::string, location) = 0;
 };
 

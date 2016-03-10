@@ -37,6 +37,10 @@ void lexer::read_file(std::istream &in) {
 	'!': case '$': case '%': case '&': case '*': case '+': case ',': \
 	case '-': case '.': case '/': case ':': case ';': case '<': case '=': \
 	case '>': case '?': case '@': case '^': case '~': case '|'
+#define OPENER \
+	'(': case '[': case '{'
+#define CLOSER \
+	')': case ']': case '}'
 #define DIGIT \
 	'0': case '1': case '2': case '3': case '4': case '5': case '6': \
 	case '7': case '8': case '9'
@@ -68,12 +72,8 @@ void lexer::next() {
 		case '\'': MATCH(UNTIL('\'')); EMIT(token_string); break;
 		case '\"': MATCH(UNTIL('\"')); EMIT(token_string); break;
 		case '#': MATCH(NOT('\n')); break;
-		case '(': out.token_open(token::delim::paren, loc()); break;
-		case '[': out.token_open(token::delim::bracket, loc()); break;
-		case '{': out.token_open(token::delim::brace, loc()); break;
-		case ')': out.token_close(token::delim::paren, loc()); break;
-		case ']': out.token_close(token::delim::bracket, loc()); break;
-		case '}': out.token_close(token::delim::brace, loc()); break;
+		case OPENER: EMIT(token_open); break;
+		case CLOSER: EMIT(token_close); break;
 		case '_': out.token_underscore(loc()); break;
 		default: {
 			string msg;

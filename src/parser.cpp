@@ -35,21 +35,31 @@ void parser::token_underscore(location loc) {
 	out.ast_atom(loc, ast::atom::wildcard);
 }
 
-void parser::token_open(token::delim c, location loc) {
+void parser::token_open(std::string text, location loc) {
+	static std::map<std::string, std::string> delims = {
+		{"(", ")"},
+		{"[", "]"},
+		{"{", "}"},
+	};
+	auto iter = delims.find(text);
+	if (iter == delims.end()) {
+		err.report(loc, "syntax error: unknown opening delimiter");
+		return;
+	}
 	if (!expecting_term) {
 		push({loc, ast::branch::apply, precedence::primary});
 	}
-	context current{loc, c, std::move(ops)};
+	context current{loc, iter->second, std::move(ops)};
 	outer.push(std::move(current));
 	expecting_term = true;
 }
 
-void parser::token_close(token::delim c, location loc) {
+void parser::token_close(std::string text, location loc) {
 	if (outer.empty()) {
 		err.report(loc, "no opening to match this closing delimiter");
 		return;
 	}
-	if (outer.top().type != c) {
+	if (outer.top().closer != text) {
 		err.report(loc, "wrong closing delimiter for this expression");
 		return;
 	}

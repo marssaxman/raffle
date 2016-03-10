@@ -20,8 +20,8 @@ struct parser: public token::delegate {
 	virtual void token_identifier(std::string, location) override;
 	virtual void token_string(std::string, location) override;
 	virtual void token_underscore(location) override;
-	virtual void token_open(token::delim, location) override;
-	virtual void token_close(token::delim, location) override;
+	virtual void token_open(std::string, location) override;
+	virtual void token_close(std::string, location) override;
 	virtual void token_symbol(std::string, location) override;
 
 private:
@@ -50,7 +50,7 @@ private:
 	// saved state for contexts outside the current expression
 	struct context {
 		location loc;
-		token::delim type;
+		std::string closer;
 		std::stack<oprec> ops;
 	};
 	std::stack<context> outer;
