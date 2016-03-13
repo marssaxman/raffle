@@ -8,56 +8,34 @@
 #define PROCESS_H
 
 template <typename... L>
-struct output;
-
-template <typename T>
-struct output<T> {
-	virtual void flush() = 0;
-	virtual void operator<<(T) = 0;
-};
-
-template <typename T, typename... L>
-struct output<T, L...> : output<L...> {
-	using output<L...>::operator<<;
-	virtual void operator<<(T) = 0;
-};
-
-
-template <typename V, typename... L>
-struct visitor;
-
-template <typename V, typename T>
-struct visitor<V, T> {
-	virtual void operator()(V, T) = 0;
-};
-
-template <typename V, typename T, typename... L>
-struct visitor<V, T, L...>: visitor<V, L...> {
-	using visitor<V, L...>::operator();
-	virtual void operator()(V, T) = 0;
-};
-
-
-template <typename... L>
 struct dsl;
 
 template <typename T>
 struct dsl<T> {
-	using output = ::output<T>;
+	struct ostream {
+		virtual void flush() = 0;
+		virtual void operator<<(T) = 0;
+	};
 
-	template<typename V>
-	using visitor = ::visitor<V, T>;
+	template <typename V>
+	struct visitor {
+		virtual void operator()(V, T) = 0;
+	};
 };
 
 template <typename T, typename... L>
-struct dsl<T, L...> {
-	using output = ::output<T, L...>;
+struct dsl<T, L...>: dsl<L...> {
+	struct ostream: dsl<L...>::ostream {
+		using dsl<L...>::ostream::operator<<;
+		virtual void operator<<(T) = 0;
+	};
 
 	template<typename V>
-	using visitor = ::visitor<V, T, L...>;
+	struct visitor: dsl<L...>::visitor {
+		using dsl<L...>::visitor::operator();
+		virtual void operator()(V, T) = 0;
+	};
 };
-
-
 
 #endif //PROCESS_H
 

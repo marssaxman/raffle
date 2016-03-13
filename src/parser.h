@@ -11,7 +11,7 @@
 #include "ast.h"
 #include <stack>
 
-struct parser: public token::delegate {
+struct parser: public token::ostream {
 	parser(ast::builder &o, errors &e): out(o), err(e) {}
 
 	// implementation of token::delegate

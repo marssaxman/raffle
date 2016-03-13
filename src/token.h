@@ -19,7 +19,7 @@ namespace token {
 	struct delimiter { std::string text; location loc; };
 
 	using dsl = ::dsl<struct number, identifier, string, symbol, delimiter>;
-	using delegate = dsl::output;
+	using ostream = dsl::ostream;
 };
 
 #endif //TOKEN_H

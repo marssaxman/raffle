@@ -23,9 +23,9 @@
 //  delimiter: [\(\)\[\]\{\}\;\,]
 // 	space: [ \t\v\f]+
 
-class lexer: public output<char> {
+class lexer: public dsl<char>::ostream {
 public:
-	lexer(token::delegate &o, errors &e): out(o), err(e) {}
+	lexer(token::ostream &o, errors &e): out(o), err(e) {}
 	virtual void flush() override;
 	virtual void operator<<(char) override;
 private:
@@ -50,7 +50,7 @@ private:
 	position tk_begin;
 	position tk_end;
 	std::stringstream buf;
-	token::delegate &out;
+	token::ostream &out;
 	errors &err;
 };
 
