@@ -19,9 +19,8 @@ struct parser: public token::delegate {
 	virtual void token_number(token) override;
 	virtual void token_identifier(token) override;
 	virtual void token_string(token) override;
-	virtual void token_open(token) override;
-	virtual void token_close(token) override;
 	virtual void token_symbol(token) override;
+	virtual void token_delimiter(token) override;
 
 private:
 	// the classic shunting-yard algorithm
@@ -54,6 +53,8 @@ private:
 	};
 	std::stack<context> outer;
 
+	void delimiter_open(token);
+	void delimiter_close(token);
 	void reduce(precedence);
 	void prep_term(location);
 	void prep_operator(location);

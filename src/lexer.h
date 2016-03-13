@@ -14,19 +14,13 @@
 #include <iostream>
 
 // lexical grammar:
-// 	file: (line '\n')*
-// 	line: token* comment?
-// 	comment: '#' [^\n]*
-// 	token: literal | identifier | blank | open | close | symbol | space
-//  literal: number | string
+// 	comment: # [^\n]*
 // 	number: [0-9]+
-// 	string: ('\"' [^\"]* '\"') | ('\'' [^\']* '\'')
-// 	identifier: [A-Za-z] [_A-Za-z0-9]*
-//	blank: '_'
-//  open: '(' | '[' | '{'
-//  close: ')' | ']' | '}'
-//  symbol: [\;\,\+\-\*\/\%\<\>\|\&\^\!\=\.\:]+
-// 	space: [\s\t]+
+// 	string: \" [^\"]* \"
+// 	identifier: [A-Za-z_] [A-Za-z0-9_]*
+//  symbol: [\+\-\*\/\%\<\>\|\&\^\!\=\.\:]+
+//  delimiter: [\(\)\[\]\{\}\;\,]
+// 	space: [ \t\v\f]+
 
 class lexer {
 public:

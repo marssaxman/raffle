@@ -35,14 +35,12 @@ void lexer::read_file(std::istream &in) {
 
 #define SPACE \
 	' ': case '\t': case '\f': case '\v'
+#define DELIM \
+	'(': case ')': case '[': case ']': case '{': case '}': case ';': case ','
 #define SYMBOL \
-	'!': case '$': case '%': case '&': case '*': case '+': case ',': \
-	case '-': case '.': case '/': case ':': case ';': case '<': case '=': \
-	case '>': case '?': case '@': case '^': case '~': case '|'
-#define OPENER \
-	'(': case '[': case '{'
-#define CLOSER \
-	')': case ']': case '}'
+	'!': case '$': case '%': case '&': case '*': case '+': case '-': \
+	case '.': case '/': case ':': case '<': case '=': case '>': case '?': \
+	case '@': case '^': case '~': case '|'
 #define DIGIT \
 	'0': case '1': case '2': case '3': case '4': case '5': case '6': \
 	case '7': case '8': case '9'
@@ -59,7 +57,8 @@ void lexer::read_file(std::istream &in) {
 #define IDSTART \
 	ALPHA: case '_'
 #define IDBODY \
-	ALPHA: case DIGIT: case '_'
+	IDSTART: case DIGIT
+
 #define MATCH(X) while(i != end) { X break; }
 #define ALL(X) switch(*i) {case X: adv(); continue; default: break;}
 #define NOT(X) switch(*i) {case X: break; default: adv(); continue;}
@@ -69,14 +68,12 @@ void lexer::read_file(std::istream &in) {
 void lexer::next() {
 	switch (adv()) {
 		case SPACE: MATCH(ALL(SPACE)); break;
+		case DELIM: EMIT(token_delimiter); break;
 		case SYMBOL: MATCH(ALL(SYMBOL)); EMIT(token_symbol); break;
 		case DIGIT: MATCH(ALL(DIGIT)); EMIT(token_number); break;
 		case IDSTART: MATCH(ALL(IDBODY)); EMIT(token_identifier); break;
-		case '\'': MATCH(UNTIL('\'')); EMIT(token_string); break;
 		case '\"': MATCH(UNTIL('\"')); EMIT(token_string); break;
 		case '#': MATCH(NOT('\n')); break;
-		case OPENER: EMIT(token_open); break;
-		case CLOSER: EMIT(token_close); break;
 		default: {
 			string msg;
 			char c = *tokenstart;

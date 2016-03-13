@@ -30,40 +30,6 @@ void parser::token_string(token t) {
 	out.ast_leaf(t.loc, ast::leaf::string, t.text);
 }
 
-void parser::token_open(token t) {
-	static std::map<std::string, std::string> delims = {
-		{"(", ")"},
-		{"[", "]"},
-		{"{", "}"},
-	};
-	auto iter = delims.find(t.text);
-	if (iter == delims.end()) {
-		err.report(t.loc, "syntax error: unknown opening delimiter");
-		return;
-	}
-	if (!expecting_term) {
-		push({t.loc, ast::branch::apply, precedence::primary});
-	}
-	context current{t.loc, iter->second, std::move(ops)};
-	outer.push(std::move(current));
-	expecting_term = true;
-}
-
-void parser::token_close(token t) {
-	if (outer.empty()) {
-		err.report(t.loc, "no opening to match this closing delimiter");
-		return;
-	}
-	if (outer.top().closer != t.text) {
-		err.report(t.loc, "wrong closing delimiter for this expression");
-		return;
-	}
-	close(t.loc);
-	ops = std::move(outer.top().ops);
-	outer.pop();
-	expecting_term = false;
-}
-
 void parser::token_symbol(token t) {
 	struct opdesc {
 		ast::branch id;
@@ -111,6 +77,48 @@ void parser::token_symbol(token t) {
 		prec = precedence::prefix;
 	}
 	push({t.loc, iter->second.id, prec, t.text});
+}
+
+void parser::token_delimiter(token t) {
+	switch (t.text.size() == 1? t.text.front(): 0) {
+		case '(': case '[': case '{': delimiter_open(t); break;
+		case ')': case ']': case '}': delimiter_close(t); break;
+		default: token_symbol(t);
+	}
+}
+
+void parser::delimiter_open(token t) {
+	static std::map<std::string, std::string> delims = {
+		{"(", ")"},
+		{"[", "]"},
+		{"{", "}"},
+	};
+	auto iter = delims.find(t.text);
+	if (iter == delims.end()) {
+		err.report(t.loc, "syntax error: unknown opening delimiter");
+		return;
+	}
+	if (!expecting_term) {
+		push({t.loc, ast::branch::apply, precedence::primary});
+	}
+	context current{t.loc, iter->second, std::move(ops)};
+	outer.push(std::move(current));
+	expecting_term = true;
+}
+
+void parser::delimiter_close(token t) {
+	if (outer.empty()) {
+		err.report(t.loc, "no opening to match this closing delimiter");
+		return;
+	}
+	if (outer.top().closer != t.text) {
+		err.report(t.loc, "wrong closing delimiter for this expression");
+		return;
+	}
+	close(t.loc);
+	ops = std::move(outer.top().ops);
+	outer.pop();
+	expecting_term = false;
 }
 
 void parser::reduce(precedence prec) {

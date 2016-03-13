@@ -19,9 +19,8 @@ struct token {
 		virtual void token_number(token) = 0;
 		virtual void token_identifier(token) = 0;
 		virtual void token_string(token) = 0;
-		virtual void token_open(token) = 0;
-		virtual void token_close(token) = 0;
 		virtual void token_symbol(token) = 0;
+		virtual void token_delimiter(token) = 0;
 	};
 };
 

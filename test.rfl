@@ -2,16 +2,16 @@ true(t, f) := t;
 false(t, f) := f;
 boolean := true | false;
 
-islower(c) := (c !< 'a') & (c !> 'z');
+islower(c) := (c !< "a") & (c !> "z");
 
-isupper(c) := (c !< 'A') & (c !> 'Z');
+isupper(c) := (c !< "A") & (c !> "Z");
 
 rot(key: int, str:[char]) := {
 	upchars <- "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	lowchars <- "abcdefghijklmnopqrstuvwxyz";
 	x <- key % 26;
-	shift_hi <- x - 'A';
-	shift_lo <- x - 'a';
+	shift_hi <- x - "A";
+	shift_lo <- x - "a";
 	str * (c -> {
 		islower(c)(
 			lowchars[(c + shift_lo) % 26],
