@@ -58,15 +58,17 @@ void lexer::read_file(std::istream &in) {
 	ALPHA: case '_'
 #define IDBODY \
 	IDSTART: case DIGIT
+#define STRING \
+	'\"': case '\''
 
 #define MATCH(X) while(i != end) { X break; }
-#define ALL(X) switch(*i) {case X: adv(); continue; default: break;}
-#define NOT(X) switch(*i) {case X: break; default: adv(); continue;}
-#define UNTIL(X) switch(adv()) {case X: break; default: continue;}
+#define ALL(X) switch(*i) {case X: ++i; continue; default: break;}
+#define NOT(X) switch(*i) {case X: break; default: ++i; continue;}
+#define UNTIL(X) switch(*i++) {case X: break; default: continue;}
 #define EMIT(X) out.X(current())
 
 void lexer::next() {
-	switch (adv()) {
+	if (i != end) switch (*i++) {
 		case SPACE: MATCH(ALL(SPACE)); break;
 		case DELIM: EMIT(token_delimiter); break;
 		case SYMBOL: MATCH(ALL(SYMBOL)); EMIT(token_symbol); break;
@@ -75,8 +77,8 @@ void lexer::next() {
 		case '\"': MATCH(UNTIL('\"')); EMIT(token_string); break;
 		case '#': MATCH(NOT('\n')); break;
 		default: {
-			string msg;
 			char c = *tokenstart;
+			std::string msg;
 			if (isprint(c)) {
 				msg = string(1, c);
 			} else {
@@ -89,15 +91,6 @@ void lexer::next() {
 		} break;
 	}
 	pos = position(pos.row(), pos.col() + i - tokenstart);
-}
-
-char lexer::adv() {
-	char c = 0;
-	if (i != end) {
-		c = *i;
-		++i;
-	}
-	return c;
 }
 
 token lexer::current() const {

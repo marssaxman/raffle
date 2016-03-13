@@ -30,7 +30,6 @@ public:
 private:
 	void read(const std::string&);
 	void next();
-	char adv();
 	std::string::const_iterator tokenstart;
 	std::string::const_iterator i;
 	std::string::const_iterator end;
