@@ -7,7 +7,7 @@
 #include "parser.h"
 #include <map>
 
-void parser::token_eof(token t) {
+void parser::operator()(token::eof t) {
 	if (!outer.empty()) {
 		err.report(outer.top().loc, "opening delimiter is never closed");
 		return;
@@ -15,29 +15,27 @@ void parser::token_eof(token t) {
 	close(t.loc);
 }
 
-void parser::token_number(token t) {
+void parser::operator()(token::number t) {
 	prep_term(t.loc);
 	out.ast_leaf(t.loc, ast::leaf::number, t.text);
 }
 
-void parser::token_identifier(token t) {
+void parser::operator()(token::identifier t) {
 	prep_term(t.loc);
 	out.ast_leaf(t.loc, ast::leaf::identifier, t.text);
 }
 
-void parser::token_string(token t) {
+void parser::operator()(token::string t) {
 	prep_term(t.loc);
 	out.ast_leaf(t.loc, ast::leaf::string, t.text);
 }
 
-void parser::token_symbol(token t) {
+void parser::operator()(token::symbol t) {
 	struct opdesc {
 		ast::branch id;
 		precedence prec;
 	};
 	static std::map<std::string, opdesc> ops = {
-		{";", {ast::branch::sequence, precedence::sequence}},
-		{",", {ast::branch::pair, precedence::binding}},
 		{":", {ast::branch::declare, precedence::binding}},
 		{":=", {ast::branch::define, precedence::binding}},
 		{"::=", {ast::branch::typealias, precedence::binding}},
@@ -71,54 +69,56 @@ void parser::token_symbol(token t) {
 		err.report(t.loc, "syntax error: unknown operator");
 		return;
 	}
-	precedence prec = iter->second.prec;
-	if (expecting_term) {
-		out.ast_atom(t.loc, ast::atom::null);
-		prec = precedence::prefix;
-	}
+	precedence prec = prep_operator(t.loc, iter->second.prec);
 	push({t.loc, iter->second.id, prec, t.text});
 }
 
-void parser::token_delimiter(token t) {
+void parser::operator()(token::delimiter t) {
 	switch (t.text.size() == 1? t.text.front(): 0) {
-		case '(': case '[': case '{': delimiter_open(t); break;
-		case ')': case ']': case '}': delimiter_close(t); break;
-		default: token_symbol(t);
+		case '(': case '[': case '{': {
+			static std::map<std::string, std::string> delims = {
+				{"(", ")"},
+				{"[", "]"},
+				{"{", "}"},
+			};
+			auto iter = delims.find(t.text);
+			if (iter == delims.end()) {
+				err.report(t.loc, "unknown delimiter");
+				return;
+			}
+			if (!expecting_term) {
+				push({t.loc, ast::branch::apply, precedence::primary});
+			}
+			context current{t.loc, iter->second, std::move(ops)};
+			outer.push(std::move(current));
+			expecting_term = true;
+		} break;
+		case ')': case ']': case '}': {
+			if (outer.empty()) {
+				err.report(t.loc, "unexpected closing delimiter");
+				return;
+			}
+			if (outer.top().closer != t.text) {
+				err.report(t.loc, "mismatched closing delimiter");
+				return;
+			}
+			close(t.loc);
+			ops = std::move(outer.top().ops);
+			outer.pop();
+			expecting_term = false;
+		} break;
+		case ';': {
+			precedence prec = prep_operator(t.loc, precedence::sequence);
+			push({t.loc, ast::branch::sequence, prec, t.text});
+		} break;
+		case ',': {
+			precedence prec = prep_operator(t.loc, precedence::binding);
+			push({t.loc, ast::branch::pair, prec, t.text});
+		} break;
+		default: {
+			err.report(t.loc, "syntax error: unknown delimiter");
+		}
 	}
-}
-
-void parser::delimiter_open(token t) {
-	static std::map<std::string, std::string> delims = {
-		{"(", ")"},
-		{"[", "]"},
-		{"{", "}"},
-	};
-	auto iter = delims.find(t.text);
-	if (iter == delims.end()) {
-		err.report(t.loc, "syntax error: unknown opening delimiter");
-		return;
-	}
-	if (!expecting_term) {
-		push({t.loc, ast::branch::apply, precedence::primary});
-	}
-	context current{t.loc, iter->second, std::move(ops)};
-	outer.push(std::move(current));
-	expecting_term = true;
-}
-
-void parser::delimiter_close(token t) {
-	if (outer.empty()) {
-		err.report(t.loc, "no opening to match this closing delimiter");
-		return;
-	}
-	if (outer.top().closer != t.text) {
-		err.report(t.loc, "wrong closing delimiter for this expression");
-		return;
-	}
-	close(t.loc);
-	ops = std::move(outer.top().ops);
-	outer.pop();
-	expecting_term = false;
 }
 
 void parser::reduce(precedence prec) {
@@ -144,10 +144,18 @@ void parser::prep_term(location loc) {
 	expecting_term = false;
 }
 
+parser::precedence parser::prep_operator(location loc, precedence prec) {
+	if (expecting_term) {
+		out.ast_atom(loc, ast::atom::null);
+		prec = precedence::prefix;
+	}
+	expecting_term = true;
+	return prec;
+}
+
 void parser::push(oprec op) {
 	reduce(op.prec);
 	ops.push(op);
-	expecting_term = true;
 }
 
 void parser::close(location loc) {

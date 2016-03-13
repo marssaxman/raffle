@@ -8,20 +8,25 @@
 #define TOKEN_H
 
 #include "location.h"
+#include "process.h"
 #include <string>
 
-struct token {
-	token(std::string t, location l): text(t), loc(l) {}
-	std::string text;
-	location loc;
-	struct delegate {
-		virtual void token_eof(token) = 0;
-		virtual void token_number(token) = 0;
-		virtual void token_identifier(token) = 0;
-		virtual void token_string(token) = 0;
-		virtual void token_symbol(token) = 0;
-		virtual void token_delimiter(token) = 0;
+namespace token {
+	struct base {
+		base(std::string t, location l): text(t), loc(l) {}
+		std::string text;
+		location loc;
 	};
+	struct eof: base { using base::base; };
+	struct number: base { using base::base; };
+	struct identifier: base { using base::base; };
+	struct string: base { using base::base; };
+	struct symbol: base { using base::base; };
+	struct delimiter: base { using base::base; };
+
+	using delegate = visitor<
+		eof, number, identifier, string, symbol, delimiter
+	>;
 };
 
 #endif //TOKEN_H

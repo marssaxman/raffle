@@ -15,12 +15,12 @@ struct parser: public token::delegate {
 	parser(ast::builder &o, errors &e): out(o), err(e) {}
 
 	// implementation of token::delegate
-	virtual void token_eof(token) override;
-	virtual void token_number(token) override;
-	virtual void token_identifier(token) override;
-	virtual void token_string(token) override;
-	virtual void token_symbol(token) override;
-	virtual void token_delimiter(token) override;
+	virtual void operator()(token::eof) override;
+	virtual void operator()(token::number) override;
+	virtual void operator()(token::identifier) override;
+	virtual void operator()(token::string) override;
+	virtual void operator()(token::symbol) override;
+	virtual void operator()(token::delimiter) override;
 
 private:
 	// the classic shunting-yard algorithm
@@ -53,11 +53,9 @@ private:
 	};
 	std::stack<context> outer;
 
-	void delimiter_open(token);
-	void delimiter_close(token);
 	void reduce(precedence);
 	void prep_term(location);
-	void prep_operator(location);
+	precedence prep_operator(location, precedence);
 	void push(oprec);
 	void close(location);
 

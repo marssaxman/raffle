@@ -40,7 +40,7 @@ void lexer::read(char c) {
 			case '\"': accept(c); state = string; break;
 			case IDSTART: accept(c); state = identifier; break;
 			case SYMBOL: accept(c); state = symbol; break;
-			case DELIM: accept(c); out.token_delimiter(emit()); break;
+			case DELIM: accept(c); emit<token::delimiter>(); break;
 			case '\n': tk_end = tk_end.next_row(); clear(); break;
 			case SPACE: accept(c); state = space; break;
 			case 0: clear(); state = eof; break;
@@ -54,26 +54,22 @@ void lexer::read(char c) {
 
 		case number: switch (c) {
 			case DIGIT: accept(c); break;
-			default: out.token_number(emit()); read(c); break;
+			default: emit<token::number>(); read(c); break;
 		} break;
 
 		case string: switch (c) {
-			case '\"': accept(c); out.token_string(emit()); break;
+			case '\"': accept(c); emit<token::string>(); break;
 			default: accept(c); break;
 		} break;
 
 		case identifier: switch (c) {
 			case IDBODY: accept(c); break;
-			default: out.token_identifier(emit()); read(c); break;
+			default: emit<token::identifier>(); read(c); break;
 		} break;
 
 		case symbol: switch (c) {
 			case SYMBOL: accept(c); break;
-			default: out.token_symbol(emit()); read(c); break;
-		} break;
-
-		case delimiter: switch (c) {
-			default: out.token_delimiter(emit()); break;
+			default: emit<token::symbol>(); read(c); break;
 		} break;
 
 		case space: switch (c) {
@@ -111,11 +107,5 @@ void lexer::clear() {
 	buf.str("");
 	tk_begin = tk_end;
 	state = start;
-}
-
-token lexer::emit() {
-	token out{buf.str(), location(tk_begin, tk_end)};
-	clear();
-	return out;
 }
 

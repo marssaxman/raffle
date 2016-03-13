@@ -30,7 +30,11 @@ private:
 	void accept(char);
 	void reject(char);
 	void clear();
-	token emit();
+	template <typename T>
+	void emit() {
+		out(T(buf.str(), location(tk_begin, tk_end)));
+		clear();
+	}
 	enum {
 		start = 0,
 		comment,
@@ -38,7 +42,6 @@ private:
 		string,
 		identifier,
 		symbol,
-		delimiter,
 		space,
 		eof
 	} state = start;
