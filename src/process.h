@@ -22,6 +22,7 @@ struct output<T, L...> : output<L...> {
 	virtual void operator<<(T) = 0;
 };
 
+
 template <typename V, typename... L>
 struct visitor;
 
@@ -31,10 +32,32 @@ struct visitor<V, T> {
 };
 
 template <typename V, typename T, typename... L>
-struct visitor<V, T, L...> : visitor<V, L...> {
+struct visitor<V, T, L...>: visitor<V, L...> {
 	using visitor<V, L...>::operator();
 	virtual void operator()(V, T) = 0;
 };
+
+
+template <typename... L>
+struct dsl;
+
+template <typename T>
+struct dsl<T> {
+	using output = ::output<T>;
+
+	template<typename V>
+	using visitor = ::visitor<V, T>;
+};
+
+template <typename T, typename... L>
+struct dsl<T, L...> {
+	using output = ::output<T, L...>;
+
+	template<typename V>
+	using visitor = ::visitor<V, T, L...>;
+};
+
+
 
 #endif //PROCESS_H
 

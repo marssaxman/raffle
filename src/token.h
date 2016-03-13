@@ -18,9 +18,8 @@ namespace token {
 	struct symbol { std::string text; location loc; };
 	struct delimiter { std::string text; location loc; };
 
-	using delegate = output<
-		number, identifier, string, symbol, delimiter
-	>;
+	using dsl = ::dsl<struct number, identifier, string, symbol, delimiter>;
+	using delegate = dsl::output;
 };
 
 #endif //TOKEN_H
