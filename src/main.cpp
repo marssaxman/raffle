@@ -86,7 +86,11 @@ static int run(std::istream &i) {
 	binder r(o, e);
 	parser p(r, e);
 	lexer l(p, e);
-	l.read_file(i);
+	char c;
+	while (i.get(c)) {
+		l.read(c);
+	}
+	l.read(0);
 	o.print();
 }
 
@@ -94,13 +98,8 @@ int main(int argc, const char *argv[]) {
 	if (argc <= 1 && isatty(fileno(stdin))) {
 		std::cout << "$> ";
 		for (std::string line; std::getline(std::cin, line);) {
-			errors e;
-			output o;
-			binder r(o, e);
-			parser p(r, e);
-			lexer l(p, e);
-			l.read_line(line);
-			o.print();
+			std::stringstream in(line);
+			run(in);
 			std::cout << std::endl << "$> ";
 		}
 		return EXIT_SUCCESS;

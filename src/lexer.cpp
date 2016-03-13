@@ -6,33 +6,6 @@
 
 #include "lexer.h"
 
-using std::string;
-
-void lexer::read(const string &input) {
-	tokenstart = input.begin();
-	i = input.begin();
-	end = input.end();
-	while (i != input.end()) {
-		next();
-		tokenstart = i;
-	}
-}
-
-void lexer::read_line(const string &input) {
-	pos = position(1, 0);
-	read(input);
-	out.token_eof(current());
-}
-
-void lexer::read_file(std::istream &in) {
-	unsigned row = 1;
-	for (string line; std::getline(in, line); ++row) {
-		pos = position(row, 0);
-		read(line);
-	}
-	out.token_eof(current());
-}
-
 #define SPACE \
 	' ': case '\t': case '\f': case '\v'
 #define DELIM \
@@ -58,43 +31,91 @@ void lexer::read_file(std::istream &in) {
 	ALPHA: case '_'
 #define IDBODY \
 	IDSTART: case DIGIT
-#define STRING \
-	'\"': case '\''
 
-#define MATCH(X) while(i != end) { X break; }
-#define ALL(X) switch(*i) {case X: ++i; continue; default: break;}
-#define NOT(X) switch(*i) {case X: break; default: ++i; continue;}
-#define UNTIL(X) switch(*i++) {case X: break; default: continue;}
-#define EMIT(X) out.X(current())
+void lexer::read(char c) {
+	switch (state) {
+		case start: switch (c) {
+			case '#': accept(c); state = comment; break;
+			case DIGIT: accept(c); state = number; break;
+			case '\"': accept(c); state = string; break;
+			case IDSTART: accept(c); state = identifier; break;
+			case SYMBOL: accept(c); state = symbol; break;
+			case DELIM: accept(c); out.token_delimiter(emit()); break;
+			case '\n': tk_end = tk_end.next_row(); clear(); break;
+			case SPACE: accept(c); state = space; break;
+			case 0: clear(); state = eof; break;
+			default: reject(c); break;
+		} break;
 
-void lexer::next() {
-	if (i != end) switch (*i++) {
-		case SPACE: MATCH(ALL(SPACE)); break;
-		case DELIM: EMIT(token_delimiter); break;
-		case SYMBOL: MATCH(ALL(SYMBOL)); EMIT(token_symbol); break;
-		case DIGIT: MATCH(ALL(DIGIT)); EMIT(token_number); break;
-		case IDSTART: MATCH(ALL(IDBODY)); EMIT(token_identifier); break;
-		case '\"': MATCH(UNTIL('\"')); EMIT(token_string); break;
-		case '#': MATCH(NOT('\n')); break;
-		default: {
-			char c = *tokenstart;
-			std::string msg;
-			if (isprint(c)) {
-				msg = string(1, c);
-			} else {
-				static const char xdig[] = "0123456789ABCDEF";
-				char hex[5] {'\\', 'x', xdig[(c >> 4) & 0x0F], xdig[c & 0x0F]};
-				msg = string(hex);
-			}
-			location errloc = location::span(pos, 1);
-			err.report(errloc, "unexpected character '" + msg + "'");
+		case comment: switch (c) {
+			case '\n': clear(); read(c); break;
+			default: accept(c); break;
+		} break;
+
+		case number: switch (c) {
+			case DIGIT: accept(c); break;
+			default: out.token_number(emit()); read(c); break;
+		} break;
+
+		case string: switch (c) {
+			case '\"': accept(c); out.token_string(emit()); break;
+			default: accept(c); break;
+		} break;
+
+		case identifier: switch (c) {
+			case IDBODY: accept(c); break;
+			default: out.token_identifier(emit()); read(c); break;
+		} break;
+
+		case symbol: switch (c) {
+			case SYMBOL: accept(c); break;
+			default: out.token_symbol(emit()); read(c); break;
+		} break;
+
+		case delimiter: switch (c) {
+			default: out.token_delimiter(emit()); break;
+		} break;
+
+		case space: switch (c) {
+			case SPACE: accept(c); break;
+			default: clear(); read(c); break;
+		} break;
+
+		case eof: switch (c) {
+			reject(c); break;
 		} break;
 	}
-	pos = position(pos.row(), pos.col() + i - tokenstart);
 }
 
-token lexer::current() const {
-	size_t len = i - tokenstart;
-	return token(std::string(tokenstart, i), location::span(pos, len));
+void lexer::accept(char c) {
+	buf << c;
+	tk_end = tk_end.next_col();
+}
+
+void lexer::reject(char c) {
+	std::string msg;
+	if (isprint(c)) {
+		msg = std::string(1, c);
+	} else {
+		static const char xdig[] = "0123456789ABCDEF";
+		char hex[5] {'\\', 'x', xdig[(c >> 4) & 0x0F], xdig[c & 0x0F]};
+		msg = std::string(hex);
+	}
+	location loc(tk_begin, tk_end);
+	err.report(loc, "unexpected character '" + msg + "'");
+	clear();
+}
+
+void lexer::clear() {
+	buf.clear();
+	buf.str("");
+	tk_begin = tk_end;
+	state = start;
+}
+
+token lexer::emit() {
+	token out{buf.str(), location(tk_begin, tk_end)};
+	clear();
+	return out;
 }
 

@@ -11,7 +11,7 @@
 #include "location.h"
 #include "token.h"
 #include <string>
-#include <iostream>
+#include <sstream>
 
 // lexical grammar:
 // 	comment: # [^\n]*
@@ -25,16 +25,26 @@
 class lexer {
 public:
 	lexer(token::delegate &o, errors &e): out(o), err(e) {}
-	void read_line(const std::string&);
-	void read_file(std::istream &in);
+	void read(char);
 private:
-	void read(const std::string&);
-	void next();
-	std::string::const_iterator tokenstart;
-	std::string::const_iterator i;
-	std::string::const_iterator end;
-	position pos;
-	token current() const;
+	void accept(char);
+	void reject(char);
+	void clear();
+	token emit();
+	enum {
+		start = 0,
+		comment,
+		number,
+		string,
+		identifier,
+		symbol,
+		delimiter,
+		space,
+		eof
+	} state = start;
+	position tk_begin;
+	position tk_end;
+	std::stringstream buf;
 	token::delegate &out;
 	errors &err;
 };

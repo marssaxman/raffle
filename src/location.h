@@ -16,7 +16,10 @@ struct position {
 	unsigned col() const { return value & 0xFF; }
 	bool operator<(const position&) const;
 	bool operator>(const position &other) const { return !(*this < other); }
+	position next_col() const { return position(value + !!(value ^ 0xFF)); }
+	position next_row() const { return position((value | 0xFF) + 1); }
 private:
+	position(uint32_t v): value(v) {}
 	uint32_t value = 0;
 };
 
