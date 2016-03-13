@@ -38,60 +38,54 @@ void lexer::flush() {
 }
 
 void lexer::operator<<(char c) {
+	tk_end = tk_end.next_col();
 retry:
 	switch (state) {
 		case start: switch (c) {
-			case '#': accept(c); state = comment; break;
-			case DIGIT: accept(c); state = number; break;
-			case '\"': accept(c); state = string; break;
-			case IDSTART: accept(c); state = identifier; break;
-			case SYMBOL: accept(c); state = symbol; break;
-			case DELIM: accept(c); emit<token::delimiter>(); break;
+			case '#': state = comment; break;
+			case DIGIT: buf << c; state = number; break;
+			case '\"': buf << c; state = string; break;
+			case IDSTART: buf << c; state = identifier; break;
+			case SYMBOL: buf << c; state = symbol; break;
+			case DELIM: buf << c; emit<token::delimiter>(); break;
 			case '\n': tk_end = tk_end.next_row(); clear(); break;
-			case SPACE: accept(c); state = space; break;
+			case SPACE: state = space; break;
 			case 0: clear(); state = eof; break;
 			default: reject(c); break;
 		} break;
 
 		case comment: switch (c) {
 			case '\n': clear(); goto retry;
-			default: accept(c); break;
+			default: break;
 		} break;
 
 		case number: switch (c) {
-			case DIGIT: accept(c); break;
+			case DIGIT: buf << c; break;
 			default: emit<token::number>(); goto retry;
 		} break;
 
 		case string: switch (c) {
-			case '\"': accept(c); emit<token::string>(); break;
-			default: accept(c); break;
+			case '\"': buf << c; emit<token::string>(); break;
+			default: buf << c; break;
 		} break;
 
 		case identifier: switch (c) {
-			case IDBODY: accept(c); break;
+			case IDBODY: buf << c; break;
 			default: emit<token::identifier>(); goto retry;
 		} break;
 
 		case symbol: switch (c) {
-			case SYMBOL: accept(c); break;
+			case SYMBOL: buf << c; break;
 			default: emit<token::symbol>(); goto retry;
 		} break;
 
 		case space: switch (c) {
-			case SPACE: accept(c); break;
+			case SPACE: break;
 			default: clear(); goto retry;
 		} break;
 
-		case eof: switch (c) {
-			reject(c); break;
-		} break;
+		case eof: reject(c); break;
 	}
-}
-
-void lexer::accept(char c) {
-	buf << c;
-	tk_end = tk_end.next_col();
 }
 
 void lexer::reject(char c) {
