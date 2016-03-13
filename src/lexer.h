@@ -34,7 +34,7 @@ private:
 	void clear();
 	template <typename T>
 	void emit() {
-		out << T(buf.str(), location(tk_begin, tk_end));
+		out << T{buf.str(), location(tk_begin, tk_end)};
 		clear();
 	}
 	enum {

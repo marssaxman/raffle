@@ -12,16 +12,11 @@
 #include <string>
 
 namespace token {
-	struct base {
-		base(std::string t, location l): text(t), loc(l) {}
-		std::string text;
-		location loc;
-	};
-	struct number: base { using base::base; };
-	struct identifier: base { using base::base; };
-	struct string: base { using base::base; };
-	struct symbol: base { using base::base; };
-	struct delimiter: base { using base::base; };
+	struct number { std::string text; location loc; };
+	struct identifier { std::string text; location loc; };
+	struct string { std::string text; location loc; };
+	struct symbol { std::string text; location loc; };
+	struct delimiter { std::string text; location loc; };
 
 	using delegate = output<
 		number, identifier, string, symbol, delimiter
