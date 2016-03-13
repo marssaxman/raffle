@@ -7,30 +7,30 @@
 #include "parser.h"
 #include <map>
 
-void parser::operator()(token::eof t) {
+void parser::flush() {
 	if (!outer.empty()) {
 		err.report(outer.top().loc, "opening delimiter is never closed");
 		return;
 	}
-	close(t.loc);
+	close(location());
 }
 
-void parser::operator()(token::number t) {
+void parser::operator<<(token::number t) {
 	prep_term(t.loc);
 	out.ast_leaf(t.loc, ast::leaf::number, t.text);
 }
 
-void parser::operator()(token::identifier t) {
+void parser::operator<<(token::identifier t) {
 	prep_term(t.loc);
 	out.ast_leaf(t.loc, ast::leaf::identifier, t.text);
 }
 
-void parser::operator()(token::string t) {
+void parser::operator<<(token::string t) {
 	prep_term(t.loc);
 	out.ast_leaf(t.loc, ast::leaf::string, t.text);
 }
 
-void parser::operator()(token::symbol t) {
+void parser::operator<<(token::symbol t) {
 	struct opdesc {
 		ast::branch id;
 		precedence prec;
@@ -73,7 +73,7 @@ void parser::operator()(token::symbol t) {
 	push({t.loc, iter->second.id, prec, t.text});
 }
 
-void parser::operator()(token::delimiter t) {
+void parser::operator<<(token::delimiter t) {
 	switch (t.text.size() == 1? t.text.front(): 0) {
 		case '(': case '[': case '{': {
 			static std::map<std::string, std::string> delims = {

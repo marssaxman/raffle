@@ -32,7 +32,13 @@
 #define IDBODY \
 	IDSTART: case DIGIT
 
-void lexer::read(char c) {
+void lexer::flush() {
+	*this << '\0';
+	state = start;
+}
+
+void lexer::operator<<(char c) {
+retry:
 	switch (state) {
 		case start: switch (c) {
 			case '#': accept(c); state = comment; break;
@@ -48,13 +54,13 @@ void lexer::read(char c) {
 		} break;
 
 		case comment: switch (c) {
-			case '\n': clear(); read(c); break;
+			case '\n': clear(); goto retry;
 			default: accept(c); break;
 		} break;
 
 		case number: switch (c) {
 			case DIGIT: accept(c); break;
-			default: emit<token::number>(); read(c); break;
+			default: emit<token::number>(); goto retry;
 		} break;
 
 		case string: switch (c) {
@@ -64,17 +70,17 @@ void lexer::read(char c) {
 
 		case identifier: switch (c) {
 			case IDBODY: accept(c); break;
-			default: emit<token::identifier>(); read(c); break;
+			default: emit<token::identifier>(); goto retry;
 		} break;
 
 		case symbol: switch (c) {
 			case SYMBOL: accept(c); break;
-			default: emit<token::symbol>(); read(c); break;
+			default: emit<token::symbol>(); goto retry;
 		} break;
 
 		case space: switch (c) {
 			case SPACE: accept(c); break;
-			default: clear(); read(c); break;
+			default: clear(); goto retry;
 		} break;
 
 		case eof: switch (c) {

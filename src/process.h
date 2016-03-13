@@ -8,17 +8,32 @@
 #define PROCESS_H
 
 template <typename... L>
-struct visitor;
+struct output;
 
 template <typename T>
-struct visitor<T> {
-	virtual void operator()(T) = 0;
+struct output<T> {
+	virtual void flush() = 0;
+	virtual void operator<<(T) = 0;
 };
 
 template <typename T, typename... L>
-struct visitor<T, L...> : visitor<L...> {
-	using visitor<L...>::operator();
-	virtual void operator()(T) = 0;
+struct output<T, L...> : output<L...> {
+	using output<L...>::operator<<;
+	virtual void operator<<(T) = 0;
+};
+
+template <typename V, typename... L>
+struct visitor;
+
+template <typename V, typename T>
+struct visitor<V, T> {
+	virtual void operator()(V, T) = 0;
+};
+
+template <typename V, typename T, typename... L>
+struct visitor<V, T, L...> : visitor<V, L...> {
+	using visitor<V, L...>::operator();
+	virtual void operator()(V, T) = 0;
 };
 
 #endif //PROCESS_H

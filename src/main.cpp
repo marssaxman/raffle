@@ -16,7 +16,7 @@
 
 using std::string;
 
-struct output: public lts::builder {
+struct readout: public lts::builder {
 	std::stack<string> nodes;
 	virtual void lts_null(location l) override {
 		nodes.push("null");
@@ -82,15 +82,15 @@ struct output: public lts::builder {
 
 static int run(std::istream &i) {
 	errors e;
-	output o;
+	readout o;
 	binder r(o, e);
 	parser p(r, e);
 	lexer l(p, e);
 	char c;
 	while (i.get(c)) {
-		l.read(c);
+		l << c;
 	}
-	l.read(0);
+	l.flush();
 	o.print();
 }
 

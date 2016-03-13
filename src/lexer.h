@@ -10,6 +10,7 @@
 #include "errors.h"
 #include "location.h"
 #include "token.h"
+#include "process.h"
 #include <string>
 #include <sstream>
 
@@ -22,17 +23,18 @@
 //  delimiter: [\(\)\[\]\{\}\;\,]
 // 	space: [ \t\v\f]+
 
-class lexer {
+class lexer: public output<char> {
 public:
 	lexer(token::delegate &o, errors &e): out(o), err(e) {}
-	void read(char);
+	virtual void flush() override;
+	virtual void operator<<(char) override;
 private:
 	void accept(char);
 	void reject(char);
 	void clear();
 	template <typename T>
 	void emit() {
-		out(T(buf.str(), location(tk_begin, tk_end)));
+		out << T(buf.str(), location(tk_begin, tk_end));
 		clear();
 	}
 	enum {

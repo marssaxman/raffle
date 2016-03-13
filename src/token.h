@@ -17,15 +17,14 @@ namespace token {
 		std::string text;
 		location loc;
 	};
-	struct eof: base { using base::base; };
 	struct number: base { using base::base; };
 	struct identifier: base { using base::base; };
 	struct string: base { using base::base; };
 	struct symbol: base { using base::base; };
 	struct delimiter: base { using base::base; };
 
-	using delegate = visitor<
-		eof, number, identifier, string, symbol, delimiter
+	using delegate = output<
+		number, identifier, string, symbol, delimiter
 	>;
 };
 
