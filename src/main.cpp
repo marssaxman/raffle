@@ -90,7 +90,7 @@ static int run(std::istream &i) {
 	while (i.get(c)) {
 		l.scan(c);
 	}
-	l.flush();
+	l.scan(0);
 	o.print();
 	return 0;
 }

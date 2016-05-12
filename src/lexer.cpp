@@ -66,7 +66,7 @@ retry:
 			case DELIM: buf << c; emit(token::delimiter); break;
 			case '\n': tk_end = tk_end.next_row(); clear(); break;
 			case SPACE: state = space; break;
-			case 0: clear(); state = eof; break;
+			case 0: clear(); state = eof; emit(token::eof); break;
 			default: reject(c); break;
 		} break;
 
@@ -102,11 +102,6 @@ retry:
 
 		case eof: reject(c); break;
 	}
-}
-
-void lexer::flush() {
-	scan(0);
-	state = start;
 }
 
 void lexer::reject(char c) {

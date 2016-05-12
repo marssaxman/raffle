@@ -9,6 +9,7 @@
 
 void parser::parse(token::type type, std::string text, location loc) {
 	switch (type) {
+		case token::eof: flush(); break;
 		case token::number: parse_number(text, loc); break;
 		case token::identifier: parse_identifier(text, loc); break;
 		case token::string: parse_string(text, loc); break;

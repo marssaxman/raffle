@@ -17,7 +17,6 @@ class lexer {
 public:
 	lexer(token::delegate &o, errors &e): out(o), err(e) {}
 	void scan(char);
-	void flush();
 private:
 	void accept(char);
 	void reject(char);

@@ -13,12 +13,10 @@
 
 struct parser: public token::delegate {
 	parser(ast::builder &o, errors &e): out(o), err(e) {}
-
-	// implementation of token::delegate
 	virtual void parse(token::type, std::string, location) override;
-	virtual void flush() override;
 
 private:
+	void flush();
 	void parse_number(std::string, location);
 	void parse_identifier(std::string, location);
 	void parse_string(std::string, location);

@@ -12,6 +12,7 @@
 
 namespace token {
 enum type {
+	eof,
 	number,
 	identifier,
 	string,
@@ -20,7 +21,6 @@ enum type {
 };
 struct delegate {
 	virtual void parse(enum type, std::string, location) = 0;
-	virtual void flush() = 0;
 };
 }
 
