@@ -7,6 +7,16 @@
 #include "parser.h"
 #include <map>
 
+void parser::parse(token::type type, std::string text, location loc) {
+	switch (type) {
+		case token::number: parse_number(text, loc); break;
+		case token::identifier: parse_identifier(text, loc); break;
+		case token::string: parse_string(text, loc); break;
+		case token::symbol: parse_symbol(text, loc); break;
+		case token::delimiter: parse_delimiter(text, loc); break;
+	}
+}
+
 void parser::flush() {
 	if (!outer.empty()) {
 		err.report(outer.top().loc, "opening delimiter is never closed");
@@ -15,22 +25,22 @@ void parser::flush() {
 	close(location());
 }
 
-void parser::operator<<(token::number t) {
-	prep_term(t.loc);
-	out.ast_leaf(t.loc, ast::leaf::number, t.text);
+void parser::parse_number(std::string text, location loc) {
+	prep_term(loc);
+	out.ast_leaf(loc, ast::leaf::number, text);
 }
 
-void parser::operator<<(token::identifier t) {
-	prep_term(t.loc);
-	out.ast_leaf(t.loc, ast::leaf::identifier, t.text);
+void parser::parse_identifier(std::string text, location loc) {
+	prep_term(loc);
+	out.ast_leaf(loc, ast::leaf::identifier, text);
 }
 
-void parser::operator<<(token::string t) {
-	prep_term(t.loc);
-	out.ast_leaf(t.loc, ast::leaf::string, t.text);
+void parser::parse_string(std::string text, location loc) {
+	prep_term(loc);
+	out.ast_leaf(loc, ast::leaf::string, text);
 }
 
-void parser::operator<<(token::symbol t) {
+void parser::parse_symbol(std::string text, location loc) {
 	struct opdesc {
 		ast::branch id;
 		precedence prec;
@@ -64,59 +74,59 @@ void parser::operator<<(token::symbol t) {
 		{">>", {ast::branch::shr, precedence::multiplicative}},
 		{".", {ast::branch::pipe, precedence::primary}}
 	};
-	auto iter = ops.find(t.text);
+	auto iter = ops.find(text);
 	if (iter == ops.end()) {
-		err.report(t.loc, "syntax error: unknown operator");
+		err.report(loc, "syntax error: unknown operator");
 		return;
 	}
-	precedence prec = prep_operator(t.loc, iter->second.prec);
-	push({t.loc, iter->second.id, prec, t.text});
+	precedence prec = prep_operator(loc, iter->second.prec);
+	push({loc, iter->second.id, prec, text});
 }
 
-void parser::operator<<(token::delimiter t) {
-	switch (t.text.size() == 1? t.text.front(): 0) {
+void parser::parse_delimiter(std::string text, location loc) {
+	switch (text.size() == 1? text.front(): 0) {
 		case '(': case '[': case '{': {
 			static std::map<std::string, std::string> delims = {
 				{"(", ")"},
 				{"[", "]"},
 				{"{", "}"},
 			};
-			auto iter = delims.find(t.text);
+			auto iter = delims.find(text);
 			if (iter == delims.end()) {
-				err.report(t.loc, "unknown delimiter");
+				err.report(loc, "unknown delimiter");
 				return;
 			}
 			if (!expecting_term) {
-				push({t.loc, ast::branch::apply, precedence::primary});
+				push({loc, ast::branch::apply, precedence::primary});
 			}
-			context current{t.loc, iter->second, std::move(ops)};
+			context current{loc, iter->second, std::move(ops)};
 			outer.push(std::move(current));
 			expecting_term = true;
 		} break;
 		case ')': case ']': case '}': {
 			if (outer.empty()) {
-				err.report(t.loc, "unexpected closing delimiter");
+				err.report(loc, "unexpected closing delimiter");
 				return;
 			}
-			if (outer.top().closer != t.text) {
-				err.report(t.loc, "mismatched closing delimiter");
+			if (outer.top().closer != text) {
+				err.report(loc, "mismatched closing delimiter");
 				return;
 			}
-			close(t.loc);
+			close(loc);
 			ops = std::move(outer.top().ops);
 			outer.pop();
 			expecting_term = false;
 		} break;
 		case ';': {
-			precedence prec = prep_operator(t.loc, precedence::sequence);
-			push({t.loc, ast::branch::sequence, prec, t.text});
+			precedence prec = prep_operator(loc, precedence::sequence);
+			push({loc, ast::branch::sequence, prec, text});
 		} break;
 		case ',': {
-			precedence prec = prep_operator(t.loc, precedence::binding);
-			push({t.loc, ast::branch::pair, prec, t.text});
+			precedence prec = prep_operator(loc, precedence::binding);
+			push({loc, ast::branch::pair, prec, text});
 		} break;
 		default: {
-			err.report(t.loc, "syntax error: unknown delimiter");
+			err.report(loc, "syntax error: unknown delimiter");
 		}
 	}
 }

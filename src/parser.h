@@ -11,18 +11,20 @@
 #include "ast.h"
 #include <stack>
 
-struct parser: public token::ostream {
+struct parser: public token::delegate {
 	parser(ast::builder &o, errors &e): out(o), err(e) {}
 
 	// implementation of token::delegate
+	virtual void parse(token::type, std::string, location) override;
 	virtual void flush() override;
-	virtual void operator<<(token::number) override;
-	virtual void operator<<(token::identifier) override;
-	virtual void operator<<(token::string) override;
-	virtual void operator<<(token::symbol) override;
-	virtual void operator<<(token::delimiter) override;
 
 private:
+	void parse_number(std::string, location);
+	void parse_identifier(std::string, location);
+	void parse_string(std::string, location);
+	void parse_symbol(std::string, location);
+	void parse_delimiter(std::string, location);
+
 	// the classic shunting-yard algorithm
 	enum class precedence {
 		none = 0,

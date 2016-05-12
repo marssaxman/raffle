@@ -10,47 +10,24 @@
 #include "errors.h"
 #include "location.h"
 #include "token.h"
-#include "process.h"
 #include <string>
 #include <sstream>
 
-// lexical grammar:
-// 	comment: # [^\n]*
-// 	number: [0-9]+
-// 	string: \" [^\"]* \"
-// 	identifier: [A-Za-z_] [A-Za-z0-9_]*
-//  symbol: [\+\-\*\/\%\<\>\|\&\^\!\=\.\:]+
-//  delimiter: [\(\)\[\]\{\}\;\,]
-// 	space: [ \t\v\f]+
-
-class lexer: public dsl<char>::ostream {
+class lexer {
 public:
-	lexer(token::ostream &o, errors &e): out(o), err(e) {}
-	virtual void flush() override;
-	virtual void operator<<(char) override;
+	lexer(token::delegate &o, errors &e): out(o), err(e) {}
+	void scan(char);
+	void flush();
 private:
 	void accept(char);
 	void reject(char);
 	void clear();
-	template <typename T>
-	void emit() {
-		out << T{buf.str(), location(tk_begin, tk_end)};
-		clear();
-	}
-	enum {
-		start = 0,
-		comment,
-		number,
-		string,
-		identifier,
-		symbol,
-		space,
-		eof
-	} state = start;
+	void emit(token::type);
+	int state = 0;
 	position tk_begin;
 	position tk_end;
 	std::stringstream buf;
-	token::ostream &out;
+	token::delegate &out;
 	errors &err;
 };
 

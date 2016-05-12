@@ -88,7 +88,7 @@ static int run(std::istream &i) {
 	lexer l(p, e);
 	char c;
 	while (i.get(c)) {
-		l << c;
+		l.scan(c);
 	}
 	l.flush();
 	o.print();

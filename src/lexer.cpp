@@ -6,6 +6,19 @@
 
 #include "lexer.h"
 
+// State machine constants
+enum {
+	start = 0,
+	comment,
+	number,
+	string,
+	identifier,
+	symbol,
+	space,
+	eof
+};
+
+// Character category definitions, expressed as case statement groups:
 #define SPACE \
 	' ': case '\t': case '\f': case '\v'
 #define DELIM \
@@ -32,12 +45,15 @@
 #define IDBODY \
 	IDSTART: case DIGIT
 
-void lexer::flush() {
-	*this << '\0';
-	state = start;
-}
-
-void lexer::operator<<(char c) {
+void lexer::scan(char c) {
+	// lexical grammar:
+	// 	comment: # [^\n]*
+	// 	number: [0-9]+
+	// 	string: \" [^\"]* \"
+	// 	identifier: [A-Za-z_] [A-Za-z0-9_]*
+	//  symbol: [\+\-\*\/\%\<\>\|\&\^\!\=\.\:]+
+	//  delimiter: [\(\)\[\]\{\}\;\,]
+	// 	space: [ \t\v\f]+
 	tk_end = tk_end.next_col();
 retry:
 	switch (state) {
@@ -47,7 +63,7 @@ retry:
 			case '\"': buf << c; state = string; break;
 			case IDSTART: buf << c; state = identifier; break;
 			case SYMBOL: buf << c; state = symbol; break;
-			case DELIM: buf << c; emit<token::delimiter>(); break;
+			case DELIM: buf << c; emit(token::delimiter); break;
 			case '\n': tk_end = tk_end.next_row(); clear(); break;
 			case SPACE: state = space; break;
 			case 0: clear(); state = eof; break;
@@ -61,22 +77,22 @@ retry:
 
 		case number: switch (c) {
 			case DIGIT: buf << c; break;
-			default: emit<token::number>(); goto retry;
+			default: emit(token::number); goto retry;
 		} break;
 
 		case string: switch (c) {
-			case '\"': buf << c; emit<token::string>(); break;
+			case '\"': buf << c; emit(token::string); break;
 			default: buf << c; break;
 		} break;
 
 		case identifier: switch (c) {
 			case IDBODY: buf << c; break;
-			default: emit<token::identifier>(); goto retry;
+			default: emit(token::identifier); goto retry;
 		} break;
 
 		case symbol: switch (c) {
 			case SYMBOL: buf << c; break;
-			default: emit<token::symbol>(); goto retry;
+			default: emit(token::symbol); goto retry;
 		} break;
 
 		case space: switch (c) {
@@ -86,6 +102,11 @@ retry:
 
 		case eof: reject(c); break;
 	}
+}
+
+void lexer::flush() {
+	scan(0);
+	state = start;
 }
 
 void lexer::reject(char c) {
@@ -108,4 +129,11 @@ void lexer::clear() {
 	tk_begin = tk_end;
 	state = start;
 }
+
+void lexer::emit(token::type t) {
+	out.parse(t, buf.str(), location(tk_begin, tk_end));
+	clear();
+}
+
+
 

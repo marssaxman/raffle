@@ -8,18 +8,20 @@
 #define TOKEN_H
 
 #include "location.h"
-#include "process.h"
 #include <string>
 
 namespace token {
-	struct number { std::string text; location loc; };
-	struct identifier { std::string text; location loc; };
-	struct string { std::string text; location loc; };
-	struct symbol { std::string text; location loc; };
-	struct delimiter { std::string text; location loc; };
-
-	using dsl = ::dsl<struct number, identifier, string, symbol, delimiter>;
-	using ostream = dsl::ostream;
+enum type {
+	number,
+	identifier,
+	string,
+	symbol,
+	delimiter
 };
+struct delegate {
+	virtual void parse(enum type, std::string, location) = 0;
+	virtual void flush() = 0;
+};
+}
 
 #endif //TOKEN_H
