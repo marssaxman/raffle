@@ -45,6 +45,12 @@ enum {
 #define IDBODY \
 	IDSTART: case DIGIT
 
+lexer::~lexer() {
+	if (state != eof) {
+		scan('\0');
+	}
+}
+
 void lexer::scan(char c) {
 	// lexical grammar:
 	// 	comment: # [^\n]*
@@ -66,7 +72,7 @@ retry:
 			case DELIM: buf << c; emit(token::delimiter); break;
 			case '\n': tk_end = tk_end.next_row(); clear(); break;
 			case SPACE: state = space; break;
-			case 0: clear(); state = eof; emit(token::eof); break;
+			case '\0': break;
 			default: reject(c); break;
 		} break;
 
@@ -101,6 +107,11 @@ retry:
 		} break;
 
 		case eof: reject(c); break;
+	}
+
+	if (!c) {
+		clear();
+		state = eof;
 	}
 }
 

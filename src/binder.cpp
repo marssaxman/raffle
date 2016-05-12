@@ -6,31 +6,41 @@
 
 #include "binder.h"
 
-void binder::ast_atom(location loc, ast::atom id) {
+void binder::emit(ast::type id, std::string text, location loc) {
+	switch (ast::edges(id)) {
+		case 0: ast_atom(id, loc); break;
+		case 1: ast_leaf(id, text, loc); break;
+		case 2: ast_branch(id, text, loc); break;
+		default: err.report(loc, "unexpected AST edge count");
+	}
+}
+
+void binder::ast_atom(ast::type id, location loc) {
 	switch (id) {
-		case ast::atom::null: out.lts_null(loc); break;
+		case ast::null: out.lts_null(loc); break;
 		default: err.report(loc, "not yet implemented");
 	}
 }
 
-void binder::ast_leaf(location loc, ast::leaf id, std::string t) {
+void binder::ast_leaf(ast::type id, std::string t, location loc) {
 	switch (id) {
-		case ast::leaf::number: out.lts_number(t, loc); break;
-		case ast::leaf::string: out.lts_string(t, loc); break;
-		case ast::leaf::identifier: out.lts_symbol(t, loc); break;
+		case ast::number: out.lts_number(t, loc); break;
+		case ast::string: out.lts_string(t, loc); break;
+		case ast::identifier: out.lts_symbol(t, loc); break;
+		default: err.report(loc, "unexpected leaf node");
 	}
 }
 
-void binder::ast_branch(location loc, ast::branch id, std::string t) {
+void binder::ast_branch(ast::type id, std::string t, location loc) {
 	switch (id) {
-		case ast::branch::apply: out.lts_apply_top(loc); break;
-		case ast::branch::pipe: out.lts_apply_next(loc); break;
-		case ast::branch::capture: out.lts_lambda(loc); break;
-		case ast::branch::sequence: out.lts_eval(loc); break;
-		case ast::branch::assign: out.lts_bind(loc); break;
-		case ast::branch::declare:
-		case ast::branch::define:
-		case ast::branch::typealias:
+		case ast::apply: out.lts_apply_top(loc); break;
+		case ast::pipe: out.lts_apply_next(loc); break;
+		case ast::capture: out.lts_lambda(loc); break;
+		case ast::sequence: out.lts_eval(loc); break;
+		case ast::assign: out.lts_bind(loc); break;
+		case ast::declare:
+		case ast::define:
+		case ast::typealias:
 			err.report(loc, "operator '" + t + "' not yet implemented");
 			break;
 		default:

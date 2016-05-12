@@ -11,25 +11,23 @@
 #include <string>
 
 namespace ast {
-
-enum class atom {
-	wildcard, null
-};
-enum class leaf {
-	number, string, identifier
-};
-enum class branch {
-	apply, pipe, sequence, pair, range,
+enum type {
+	// atoms: zero edges
+	eof = (0<<8), wildcard, null,
+	// leafs: one edge
+	number = (1<<8), string, identifier,
+	// branches: two edges
+	apply = (2<<8), pipe, sequence, pair, range,
 	assign, capture, declare, define, typealias,
 	and_join, or_join, xor_join, nand_join, nor_join, xnor_join,
-	add, sub, mul, div, rem, shl, shr, eq, gt, lt, neq, ngt, nlt,
+	add, sub, mul, div, rem, shl, shr, eq, gt, lt, neq, ngt, nlt
 };
+static inline int edges(ast::type id) {
+	return static_cast<int>(id) >> 8;
+}
 struct builder {
-	virtual void ast_atom(location, atom) = 0;
-	virtual void ast_leaf(location, leaf, std::string) = 0;
-	virtual void ast_branch(location, branch, std::string) = 0;
+	virtual void emit(enum type, std::string, location) = 0;
 };
-
 } // namespace ast
 
 #endif //AST_H

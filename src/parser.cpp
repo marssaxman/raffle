@@ -9,7 +9,7 @@
 
 void parser::parse(token::type type, std::string text, location loc) {
 	switch (type) {
-		case token::eof: flush(); break;
+		case token::eof: parse_eof(text, loc); break;
 		case token::number: parse_number(text, loc); break;
 		case token::identifier: parse_identifier(text, loc); break;
 		case token::string: parse_string(text, loc); break;
@@ -18,62 +18,63 @@ void parser::parse(token::type type, std::string text, location loc) {
 	}
 }
 
-void parser::flush() {
-	if (!outer.empty()) {
+void parser::parse_eof(std::string text, location loc) {
+	if (outer.empty()) {
+		close(loc);
+		out.emit(ast::eof, text, loc);
+	} else {
 		err.report(outer.top().loc, "opening delimiter is never closed");
-		return;
 	}
-	close(location());
 }
 
 void parser::parse_number(std::string text, location loc) {
 	prep_term(loc);
-	out.ast_leaf(loc, ast::leaf::number, text);
+	out.emit(ast::number, text, loc);
 }
 
 void parser::parse_identifier(std::string text, location loc) {
 	prep_term(loc);
-	out.ast_leaf(loc, ast::leaf::identifier, text);
+	out.emit(ast::identifier, text, loc);
 }
 
 void parser::parse_string(std::string text, location loc) {
 	prep_term(loc);
-	out.ast_leaf(loc, ast::leaf::string, text);
+	out.emit(ast::string, text, loc);
 }
 
 void parser::parse_symbol(std::string text, location loc) {
 	struct opdesc {
-		ast::branch id;
+		ast::type id;
 		precedence prec;
 	};
 	static std::map<std::string, opdesc> ops = {
-		{":", {ast::branch::declare, precedence::binding}},
-		{":=", {ast::branch::define, precedence::binding}},
-		{"::=", {ast::branch::typealias, precedence::binding}},
-		{"<-", {ast::branch::assign, precedence::binding}},
-		{"->", {ast::branch::capture, precedence::binding}},
-		{"=", {ast::branch::eq, precedence::relation}},
-		{"<", {ast::branch::lt, precedence::relation}},
-		{">", {ast::branch::gt, precedence::relation}},
-		{"!=", {ast::branch::neq, precedence::relation}},
-		{"!<", {ast::branch::nlt, precedence::relation}},
-		{"!>", {ast::branch::ngt, precedence::relation}},
-		{"+", {ast::branch::add, precedence::additive}},
-		{"-", {ast::branch::sub, precedence::additive}},
-		{"&", {ast::branch::and_join, precedence::multiplicative}},
-		{"|", {ast::branch::or_join, precedence::additive}},
-		{"^", {ast::branch::xor_join, precedence::additive}},
-		{"!&", {ast::branch::nand_join, precedence::multiplicative}},
-		{"!|", {ast::branch::nor_join, precedence::additive}},
-		{"!^", {ast::branch::xnor_join, precedence::additive}},
-		{"..", {ast::branch::range, precedence::additive}},
-		{"!", {ast::branch::nand_join, precedence::additive}},
-		{"*", {ast::branch::mul, precedence::multiplicative}},
-		{"/", {ast::branch::div, precedence::multiplicative}},
-		{"%", {ast::branch::rem, precedence::multiplicative}},
-		{"<<", {ast::branch::shl, precedence::multiplicative}},
-		{">>", {ast::branch::shr, precedence::multiplicative}},
-		{".", {ast::branch::pipe, precedence::primary}}
+		{":", {ast::declare, precedence::binding}},
+		{":=", {ast::define, precedence::binding}},
+		{"::=", {ast::typealias, precedence::binding}},
+		{"<-", {ast::assign, precedence::binding}},
+		{"->", {ast::capture, precedence::binding}},
+		{"=", {ast::eq, precedence::relation}},
+		{"<", {ast::lt, precedence::relation}},
+		{">", {ast::gt, precedence::relation}},
+		{"!=", {ast::neq, precedence::relation}},
+		{"!<", {ast::nlt, precedence::relation}},
+		{"!>", {ast::ngt, precedence::relation}},
+		{"+", {ast::add, precedence::additive}},
+		{"-", {ast::sub, precedence::additive}},
+		{"&", {ast::and_join, precedence::multiplicative}},
+		{"|", {ast::or_join, precedence::additive}},
+		{"^", {ast::xor_join, precedence::additive}},
+		{"!&", {ast::nand_join, precedence::multiplicative}},
+		{"!|", {ast::nor_join, precedence::additive}},
+		{"!^", {ast::xnor_join, precedence::additive}},
+		{"..", {ast::range, precedence::additive}},
+		{"!", {ast::nand_join, precedence::additive}},
+		{"*", {ast::mul, precedence::multiplicative}},
+		{"/", {ast::div, precedence::multiplicative}},
+		{"%", {ast::rem, precedence::multiplicative}},
+		{"<<", {ast::shl, precedence::multiplicative}},
+		{">>", {ast::shr, precedence::multiplicative}},
+		{".", {ast::pipe, precedence::primary}}
 	};
 	auto iter = ops.find(text);
 	if (iter == ops.end()) {
@@ -98,7 +99,7 @@ void parser::parse_delimiter(std::string text, location loc) {
 				return;
 			}
 			if (!expecting_term) {
-				push({loc, ast::branch::apply, precedence::primary});
+				push({loc, ast::apply, precedence::primary});
 			}
 			context current{loc, iter->second, std::move(ops)};
 			outer.push(std::move(current));
@@ -120,11 +121,11 @@ void parser::parse_delimiter(std::string text, location loc) {
 		} break;
 		case ';': {
 			precedence prec = prep_operator(loc, precedence::sequence);
-			push({loc, ast::branch::sequence, prec, text});
+			push({loc, ast::sequence, prec, text});
 		} break;
 		case ',': {
 			precedence prec = prep_operator(loc, precedence::binding);
-			push({loc, ast::branch::pair, prec, text});
+			push({loc, ast::pair, prec, text});
 		} break;
 		default: {
 			err.report(loc, "syntax error: unknown delimiter");
@@ -143,21 +144,21 @@ void parser::reduce(precedence prec) {
 		if (prec > ops.top().prec) break;
 		if (rightassoc && prec == ops.top().prec) break;
 		oprec &op = ops.top();
-		out.ast_branch(op.loc, op.id, op.text);
+		out.emit(op.id, op.text, op.loc);
 		ops.pop();
 	}
 }
 
 void parser::prep_term(location loc) {
 	if (!expecting_term) {
-		push({loc, ast::branch::apply, precedence::primary});
+		push({loc, ast::apply, precedence::primary});
 	}
 	expecting_term = false;
 }
 
 parser::precedence parser::prep_operator(location loc, precedence prec) {
 	if (expecting_term) {
-		out.ast_atom(loc, ast::atom::null);
+		out.emit(ast::null, std::string(), loc);
 		prec = precedence::prefix;
 	}
 	expecting_term = true;
@@ -171,7 +172,7 @@ void parser::push(oprec op) {
 
 void parser::close(location loc) {
 	if (expecting_term) {
-		out.ast_atom(loc, ast::atom::null);
+		out.emit(ast::null, std::string(), loc);
 	}
 	reduce(precedence::none);
 }

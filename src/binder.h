@@ -13,10 +13,11 @@
 
 struct binder: public ast::builder {
 	binder(lts::builder &o, errors &e): out(o), err(e) {}
-	virtual void ast_atom(location, ast::atom) override;
-	virtual void ast_leaf(location, ast::leaf, std::string) override;
-	virtual void ast_branch(location, ast::branch, std::string) override;
+	virtual void emit(ast::type, std::string, location) override;
 private:
+	void ast_atom(ast::type, location);
+	void ast_leaf(ast::type, std::string, location);
+	void ast_branch(ast::type, std::string, location);
 	lts::builder &out;
 	errors &err;
 };

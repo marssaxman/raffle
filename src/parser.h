@@ -16,7 +16,7 @@ struct parser: public token::delegate {
 	virtual void parse(token::type, std::string, location) override;
 
 private:
-	void flush();
+	void parse_eof(std::string, location);
 	void parse_number(std::string, location);
 	void parse_identifier(std::string, location);
 	void parse_string(std::string, location);
@@ -38,7 +38,7 @@ private:
 	// binary operators waiting for operands
 	struct oprec {
 		location loc;
-		ast::branch id;
+		ast::type id;
 		precedence prec;
 		std::string text;
 	};
