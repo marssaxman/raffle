@@ -92,6 +92,7 @@ static int run(std::istream &i) {
 	}
 	l.flush();
 	o.print();
+	return 0;
 }
 
 int main(int argc, const char *argv[]) {
