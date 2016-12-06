@@ -8,11 +8,11 @@
 
 #include "errors.h"
 #include "token.h"
-#include "ast.h"
+#include "syntax.h"
 #include <stack>
 
 struct parser: public token::delegate {
-	parser(ast::builder &o, errors &e): out(o), err(e) {}
+	parser(syntax::delegate &o, errors &e): out(o), err(e) {}
 	virtual void parse(token::type, std::string, location) override;
 
 private:
@@ -38,7 +38,7 @@ private:
 	// binary operators waiting for operands
 	struct oprec {
 		location loc;
-		ast::type id;
+		syntax::branch id;
 		precedence prec;
 		std::string text;
 	};
@@ -59,7 +59,7 @@ private:
 	void push(oprec);
 	void close(location);
 
-	ast::builder &out;
+	syntax::delegate &out;
 	errors &err;
 };
 

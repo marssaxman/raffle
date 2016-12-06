@@ -8,26 +8,144 @@
 #define AST_H
 
 #include "location.h"
+#include <memory>
 #include <string>
 
 namespace ast {
-enum type {
-	// atoms: zero edges
-	eof = (0<<8), wildcard, null,
-	// leafs: one edge
-	number = (1<<8), string, identifier,
-	// branches: two edges
-	apply = (2<<8), pipe, sequence, pair, range,
-	assign, capture, declare, define, typealias,
-	and_join, or_join, xor_join, nand_join, nor_join, xnor_join,
-	add, sub, mul, div, rem, shl, shr, eq, gt, lt, neq, ngt, nlt
+
+struct visitor;
+struct node;
+typedef std::unique_ptr<node> unique_ptr;
+
+struct node {
+	node(location o): origin(o) {}
+	virtual void accept(visitor&) const = 0;
+	location origin;
 };
-static inline int edges(ast::type id) {
-	return static_cast<int>(id) >> 8;
-}
-struct builder {
-	virtual void emit(enum type, std::string, location) = 0;
+
+struct eof: public node {
+	using node::node;
+	virtual void accept(visitor&) const override;
 };
+
+struct wildcard: public node {
+	using node::node;
+	virtual void accept(visitor&) const override;
+};
+
+struct null: public node {
+	using node::node;
+	virtual void accept(visitor&) const override;
+};
+
+struct leaf: public node {
+	leaf(std::string t, location o): node(o), text(t) {}
+	std::string text;
+};
+
+struct number: public leaf {
+	using leaf::leaf;
+	virtual void accept(visitor&) const override;
+};
+
+struct string: public leaf {
+	using leaf::leaf;
+	virtual void accept(visitor&) const override;
+};
+
+struct identifier: public leaf {
+	using leaf::leaf;
+	virtual void accept(visitor&) const override;
+};
+
+struct branch: public node {
+	branch(unique_ptr &&l, unique_ptr &&r, location o):
+			node(o), left(std::move(l)), right(std::move(r)) {}
+	unique_ptr left;
+	unique_ptr right;
+};
+
+struct apply: public branch {
+	using branch::branch;
+	virtual void accept(visitor&) const override;
+};
+
+struct pipe: public branch {
+	using branch::branch;
+	virtual void accept(visitor&) const override;
+};
+
+struct sequence: public branch {
+	using branch::branch;
+	virtual void accept(visitor&) const override;
+};
+
+struct pair: public branch {
+	using branch::branch;
+	virtual void accept(visitor&) const override;
+};
+
+struct range: public branch {
+	using branch::branch;
+	virtual void accept(visitor&) const override;
+};
+
+struct assign: public branch {
+	using branch::branch;
+	virtual void accept(visitor&) const override;
+};
+
+struct capture: public branch {
+	using branch::branch;
+	virtual void accept(visitor&) const override;
+};
+
+struct declare: public branch {
+	using branch::branch;
+	virtual void accept(visitor&) const override;
+};
+
+struct define: public branch {
+	using branch::branch;
+	virtual void accept(visitor&) const override;
+};
+
+struct typealias: public branch {
+	using branch::branch;
+	virtual void accept(visitor&) const override;
+};
+
+struct binop: public branch {
+	binop(std::string t, unique_ptr &&l, unique_ptr &&r, location o):
+			branch(std::move(l), std::move(r), o), text(t) {}
+	virtual void accept(visitor&) const override;
+	std::string text;
+};
+
+struct visitor {
+	virtual void visit(const eof&) = 0;
+	virtual void visit(const wildcard&) = 0;
+	virtual void visit(const null&) = 0;
+	virtual void visit(const number&) = 0;
+	virtual void visit(const string&) = 0;
+	virtual void visit(const identifier&) = 0;
+	virtual void visit(const apply&) = 0;
+	virtual void visit(const pipe&) = 0;
+	virtual void visit(const sequence&) = 0;
+	virtual void visit(const pair&) = 0;
+	virtual void visit(const range&) = 0;
+	virtual void visit(const assign&) = 0;
+	virtual void visit(const capture&) = 0;
+	virtual void visit(const declare&) = 0;
+	virtual void visit(const define&) = 0;
+	virtual void visit(const typealias&) = 0;
+	virtual void visit(const binop&) = 0;
+};
+
+struct delegate {
+	virtual void process(unique_ptr&&) = 0;
+};
+
 } // namespace ast
 
 #endif //AST_H

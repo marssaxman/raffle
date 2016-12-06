@@ -21,7 +21,7 @@ void parser::parse(token::type type, std::string text, location loc) {
 void parser::parse_eof(std::string text, location loc) {
 	if (outer.empty()) {
 		close(loc);
-		out.emit(ast::eof, text, loc);
+		out.emit_eof(loc);
 	} else {
 		err.report(outer.top().loc, "opening delimiter is never closed");
 	}
@@ -29,52 +29,52 @@ void parser::parse_eof(std::string text, location loc) {
 
 void parser::parse_number(std::string text, location loc) {
 	prep_term(loc);
-	out.emit(ast::number, text, loc);
+	out.emit_number(text, loc);
 }
 
 void parser::parse_identifier(std::string text, location loc) {
 	prep_term(loc);
-	out.emit(ast::identifier, text, loc);
+	out.emit_identifier(text, loc);
 }
 
 void parser::parse_string(std::string text, location loc) {
 	prep_term(loc);
-	out.emit(ast::string, text, loc);
+	out.emit_string(text, loc);
 }
 
 void parser::parse_symbol(std::string text, location loc) {
 	struct opdesc {
-		ast::type id;
+		syntax::branch id;
 		precedence prec;
 	};
 	static std::map<std::string, opdesc> ops = {
-		{":", {ast::declare, precedence::binding}},
-		{":=", {ast::define, precedence::binding}},
-		{"::=", {ast::typealias, precedence::binding}},
-		{"<-", {ast::assign, precedence::binding}},
-		{"->", {ast::capture, precedence::binding}},
-		{"=", {ast::eq, precedence::relation}},
-		{"<", {ast::lt, precedence::relation}},
-		{">", {ast::gt, precedence::relation}},
-		{"!=", {ast::neq, precedence::relation}},
-		{"!<", {ast::nlt, precedence::relation}},
-		{"!>", {ast::ngt, precedence::relation}},
-		{"+", {ast::add, precedence::additive}},
-		{"-", {ast::sub, precedence::additive}},
-		{"&", {ast::and_join, precedence::multiplicative}},
-		{"|", {ast::or_join, precedence::additive}},
-		{"^", {ast::xor_join, precedence::additive}},
-		{"!&", {ast::nand_join, precedence::multiplicative}},
-		{"!|", {ast::nor_join, precedence::additive}},
-		{"!^", {ast::xnor_join, precedence::additive}},
-		{"..", {ast::range, precedence::additive}},
-		{"!", {ast::nand_join, precedence::additive}},
-		{"*", {ast::mul, precedence::multiplicative}},
-		{"/", {ast::div, precedence::multiplicative}},
-		{"%", {ast::rem, precedence::multiplicative}},
-		{"<<", {ast::shl, precedence::multiplicative}},
-		{">>", {ast::shr, precedence::multiplicative}},
-		{".", {ast::pipe, precedence::primary}}
+		{":", {syntax::declare, precedence::binding}},
+		{":=", {syntax::define, precedence::binding}},
+		{"::=", {syntax::typealias, precedence::binding}},
+		{"<-", {syntax::assign, precedence::binding}},
+		{"->", {syntax::capture, precedence::binding}},
+		{"=", {syntax::eq, precedence::relation}},
+		{"<", {syntax::lt, precedence::relation}},
+		{">", {syntax::gt, precedence::relation}},
+		{"!=", {syntax::neq, precedence::relation}},
+		{"!<", {syntax::nlt, precedence::relation}},
+		{"!>", {syntax::ngt, precedence::relation}},
+		{"+", {syntax::add, precedence::additive}},
+		{"-", {syntax::sub, precedence::additive}},
+		{"&", {syntax::and_join, precedence::multiplicative}},
+		{"|", {syntax::or_join, precedence::additive}},
+		{"^", {syntax::xor_join, precedence::additive}},
+		{"!&", {syntax::nand_join, precedence::multiplicative}},
+		{"!|", {syntax::nor_join, precedence::additive}},
+		{"!^", {syntax::xnor_join, precedence::additive}},
+		{"..", {syntax::range, precedence::additive}},
+		{"!", {syntax::nand_join, precedence::additive}},
+		{"*", {syntax::mul, precedence::multiplicative}},
+		{"/", {syntax::div, precedence::multiplicative}},
+		{"%", {syntax::rem, precedence::multiplicative}},
+		{"<<", {syntax::shl, precedence::multiplicative}},
+		{">>", {syntax::shr, precedence::multiplicative}},
+		{".", {syntax::pipe, precedence::primary}}
 	};
 	auto iter = ops.find(text);
 	if (iter == ops.end()) {
@@ -99,7 +99,7 @@ void parser::parse_delimiter(std::string text, location loc) {
 				return;
 			}
 			if (!expecting_term) {
-				push({loc, ast::apply, precedence::primary});
+				push({loc, syntax::apply, precedence::primary});
 			}
 			context current{loc, iter->second, std::move(ops)};
 			outer.push(std::move(current));
@@ -121,11 +121,11 @@ void parser::parse_delimiter(std::string text, location loc) {
 		} break;
 		case ';': {
 			precedence prec = prep_operator(loc, precedence::sequence);
-			push({loc, ast::sequence, prec, text});
+			push({loc, syntax::sequence, prec, text});
 		} break;
 		case ',': {
 			precedence prec = prep_operator(loc, precedence::binding);
-			push({loc, ast::pair, prec, text});
+			push({loc, syntax::pair, prec, text});
 		} break;
 		default: {
 			err.report(loc, "syntax error: unknown delimiter");
@@ -144,21 +144,21 @@ void parser::reduce(precedence prec) {
 		if (prec > ops.top().prec) break;
 		if (rightassoc && prec == ops.top().prec) break;
 		oprec &op = ops.top();
-		out.emit(op.id, op.text, op.loc);
+		out.emit_branch(op.id, op.text, op.loc);
 		ops.pop();
 	}
 }
 
 void parser::prep_term(location loc) {
 	if (!expecting_term) {
-		push({loc, ast::apply, precedence::primary});
+		push({loc, syntax::apply, precedence::primary});
 	}
 	expecting_term = false;
 }
 
 parser::precedence parser::prep_operator(location loc, precedence prec) {
 	if (expecting_term) {
-		out.emit(ast::null, std::string(), loc);
+		out.emit_null(loc);
 		prec = precedence::prefix;
 	}
 	expecting_term = true;
@@ -172,7 +172,7 @@ void parser::push(oprec op) {
 
 void parser::close(location loc) {
 	if (expecting_term) {
-		out.emit(ast::null, std::string(), loc);
+		out.emit_null(loc);
 	}
 	reduce(precedence::none);
 }
